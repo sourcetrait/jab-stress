@@ -42,12 +42,25 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   manual release build runs beside jab's own suite, each asserting and
   run on a debug image. `eviction.nu` holds the tile eviction fixtures:
   `cycle` (EvictionCycle), the spawn view and the bay under 512 slots on
-  the ordinary budget, about 100 seconds; and `rebuild` (RebuildBound),
-  the same cycle under the lift with a quota of 32 tiles a boundary and
-  the stale mode, about 95 seconds. `stress.just`'s `eviction image out
-  [fixture...]` runs them on an image, `eviction-debug out [fixture...]`
-  on the checkout's debug build; each fixture's result and runtime land
-  in `<out>/<fixture>.nuon`.
+  the ordinary budget, with its picture and a reference launch's each
+  bound to a validated, settled frame by its stamp; and `rebuild`
+  (RebuildBound), the same cycle under the lift with a quota of 32 tiles
+  a boundary and the stale mode, each phase publishing at exactly its
+  frames. `stress.just`'s `eviction image out [fixture...]` runs them on
+  an image, `eviction-debug out [fixture...]` on the checkout's debug
+  build; each fixture's result and runtime land in
+  `<out>/<fixture>.nuon`.
+- A picture is bound the way jab's handoff fixture binds one: every
+  launch sends the M frame's stamp first, takes its screen with
+  `--screen` while the run goes on, and writes E after the screen.
+  `picture-refusals` reads a launch's evidence, its measurement, its
+  capture, its phase's first frame, and the times of the screen's
+  completion and E's write, and returns what it refuses, in prerequisite
+  order: the measurement incomplete or invalid; the capture absent or its
+  stamp unreadable; the stamp naming no frame after the phase's last
+  build and before the end marker; a frame from the one after that build
+  through the displayed one unsettled; and either time missing, or E not
+  after the screen. The stamp's helpers are jab's test.nu's, imported.
 - `fps/probe/` holds the probes, one directory per task: `handoff`,
   `pool`, `eviction`, `join`, and `nu` for probes of nushell's own
   behaviour.
