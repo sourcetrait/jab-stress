@@ -35,7 +35,7 @@ admission-holds script base scratch:
     nu {{script}} holds {{base}} {{scratch}}
 
 # the gauge's rules over the mirror the gauge mutants' runner writes
-rules-mirror out mirror=(env("XDGX_TMP_HOME") / "jabstress" / "mirror"):
+rules-mirror out mirror=(env("XDGX_TMP_HOME") / "jab-stress" / "mirror"):
     use {{mirror}}/game/fps/test/test.nu [gauge-rules]; gauge-rules {{out}}; print "rules: ok"
 
 probe-knobs mode out:

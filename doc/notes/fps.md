@@ -3,7 +3,7 @@
 `fps/` holds recipes, probes, and mutant runners for testing Jab's fps
 game beyond its own suite. Nothing in it is generated. Builds, captures,
 logs, candidate trees, and mirrors are written outside the repository,
-under the session's scratch directory or `$XDGX_TMP_HOME/jabstress/`.
+under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
 
 ## Layout
 
