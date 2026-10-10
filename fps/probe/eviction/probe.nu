@@ -63,7 +63,7 @@ def headers [api: binary, --bare]: nothing -> list<any> {
     $dumps
 }
 
-def main [kernel: path, image: path, disk: path, out: path, mode: string, slots: int = 0] {
+def main [kernel: path, image: path, disk: path, out: path, mode: string, slots: int = 0, --view: string = "bay", --cycles: int = 2, --modes: int = 0, --tag: string = ""] {
     let a = { name: "a", x: 29.0, y: 2.5, z: 1.6, yaw: 150, pitch: 0 }
     let b = { name: "b", x: 29.0, y: 2.5, z: 1.6, yaw: 330, pitch: 0 }
     let at = {|ms: int, bytes: binary| { at: ($ms * 1ms), bytes: $bytes } }
@@ -82,6 +82,16 @@ def main [kernel: path, image: path, disk: path, out: path, mode: string, slots:
             let t = 1300 + $e.index * 1300
             [(do $place $t $e.item) (do $at ($t + 200) (pool-frame --modes $LIFTED --cold)) (do $place ($t + 800) $e.item) (do $at ($t + 1100) (dump-frame))]
         } | flatten)
+        "pair" => {
+            let b2 = ($VIEWS | where name == $view | first)
+            let cold = [(do $at 1300 (pool-frame --modes $modes --cold --slots $slots))]
+            let legs = (0..<(2 * $cycles + 1) | each {|i|
+                let t = 1500 + $i * 1300
+                let p = (if ($i mod 2) == 0 { $a } else { $b2 })
+                [(do $place $t $p) (do $place ($t + 800) $p) (do $at ($t + 1100) (dump-frame))]
+            } | flatten)
+            $cold | append $legs
+        }
         "budget" => [
             (do $at 1300 (pool-frame --cold --slots $slots)) (do $place 1500 $a) (do $place 2300 $a) (do $at 2600 (dump-frame))
             (do $place 2800 $b) (do $place 3600 $b) (do $at 3900 (dump-frame))
@@ -91,12 +101,13 @@ def main [kernel: path, image: path, disk: path, out: path, mode: string, slots:
     })
     let last = ($phases | get at | math max)
     let sends = ($phases | append { at: ($last + 400ms), bytes: (pose command-frame "E") } | sort-by at)
-    let run = (jab launch --kernel $kernel --image $image --out ($out | path join $mode) --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --capture ($last + 800ms) --seconds (($last + 3sec) / 1sec | math ceil))
+    let name = (if $tag == "" { $mode } else { $"($mode)_($tag)" })
+    let run = (jab launch --kernel $kernel --image $image --out ($out | path join $name) --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --capture ($last + 800ms) --seconds (($last + 3sec) / 1sec | math ceil))
     let api = $run.api
     let m = (gauge measure $api [{ name: "start", places: [], pad: [] }])
     let cold = ((gauge stream $api).configs | last | get from)
-    let rows = ($m.rows | where {|r| $r.frame >= $cold } | select -o frame tiles_built evicted slots_used building missed_blocks admitted merged unprocessed tiles_us tile_resets)
+    let rows = ($m.rows | where {|r| $r.frame >= $cold } | select -o frame tiles_built evicted slots_used slots_effective building missed_blocks admitted merged unprocessed tiles_us tile_resets tile_bytes tile_peak memory memory_peak)
     let ds = (if $mode == "views" { headers $api --bare } else { headers $api })
-    { mode: $mode, slots: $slots, complete: $m.complete, valid: $m.valid, invalid: ($m.invalid | first 3), qemu: (open --raw $run.qemu_log), rows: $rows, dumps: $ds } | to nuon | save -f ($out | path join $"($mode).nuon")
+    { mode: $mode, slots: $slots, view: $view, modes: $modes, complete: $m.complete, valid: $m.valid, invalid: ($m.invalid | first 3), qemu: (open --raw $run.qemu_log), rows: $rows, dumps: $ds } | to nuon | save -f ($out | path join $"($name).nuon")
     print { mode: $mode, complete: $m.complete, valid: $m.valid, dumps: ($ds | each {|d| { tiles: ($d | length), frame: ($d | get -o 0.frame) } }) }
 }

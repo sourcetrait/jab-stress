@@ -24,7 +24,11 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jabstress/`.
   - `smoke.just` runs the development smoke. Its recipe is reconstructed:
     the original file is gone, and its argument order is the smoke
     runner's, not yet checked against `just do`.
-  - `eviction.just` runs the tile eviction probes.
+  - `eviction.just` runs the tile eviction probes: the pool's counters a
+    frame (`rows`); views' key sets at first sight, and two views
+    alternated under a slot cap with a dump at every settle, on the
+    debug build or another image (`probe`, `probe-on`, `pair`); and a
+    pair run's reading against the views' key sets (`pair-read`).
 - `fps/probe/` holds the probes, one directory per task: `handoff`,
   `pool`, `eviction`, and `nu` for probes of nushell's own behaviour.
 - `fps/mutants/` holds the dump reader's mutant runner and the interval
