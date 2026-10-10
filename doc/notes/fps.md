@@ -38,6 +38,10 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     recipes run the join's hold (`fps/probe/join/hold.nu`), and
     `join-cands` lays the join's forced cases out as candidate trees
     (`fps/probe/join/candidates.nu`) for `pool.just`'s `cand-build`.
+    `eviction-cands` does the same for the eviction fixtures' forced
+    cases (`fps/probe/eviction/candidates.nu`): construction_skipped,
+    construction skipped at every fifth frame's boundary, which fails
+    `rebuild` at its publication frames and `cycle` at its budget.
 - `fps/stress/` holds the release tier's fixtures, the exhaustive tests a
   manual release build runs beside jab's own suite, each asserting and
   run on a debug image. `eviction.nu` holds the tile eviction fixtures:

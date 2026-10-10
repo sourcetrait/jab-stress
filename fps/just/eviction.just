@@ -31,6 +31,11 @@ hold out name="hold" *flags:
 join-cands cands *names:
     nu {{probe}}/join/candidates.nu {{cands}} {{names}}
 
+# the eviction fixtures' forced cases (construction_skipped) as candidate
+# trees under cands, all or those named
+eviction-cands cands *names:
+    nu {{probe}}/eviction/candidates.nu {{cands}} {{names}}
+
 # the same on another debug image, a candidate's
 hold-on image out name="hold" *flags:
     use {{jab}}/sdk/nu/jab.nu; let t = (jab target-root {{jab}} | path join debug); ^nu {{probe}}/join/hold.nu ($t | path join kernel jab.elf) {{image}} ($t | path join game fps still.romfs) {{out}} --name {{name}} {{flags}}
