@@ -1,0 +1,76 @@
+{
+ nonce: "2CXUCU4XCM9",
+ args_type: "record<game: string, jf: string, mutants: string, manifest_file: string, cands: string, logs: string, assets: string, kernel: string, label: string, mcp_nom: string>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = $args
+if ($a.logs | path exists) { error make { msg: $\"($a.logs) exists; a mutant set is written once\" } }
+for p in [$a.assets $a.kernel $a.manifest_file $a.mutants] { if not ($p | path exists) { error make { msg: $\"missing: ($p)\" } } }
+let manifest = (open --raw $a.manifest_file | decode)
+mkdir $a.logs
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 60sec,
+    max_quiet: 30min,
+    check: {|state| { logs: (glob ($a.logs | path join \"*.log\") | length) } },
+    teardown: null,
+    work: {
+        let set = ([{ name: \"control\", file: \"census.S\", edits: [], expect: \"\" }] | append (open $a.mutants))
+        let results = ($set | each {|mu|
+            let dir = ($a.cands | path join $\"packets_($mu.name)\")
+            if ($dir | path type) == \"dir\" {
+                if not ($dir | str starts-with $a.cands) { error make { msg: $\"($dir) is not under ($a.cands)\" } }
+                rm -r $dir
+            }
+            mkdir $dir
+            cp -r ($a.game | path join \"src\") $dir
+            $manifest | save --raw -f ($dir | path join \"program.jab.toml\")
+            let target = ($dir | path join \"src\" $mu.file)
+            mut text = (open --raw $target | decode)
+            mut applied = true
+            for e in $mu.edits {
+                let count = (($text | split row $e.find | length) - 1)
+                if $count != 1 { $applied = false } else { $text = ($text | str replace $e.find $e.put) }
+            }
+            let reason = ($mu | get -o reason | default \"\")
+            if not $applied {
+                { name: $mu.name, applied: false, built: false, exit: null, failed_where: false, reason: $reason, title: \"\" }
+            } else {
+                $text | save --raw -f $target
+                let b = (^just -f $a.jf cand-build $dir | complete)
+                let image = (glob ($dir | path join \"**\" \"fps.jab\") | get -o 0)
+                if $b.exit_code != 0 or $image == null {
+                    ($b.stdout + $b.stderr) | save --raw -f ($a.logs | path join $\"($mu.name).build.log\")
+                    { name: $mu.name, applied: true, built: false, exit: $b.exit_code, failed_where: false, reason: $reason, title: \"\" }
+                } else {
+                    let r = (^just -f $a.jf image-test $image ($a.logs | path join $mu.name) $a.assets $a.kernel | complete)
+                    let log = ($r.stdout + $r.stderr)
+                    $log | save --raw -f ($a.logs | path join $\"($mu.name).log\")
+                    let ls = ($log | lines)
+                    let start = ($ls | enumerate | where {|e| $e.item starts-with \"  x \" } | get -o 0.index)
+                    let title = (if $start == null { \"\" } else {
+                        [($ls | get $start | str substring 4..)] | append ($ls | skip ($start + 1) | take while {|l| $l starts-with \"  | \" } | each {|l| $l | str substring 4.. }) | str join \" \"
+                    })
+                    let flat = ($title | str replace --all --regex '\\s+' ' ')
+                    let at_assert = ($ls | where {|l| $l =~ '^\\s*\\d+ \\|' } | any {|l| $l | str contains \"assert\" })
+                    {
+                        name: $mu.name, applied: true, built: true, exit: $r.exit_code,
+                        failed_where: (if $mu.expect == \"\" { $r.exit_code == 0 and ($ls | any {|l| $l == \"fps: ok\" }) } else { ($flat | str contains $mu.expect) and $at_assert and ($reason == \"\" or ($flat | str contains $reason)) }),
+                        reason: $reason,
+                        title: ($flat | str substring 0..300),
+                    }
+                }
+            }
+        })
+        let control = ($results | where name == \"control\" | get 0)
+        {
+            control_ok: $control.failed_where,
+            every: ($results | where name != \"control\" | all {|x| $x.applied and $x.built and $x.exit != 0 and $x.failed_where }),
+            results: ($results | select name applied built exit failed_where reason),
+            misses: ($results | where {|x| $x.name != \"control\" and (not ($x.applied and $x.built and $x.exit != 0 and $x.failed_where)) }),
+        }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}

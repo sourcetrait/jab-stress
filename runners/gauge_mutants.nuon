@@ -1,0 +1,58 @@
+{
+ nonce: "bi7K9IFr9wU",
+ args_type: "record<jab: string, jf: string, mirror: string, scratch: string, out: string, label: string, mcp_nom: string, mutants_file: string, game: list<string>>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = ($args | insert mutants (open $args.mutants_file))
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 60sec,
+    max_quiet: 90min,
+    check: {|state| { logs: (if ($a.out | path exists) { glob ($a.out | path join \"*.log\") | length } else { 0 }) } },
+    teardown: null,
+    work: {
+        let m = $a.mirror
+        let g = $a.game
+        if ($m | path type) == \"dir\" {
+            if not ($m | str starts-with $a.scratch) { error make { msg: $\"($m) is not under the scratch ($a.scratch)\" } }
+            rm -r $m
+        }
+        mkdir ($m | path join \"sdk\" \"nu\")
+        mkdir ($m | path join ...$g \"nu\")
+        mkdir ($m | path join ...$g \"test\")
+        cp ($a.jab | path join \"sdk\" \"nu\" \"jab.nu\") ($m | path join \"sdk\" \"nu\")
+        for f in [map.nu png.nu] { cp ($a.jab | path join ...$g \"nu\" $f) ($m | path join ...$g \"nu\") }
+        for f in [test.nu gauge.nu pose.nu census.nu census_holds.nu] { cp ($a.jab | path join ...$g \"test\" $f) ($m | path join ...$g \"test\") }
+        let gauge_file = ($m | path join ...$g \"test\" \"gauge.nu\")
+        let original = (open --raw $gauge_file | decode)
+        if ($a.out | path exists) { error make { msg: $\"($a.out) exists; a mutant set is written once\" } }
+        mkdir $a.out
+        let control = (^just -f $a.jf rules-mirror ($a.out | path join \"control\") | complete)
+        ($control.stdout + $control.stderr) | save --raw -f ($a.out | path join \"control.log\")
+        let results = ($a.mutants | each {|mu|
+            let count = (($original | split row $mu.find | length) - 1)
+            if $count != 1 {
+                { name: $mu.name, applied: false, count: $count, exit: null, failed_where: false, head: \"\" }
+            } else {
+                $original | str replace $mu.find $mu.put | save --raw -f $gauge_file
+                let r = (^just -f $a.jf rules-mirror ($a.out | path join $mu.name) | complete)
+                let text = ($r.stdout + $r.stderr)
+                $text | save --raw -f ($a.out | path join $\"($mu.name).log\")
+                $original | save --raw -f $gauge_file
+                let said = ($text | lines | where {|l| ($l | str contains \"×\") or ($l | str contains \"Error\") or ($l | str contains \"assert\") } | first 3 | str join \" | \")
+                { name: $mu.name, applied: true, count: 1, exit: $r.exit_code, failed_where: ($text | str contains $mu.expect), head: ($said | str substring 0..240) }
+            }
+        })
+        let restored = ((open --raw $gauge_file | decode) == $original)
+        {
+            control: { exit: $control.exit_code, ok: ($control.stdout | str contains \"rules: ok\"), tail: (($control.stdout + $control.stderr) | str substring 0..400) },
+            restored: $restored,
+            every: ($results | all {|x| $x.applied and $x.exit != 0 and $x.failed_where }),
+            results: ($results | select name applied exit failed_where),
+            misses: ($results | where {|x| not ($x.applied and $x.exit != 0 and $x.failed_where) }),
+        }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}

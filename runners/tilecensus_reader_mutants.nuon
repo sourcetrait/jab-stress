@@ -1,0 +1,41 @@
+{
+ nonce: "8k8FFBThsgC",
+ args_type: "record<operational: string, mutants: string, scratch: string, jf: string, base: string, label: string, mcp_nom: string>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = $args
+if ($a.scratch | path exists) { error make { msg: $\"the scratch exists: ($a.scratch)\" } }
+mkdir $a.scratch
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 60sec,
+    max_quiet: 40min,
+    check: {|state| { logs: (glob ($a.scratch | path join \"*.log\") | length) } },
+    teardown: null,
+    work: {
+        let src = { \"tilecensus.nu\": (open --raw ($a.operational | path join \"tilecensus.nu\") | decode), \"tilecensus_resolve.nu\": (open --raw ($a.operational | path join \"tilecensus_resolve.nu\") | decode) }
+        let mutants = (open $a.mutants)
+        let counts = ($mutants | each {|m| { name: $m.name, n: ((($src | get $m.file) | split row $m.find | length) - 1) } })
+        let bad = ($counts | where n != 1)
+        if not ($bad | is-empty) { error make { msg: $\"finds not matching exactly once: ($bad | to nuon)\" } }
+        let jobs = ([{ name: \"control\", file: null, find: null, put: null, expect: null }] | append $mutants)
+        let results = ($jobs | par-each --threads 4 {|m|
+            let tree = ($a.scratch | path join $m.name)
+            mkdir $tree
+            for f in [\"tilecensus.nu\" \"tilecensus_resolve.nu\"] {
+                let text = (if $m.file == $f { $src | get $f | str replace $m.find $m.put } else { $src | get $f })
+                $text | save --raw ($tree | path join $f)
+            }
+            let r = (^just -f $a.jf tilecensus-holds ($tree | path join \"tilecensus.nu\") $a.base ($tree | path join \"holds\") | complete)
+            let out = ($r.stdout + $r.stderr)
+            $out | save --raw ($a.scratch | path join $\"($m.name).log\")
+            let flat = ($out | str replace --all --regex '[\\s│|]+' ' ')
+            { name: $m.name, exit: $r.exit_code, at_own: (if $m.expect == null { null } else { $flat | str contains $m.expect }), ok: ($r.stdout | lines | any {|l| $l == \"tilecensus holds: ok\" }) }
+        })
+        $results | to nuon | save ($a.scratch | path join \"results.nuon\")
+        { control: ($results | where name == \"control\" | first), failing_at_own: ($results | where {|x| $x.name != \"control\" and $x.exit != 0 and $x.at_own } | length), others: ($results | where {|x| $x.name != \"control\" and not ($x.exit != 0 and $x.at_own) } | get name) }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}

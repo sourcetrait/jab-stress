@@ -1,0 +1,32 @@
+{
+ nonce: "4i3irlI6mfU",
+ args_type: "record<base: string, fps: string, image: string, runs: int, batches: table<label: string, route: string, workers: int>, label: string, mcp_nom: string>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = $args
+if ($a.base | path exists) { error make { msg: $\"($a.base) exists; a battery is written once\" } }
+if not ($a.image | path exists) { error make { msg: $\"image missing: ($a.image)\" } }
+mkdir $a.base
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 60sec,
+    max_quiet: 30min,
+    check: {|state| { batches: (glob ($a.base | path join \"*.log\") | length), runs: (glob ($a.base | path join \"*\" \"run_*\" \"serial.log\") | length) } },
+    teardown: null,
+    work: {
+        mut done = []
+        for b in $a.batches {
+            let out = ($a.base | path join $b.label)
+            let route = (if $b.route == \"\" { [] } else { [--route $b.route] })
+            let workers = (if $b.workers < 0 { [] } else { [--workers ($b.workers | into string)] })
+            let r = (do { cd $a.fps; ^just do gauge debug ($a.runs | into string) --image $a.image ...$route ...$workers --out $out --label $b.label } | complete)
+            ($r.stdout + $r.stderr) | save --raw -f ($a.base | path join $\"($b.label).log\")
+            if $r.exit_code != 0 { error make { msg: $\"($b.label) exited ($r.exit_code): (($r.stdout + $r.stderr) | lines | last 6 | str join ' | ' | str substring 0..900)\" } }
+            $done = ($done | append $b.label)
+        }
+        { batches: $done }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}

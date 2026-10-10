@@ -1,0 +1,64 @@
+{
+ nonce: "9D0O2NWYvbt",
+ args_type: "record<fps: string, game: string, out_root: string, gauge_poses: string, mcp_nom: string, set: string>",
+ result_type: "record<label: string, nonce: string, still: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let fps = $args.fps
+let game = $args.game
+let out_root = $args.out_root
+let set = $args.set
+mkdir $out_root
+# the still factory's tree, compiled from a copy of the source when absent
+let still_tree = ($game | path join \".target\" \"asset\" \"factory_still\" \"map.nuon\")
+let still = (if ($still_tree | path exists) { \"present\" } else {
+    let src = (open ($game | path join \"content\" \"map\" \"factory.nuon\"))
+    let copy = ($game | path join \"content\" \"map\" \"factory_still.nuon\")
+    $src | update name \"factory_still\" | update entities ($src.entities | where class != \"android\") | to nuon | save --raw -f $copy
+    let c = (do { cd $game; ^just compile } | complete)
+    rm $copy
+    if $c.exit_code != 0 { error make { msg: $\"compile: ($c.stderr)\" } }
+    \"compiled\"
+})
+# the poses: the factory's seven gauge views; each sample map's spawn and the test's three
+let gauge = (open --raw $args.gauge_poses | decode | from nuon | select name x y z yaw pitch)
+let content = {
+    cage2: [
+        { name: \"ramp\", x: 22.0625, y: 0.5, z: 2.15625, yaw: 180, pitch: -30 },
+        { name: \"ceiling\", x: 11.875, y: -10.5, z: -0.734375, yaw: -90, pitch: 30 },
+        { name: \"bulb\", x: 2.5, y: -5.0, z: 1.0, yaw: 0, pitch: -60 },
+    ],
+    doortest: [
+        { name: \"valley\", x: 9.0625, y: -6.03125, z: 5.296875, yaw: 0, pitch: -30 },
+        { name: \"pit\", x: 4.645833, y: -19.104166, z: 8.483105, yaw: 45, pitch: -30 },
+        { name: \"sprite\", x: 0.0, y: -6.0, z: -0.25, yaw: -90, pitch: 0 },
+    ],
+}
+let sets = ([factory_still cage2 doortest] | each {|map|
+    let poses = (if $map == \"factory_still\" { $gauge } else {
+        let s = (open ($game | path join \".target\" \"asset\" $map \"map.nuon\") | get spawn)
+        [{ name: \"spawn\", x: $s.at.0, y: $s.at.1, z: ($s.at.2 + 1.6), yaw: $s.yaw, pitch: $s.pitch }] | append ($content | get $map)
+    })
+    let file = ($out_root | path join $\"($map)_poses.nuon\")
+    $poses | to nuon | save --raw -f $file
+    { map: $map, poses: $file, out: ($out_root | path join $map) }
+})
+let handle = (long launch {
+    label: \"PortalRectsOwnerBase\",
+    mcp_nom: $args.mcp_nom,
+    interval: 60sec,
+    max_quiet: 20min,
+    check: {|state| { logs: (glob ($out_root | path join \"*.log\") | length) } },
+    teardown: null,
+    work: {
+        let results = ($sets | each {|s|
+            let r = (do { cd $fps; ^just pose $s.map $s.poses $s.out $set } | complete)
+            ($r.stdout + $r.stderr) | save --raw -f ($out_root | path join $\"($s.map).log\")
+            let lines = ($r.stdout | lines | where {|l| ($l =~ '^pose \\w+: sector') or ($l =~ '^pose \\w+: fps: frame in') })
+            let frames = ($lines | where {|l| $l =~ 'fps: frame in' } | each {|l| $l | parse --regex '^pose (?P<pose>\\w+): fps: frame in (?P<us>\\d+) us: (?P<sectors>\\d+) sectors, (?P<walls>\\d+) walls, (?P<pieces>\\d+) pieces, (?P<planes>\\d+) planes, (?P<openings>\\d+) openings, (?P<sprites>\\d+) sprites, (?P<uncovered>\\d+) uncovered.*pixels (?P<pixels>\\d+),.*rejected (?P<rejected>\\d+),' | get -o 0 } | where {|p| $p != null })
+            { map: $s.map, exit: $r.exit_code, poses: ($lines | where {|l| $l =~ 'sector' } | str join \" | \"), frames: $frames, captures: (glob ($s.out | path join \"*\" \"screen.ppm\") | length) }
+        })
+        { results: $results }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce, still: $still }"
+}

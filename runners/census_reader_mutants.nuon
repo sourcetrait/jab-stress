@@ -1,0 +1,32 @@
+{
+ nonce: "6pn8EVDeSdL",
+ args_type: "record<census: string, holds: string, mutants: string, scratch: string, jf: string, serial: string>",
+ result_type: "record<control: record<exit: int, ok: bool>, results: table<name: string, exit: int, at_own: bool, ok_printed: bool>>",
+ body: "let a = $args
+let src = (open --raw $a.census | decode)
+let holds = (open --raw $a.holds | decode)
+let mutants = (open $a.mutants)
+let counts = ($mutants | each {|m| {name: $m.name, n: (($src | split row $m.find | length) - 1)} })
+let bad = ($counts | where n != 1)
+if not ($bad | is-empty) { error make {msg: $\"finds not matching exactly once: ($bad | to nuon)\"} }
+if ($a.scratch | path exists) { error make {msg: $\"the scratch exists: ($a.scratch)\"} }
+mkdir $a.scratch
+let run_one = {|name: string, text: string|
+  let tree = ($a.scratch | path join $name)
+  let dir = ($tree | path join game fps test)
+  mkdir $dir
+  $text | save --raw ($dir | path join census.nu)
+  $holds | save --raw ($dir | path join census_holds.nu)
+  let r = (^just -f $a.jf reader-holds $tree $a.serial | complete)
+  let out = ($r.stdout + $r.stderr)
+  $out | save --raw ($a.scratch | path join $\"($name).log\")
+  {exit: $r.exit_code, out: $out}
+}
+let control = (do $run_one control $src)
+let results = ($mutants | each {|m|
+  let r = (do $run_one $m.name ($src | str replace $m.find $m.put))
+  let flat = ($r.out | str replace --all --regex '[\\s│|]+' ' ')
+  {name: $m.name, exit: $r.exit, at_own: ($flat | str contains $m.expect), ok_printed: ($r.out | str contains \"reader-holds: ok\")}
+})
+{control: {exit: $control.exit, ok: ($control.out | str contains \"reader-holds: ok\")}, results: $results}"
+}

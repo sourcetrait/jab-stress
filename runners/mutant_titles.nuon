@@ -1,0 +1,17 @@
+{
+ nonce: "cSxa2WQQMwq",
+ args_type: "record<out: string, mutants: string>",
+ result_type: "record<all: bool, rows: table<name: string, title: string, at_assert: bool, matches: bool>>",
+ body: "let ms = (open $args.mutants)
+let rows = ($ms | each {|m|
+    let ls = (open --raw ($args.out | path join $\"($m.name).log\") | decode | lines)
+    let start = ($ls | enumerate | where {|e| $e.item starts-with \"  x \" } | get -o 0.index)
+    let title = (if $start == null { \"\" } else {
+        let rest = ($ls | skip ($start + 1) | take while {|l| $l starts-with \"  | \" } | each {|l| $l | str substring 4.. })
+        [($ls | get $start | str substring 4..)] | append $rest | str join \" \"
+    })
+    let pointed = ($ls | where {|l| $l =~ '^\\s*\\d+ \\|' } | where {|l| $l | str contains \"assert\" })
+    { name: $m.name, title: ($title | str substring 0..160), at_assert: (not ($pointed | is-empty)), matches: ($title | str contains $m.expect) }
+})
+{ all: ($rows | all {|r| $r.at_assert and $r.matches }), rows: ($rows | where {|r| not ($r.at_assert and $r.matches) }) }"
+}

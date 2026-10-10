@@ -1,0 +1,65 @@
+{
+ nonce: "32lvIfah9Aq",
+ args_type: "record<fps: string, out_root: string, raster_rel: string, anchor: string, align_line: string, poses_src: string, names: list<string>, runs: int, mcp_nom: string>",
+ result_type: "record<label: string, nonce: string, sites: int>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let fps = $args.fps
+let out_root = $args.out_root
+let runs = $args.runs
+let raster = ($fps | path join $args.raster_rel)
+let before = (open --raw $raster | decode)
+let anchor = ((char nl) + $args.anchor)
+let anchor_sites = (($before | split row $anchor | length) - 1)
+if $anchor_sites != 1 { error make { msg: $\"anchor sites ($anchor_sites)\" } }
+let probed = ($before | str replace $anchor ((char nl) + $args.align_line + $anchor))
+mkdir $out_root
+let poses = ($out_root | path join \"poses.nuon\")
+open --raw $args.poses_src | decode | from nuon | where {|p| $p.name in $args.names } | to nuon | save --raw -f $poses
+let elf = ($fps | path join \".target\" \"debug\" \"fps\" \"fps.elf\")
+let handle = (long launch {
+    label: \"PolyFillAlign\",
+    mcp_nom: $args.mcp_nom,
+    interval: 60sec,
+    max_quiet: 20min,
+    check: {|state| { logs: (glob ($out_root | path join \"*.log\") | length) } },
+    teardown: null,
+    work: {
+        def pose_rows [fps: string, out_root: string, poses: string, tag: string, run: int]: nothing -> table {
+            let out = ($out_root | path join $\"($tag)_($run)\")
+            let r = (do { cd $fps; ^just pose factory $poses $out } | complete)
+            ($r.stdout + $r.stderr) | save --raw -f ($out_root | path join $\"($tag)_($run).log\")
+            $r.stdout | lines | where {|l| $l =~ '^pose \\w+: fps: frame in' } | each {|l|
+                let p = ($l | parse --regex '^pose (?P<pose>\\w+): fps: frame in (?P<us>\\d+) us: .*; clear, planes, walls, portals, sprites us (?P<clear>\\d+), (?P<plane_us>\\d+), (?P<wall_us>\\d+), (?P<portal_us>\\d+), (?P<sprite_us>\\d+); spans (?P<spans>\\d+), pixels (?P<pixels>\\d+), lit spans (?P<lit_spans>\\d+), lit pixels (?P<lit_pixels>\\d+), light us (?P<light_us>\\d+), rejected (?P<rejected>\\d+), samples (?P<samples>\\d+), tiles built (?P<tiles_built>\\d+), tiled (?P<tiled>\\d+), resets (?P<resets>\\d+)' | get -o 0)
+                if $p == null { null } else {
+                    $p | update cells --columns [us clear plane_us wall_us portal_us sprite_us spans pixels lit_spans lit_pixels light_us rejected samples tiles_built tiled resets] {|v| $v | into int } | merge { tag: $tag, run: $run }
+                }
+            } | where {|r| $r != null }
+        }
+        def poly_fill_at [elf: string]: nothing -> string {
+            ^nm -n $elf | lines | where {|l| $l ends-with \" poly_fill\" } | str join \" \"
+        }
+        mut rows = []
+        mut sites = []
+        mut restored = []
+        for run in 1..$runs {
+            $before | save --raw -f $raster
+            $rows = ($rows | append (pose_rows $fps $out_root $poses \"plain\" $run))
+            $sites = ($sites | append $\"plain ($run): (poly_fill_at $elf)\")
+            $probed | save --raw -f $raster
+            let got = (try { pose_rows $fps $out_root $poses \"aligned\" $run } catch {|e| [] })
+            $sites = ($sites | append $\"aligned ($run): (poly_fill_at $elf)\")
+            $rows = ($rows | append $got)
+            $before | save --raw -f $raster
+            $restored = ($restored | append ((open --raw $raster | decode) == $before))
+        }
+        let rebuilt = (do { cd $fps; ^just build --set debug } | complete)
+        $rows | to nuon | save --raw -f ($out_root | path join \"rows.nuon\")
+        let summary = ($rows | group-by --to-table {|r| $\"($r.pose)|($r.tag)\" } | each {|g|
+            let us = ($g.items | get us | sort)
+            { pose: ($g.items | get 0.pose), tag: ($g.items | get 0.tag), n: ($g.items | length), us_min: ($us | first), us_med: ($us | math median | math round), wall_min: ($g.items | get wall_us | math min), wall_med: ($g.items | get wall_us | math median | math round), plane_min: ($g.items | get plane_us | math min), spans: ($g.items | get spans | math max) }
+        } | sort-by pose tag)
+        { restored: $restored, rebuilt: $rebuilt.exit_code, sites: $sites, summary: $summary }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce, sites: $anchor_sites }"
+}

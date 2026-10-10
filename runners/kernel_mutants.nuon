@@ -1,0 +1,49 @@
+{
+ nonce: "M2BHJwnugU",
+ args_type: "record<jab: string, out: string, label: string, mcp_nom: string, set: string>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = ($args | insert mutants (open $args.set))
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 60sec,
+    max_quiet: 30min,
+    check: {|state| { logs: (if ($a.out | path exists) { glob ($a.out | path join \"*.log\") | length } else { 0 }) } },
+    teardown: null,
+    work: {
+        if ($a.out | path exists) { error make { msg: $\"($a.out) exists; a mutant set is written once\" } }
+        mkdir $a.out
+        let files = ($a.mutants | each {|mu| $mu.edits | get file } | flatten | uniq)
+        let originals = ($files | each {|f| { file: $f, text: (open --raw ($a.jab | path join $f) | decode) } })
+        let results = ($a.mutants | each {|mu|
+            mut texts = {}
+            mut applied = true
+            for e in $mu.edits {
+                let t = (if ($e.file in ($texts | columns)) { $texts | get $e.file } else { $originals | where file == $e.file | get 0.text })
+                let n = (($t | split row $e.find | length) - 1)
+                if $n != 1 { $applied = false } else { $texts = ($texts | upsert $e.file ($t | str replace $e.find $e.put)) }
+            }
+            if not $applied {
+                { name: $mu.name, applied: false, exit: null, failed_where: false }
+            } else {
+                for f in ($texts | columns) { $texts | get $f | save --raw -f ($a.jab | path join $f) }
+                cd $a.jab
+                let r = (^just test $mu.program | complete)
+                let text = ($r.stdout + $r.stderr)
+                $text | save --raw -f ($a.out | path join $\"($mu.name).log\")
+                for o in $originals { $o.text | save --raw -f ($a.jab | path join $o.file) }
+                { name: $mu.name, applied: true, exit: $r.exit_code, failed_where: ($text | str contains $mu.expect) }
+            }
+        })
+        for o in $originals { $o.text | save --raw -f ($a.jab | path join $o.file) }
+        let restored = ($originals | all {|o| (open --raw ($a.jab | path join $o.file) | decode) == $o.text })
+        {
+            restored: $restored,
+            every: ($results | all {|x| $x.applied and $x.exit != 0 and $x.failed_where }),
+            results: $results,
+        }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}

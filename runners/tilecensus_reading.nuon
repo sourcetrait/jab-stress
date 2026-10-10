@@ -1,0 +1,24 @@
+{
+ nonce: cnceorJbGgC,
+ args_type: "record<jf: string, base: string, labels: list<string>, label: string, mcp_nom: string>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = $args
+let out = ($a.base | path join \"census.nuon\")
+if ($out | path exists) { error make { msg: $\"the reading exists: ($out)\" } }
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 60sec,
+    max_quiet: 40min,
+    check: {|state| { written: ($out | path exists) } },
+    teardown: null,
+    work: {
+        let r = (^just -f $a.jf tilecensus $a.base $out ...$a.labels | complete)
+        ($r.stdout + $r.stderr) | save --raw -f ($a.base | path join \"census_reread.log\")
+        if $r.exit_code != 0 { error make { msg: $\"the reader exited ($r.exit_code): (($r.stdout + $r.stderr) | lines | last 8 | str join ' | ' | str substring 0..900)\" } }
+        { exit: $r.exit_code, problems: (open $out | get problems | length) }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}

@@ -1,0 +1,31 @@
+{
+ nonce: "3qrVWWbY24S",
+ args_type: "record<jab: string, log: string, label: string, mcp_nom: string, paths: list<string>>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = $args
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 60sec,
+    max_quiet: 25min,
+    check: {|state| { log: (if ($a.log | path exists) { 1 } else { 0 }) } },
+    teardown: null,
+    work: {
+        cd $a.jab
+        let runs = ($a.paths | each {|p|
+            let r = (^just test $p | complete)
+            { path: $p, exit: $r.exit_code, text: ($r.stdout + \"\\n--- stderr\\n\" + $r.stderr) }
+        })
+        mkdir ($a.log | path dirname)
+        $runs | each {|r| $\"=== ($r.path) exit ($r.exit)\\n($r.text)\" } | str join \"\\n\" | save --raw -f $a.log
+        let heads = ($runs | where exit != 0 | each {|r|
+            let ls = ($r.text | lines)
+            let i = ($ls | enumerate | where {|e| $e.item starts-with \"  x \" } | get -o 0.index)
+            { path: $r.path, head: (if $i == null { \"\" } else { $ls | get $i | str substring 0..300 }) }
+        })
+        { exits: ($runs | each {|r| { path: $r.path, exit: $r.exit } }), failed: $heads }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}

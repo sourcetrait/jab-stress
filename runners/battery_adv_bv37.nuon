@@ -1,0 +1,40 @@
+{
+ nonce: "bV373nxq4vo",
+ args_type: "record<base: string, fps: string, batches: table<label: string, image: string, workers: int, grain: int>, runs: int, cadence: int, route: string, cpu: bool, fields: list<string>, log_glob: string, label: string, mcp_nom: string>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = $args
+if ($a.base | path exists) { error make { msg: $\"($a.base) exists; a battery is written once\" } }
+let missing = ($a.batches | where {|b| $b.image != \"\" and not ($b.image | path exists) })
+if ($missing | is-not-empty) { error make { msg: $\"image missing: ($missing | get image | str join ', ')\" } }
+mkdir $a.base
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 60sec,
+    max_quiet: 45min,
+    check: {|state| { batches: (glob ($a.base | path join $a.log_glob) | length) } },
+    teardown: null,
+    work: {
+        mut done = []
+        for b in $a.batches {
+            let out = ($a.base | path join $b.label)
+            let image = (if $b.image == \"\" { [] } else { [--image $b.image] })
+            let route = (if $a.route == \"\" { [] } else { [--route $a.route] })
+            let cpu = (if $a.cpu { [--cpu] } else { [] })
+            let r = (do { cd $a.fps; ^just adv gauge release ($a.runs | into string) --cadence ($a.cadence | into string) --workers ($b.workers | into string) --grain ($b.grain | into string) ...$cpu ...$image ...$route --out $out --label $b.label } | complete)
+            ($r.stdout + $r.stderr) | save --raw -f ($a.base | path join $\"($b.label).log\")
+            if $r.exit_code != 0 { error make { msg: $\"($b.label) exited ($r.exit_code): (($r.stdout + $r.stderr) | lines | last 6 | str join ' | ' | str substring 0..900)\" } }
+            $done = ($done | append $b.label)
+        }
+        let files = ($a.batches | each {|b| $a.base | path join $b.label \"gauge.nuon\" })
+        let compares = ($a.fields | each {|f|
+            let c = (do { cd $a.fps; ^just adv gauge-compare ...$files --field $f --out ($a.base | path join $\"compare_($f).nuon\") } | complete)
+            ($c.stdout + $c.stderr) | save --raw -f ($a.base | path join $\"compare_($f).txt\")
+            { field: $f, exit: $c.exit_code }
+        })
+        { batches: $done, compares: $compares }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}

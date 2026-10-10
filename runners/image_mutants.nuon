@@ -1,0 +1,33 @@
+{
+ nonce: "2G5ATFw8HaK",
+ args_type: "record<jf: string, logs: string, assets: string, kernel: string, images: table<name: string, image: string, expect: list<string>>, label: string, mcp_nom: string>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = $args
+if ($a.logs | path exists) { error make { msg: $\"($a.logs) exists; a sequence is written once\" } }
+mkdir $a.logs
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 60sec,
+    max_quiet: 30min,
+    check: {|state| { logs: (glob ($a.logs | path join \"*.log\") | length) } },
+    teardown: null,
+    work: {
+        let mutants = ($a.images | each {|m|
+            let out = ($a.logs | path join $m.name)
+            let r = (^just -f $a.jf image-test $m.image $out $a.assets $a.kernel | complete)
+            let text = ($r.stdout + $r.stderr)
+            $text | save --raw -f ($a.logs | path join $\"($m.name).log\")
+            {
+                name: $m.name, exit: $r.exit_code,
+                failed_where: ($m.expect | any {|e| $text | str contains $e }),
+                walked: ($text | lines | any {|l| $l starts-with \"fps: the gauge's rules\" }),
+                title: ($text | lines | where {|l| $l | str contains \"×\" } | str join \" | \" | str substring 0..300),
+            }
+        })
+        { mutants: $mutants }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}

@@ -1,0 +1,37 @@
+{
+ nonce: "6udeEi69pqu",
+ args_type: "record<jf: string, kernel: string, root: string, sets: table<name: string, image: string>, maps: table<map: string, poses: string>, label: string, mcp_nom: string, base: string>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = $args
+for s in $a.sets { if ($a.root | path join $s.name | path exists) { error make { msg: $\"($s.name) exists under ($a.root)\" } } }
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 60sec,
+    max_quiet: 20min,
+    check: {|state| { shots: (glob ($a.root | path join \"new1_*\" \"**\" \"screen.ppm\") | length) } },
+    teardown: null,
+    work: {
+        let rows = ($a.sets | each {|s|
+            $a.maps | each {|m|
+                let out = ($a.root | path join $s.name $m.map)
+                let r = (^just -f $a.jf pose-map $m.map $s.image $m.poses $out $a.kernel | complete)
+                ($r.stdout + $r.stderr) | save --raw -f ($a.root | path join $\"($s.name)_($m.map).log\")
+                glob ($out | path join \"*\" \"screen.ppm\") | each {|f|
+                    { set: $s.name, map: $m.map, pose: ($f | path dirname | path basename), capture: (open --raw $f | hash sha256), exit: $r.exit_code }
+                }
+            } | flatten
+        } | flatten)
+        $rows | to nuon | save -f ($a.root | path join \"new1_captures.nuon\")
+        let base = (open $a.base)
+        let compared = ($rows | each {|r|
+            let kind = ($r.set | str replace 'new1_' '')
+            let want = ($base | where set == $\"base_($kind)\" and map == $r.map and pose == $r.pose | get -o 0.capture)
+            { kind: $kind, map: $r.map, pose: $r.pose, same: ($want == $r.capture) }
+        })
+        { captures: ($rows | length), exits: ($rows | get exit | uniq), same: ($compared | where same | length), differ: ($compared | where {|c| not $c.same } | each {|c| $\"($c.kind) ($c.pose)\" }) }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}

@@ -1,0 +1,30 @@
+{
+ nonce: "jelF9elHCR3",
+ args_type: "record<game: string, jab: string, scratch: string, path: string, mode: string, edits: table<find: string, put: string>, expect: string>",
+ result_type: "record<exit: int, restored: bool, gauge_line: bool, hits: list<string>>",
+ body: "let file = ($args.game | path join 'test' 'gauge.nu')
+mkdir $args.scratch
+let saved = ($args.scratch | path join 'gauge.nu.saved')
+let current = (open --raw $file | decode)
+let current_hash = ($current | hash sha256)
+$current | save --raw -f $saved
+if ((open --raw $saved | decode | hash sha256) != $current_hash) { error make { msg: \"the saved copy differs from the file\" } }
+let variant = (if $args.mode == \"head\" {
+    let shown = (^git -C $args.jab show $\"HEAD:($args.path)\" | complete)
+    if $shown.exit_code != 0 { error make { msg: $shown.stderr } }
+    $shown.stdout
+} else {
+    $args.edits | reduce --fold $current {|e, acc|
+        let n = (($acc | split row $e.find | length) - 1)
+        if $n != 1 { error make { msg: $\"($e.find) occurs ($n) times\" } }
+        $acc | str replace $e.find $e.put
+    }
+})
+$variant | save --raw -f $file
+let ran = (do { cd $args.game; ^just test } | complete)
+$current | save --raw -f $file
+let restored = ((open --raw $file | decode | hash sha256) == $current_hash)
+let text = ([$ran.stdout $ran.stderr] | str join (char nl))
+let hits = ($text | lines | where {|l| $l =~ $args.expect } | first 3)
+{ exit: $ran.exit_code, restored: $restored, gauge_line: ($ran.stdout | str contains \"fps: the gauge's rules hold\"), hits: $hits }"
+}

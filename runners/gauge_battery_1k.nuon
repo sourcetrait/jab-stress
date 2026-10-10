@@ -1,0 +1,84 @@
+{
+ nonce: pgQsBGjuBO,
+ args_type: "record<fps: string, game: string, gauge: string, mcp_nom: string, poses_src: string, world_rel: string, bind_line: string, off_line: string>",
+ result_type: "record<label: string, nonce: string, sanity: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let fps = $args.fps
+let game = $args.game
+let gauge = $args.gauge
+let world = ($fps | path join $args.world_rel)
+mkdir $gauge
+let poses = ($gauge | path join \"poses_settled.nuon\")
+open --raw $args.poses_src | decode | from nuon | each {|p| $p | merge { sends: [{ at: 1900, kind: \"L\" }] } } | to nuon | save --raw -f $poses
+# the still variant's tree, compiled from a copy of the source when absent
+let still_tree = ($game | path join \".target\" \"asset\" \"factory_still\" \"map.nuon\")
+let still_made = (if ($still_tree | path exists) { \"present\" } else {
+    let src = (open ($game | path join \"content\" \"map\" \"factory.nuon\"))
+    let copy = ($game | path join \"content\" \"map\" \"factory_still.nuon\")
+    $src | update name \"factory_still\" | update entities ($src.entities | where class != \"android\") | to nuon | save --raw -f $copy
+    let c = (do { cd $game; ^just compile } | complete)
+    rm $copy
+    if $c.exit_code != 0 { error make { msg: $\"compile: ($c.stderr)\" } }
+    \"compiled\"
+})
+let world_before = (open --raw $world | decode)
+let bind_sites = (($world_before | split row $args.bind_line | length) - 1)
+let world_off = ($world_before | str replace --all $args.bind_line $args.off_line)
+let sanity = $\"bind sites ($bind_sites), still ($still_made)\"
+if $bind_sites != 3 { error make { msg: $\"setup: ($sanity)\" } }
+let variants = [
+    { tag: \"tiles\", world: $world_before, runs: 5, map: \"factory\" },
+    { tag: \"off\", world: $world_off, runs: 3, map: \"factory\" },
+]
+let handle = (long launch {
+    label: \"LitTilesFixes\",
+    mcp_nom: $args.mcp_nom,
+    interval: 60sec,
+    max_quiet: 50min,
+    check: {|state| { logs: (glob ($gauge | path join \"*.log\") | length) } },
+    teardown: null,
+    work: {
+        def pose_rows [fps: string, gauge: string, poses: string, map: string, tag: string, run: int]: nothing -> table {
+            let out = ($gauge | path join $\"($tag)_($run)\")
+            let r = (do { cd $fps; ^just pose $map $poses $out } | complete)
+            ($r.stdout + $r.stderr) | save --raw -f ($gauge | path join $\"($tag)_($run).log\")
+            $r.stdout | lines | where {|l| $l =~ '^pose \\w+: fps: frame in' } | each {|l|
+                let p = ($l | parse --regex '^pose (?P<pose>\\w+): fps: frame in (?P<us>\\d+) us: .*; clear, planes, walls, portals, sprites us (?P<clear>\\d+), (?P<plane_us>\\d+), (?P<wall_us>\\d+), (?P<portal_us>\\d+), (?P<sprite_us>\\d+); spans (?P<spans>\\d+), pixels (?P<pixels>\\d+), lit spans (?P<lit_spans>\\d+), lit pixels (?P<lit_pixels>\\d+), light us (?P<light_us>\\d+), rejected (?P<rejected>\\d+), samples (?P<samples>\\d+), tiles built (?P<tiles_built>\\d+), tiled (?P<tiled>\\d+), resets (?P<resets>\\d+)' | get -o 0)
+                if $p == null { null } else {
+                    $p | update cells --columns [us clear plane_us wall_us portal_us sprite_us spans pixels lit_spans lit_pixels light_us rejected samples tiles_built tiled resets] {|v| $v | into int } | merge { tag: $tag, run: $run }
+                }
+            } | where {|r| $r != null }
+        }
+        let test = (do { cd $fps; ^just test } | complete)
+        ($test.stdout + $test.stderr) | save --raw -f ($gauge | path join \"test.log\")
+        let test_ok = ($test.exit_code == 0) and ($test.stdout | lines | any {|l| $l == \"fps: ok\" })
+        if not $test_ok {
+            error make { msg: $\"just test failed: exit ($test.exit_code); tail: ($test.stdout | lines | last 3 | str join ' | ' | str substring 0..1200) ($test.stderr | str substring 0..600)\" }
+        }
+        mut rows = []
+        $rows = ($rows | append (pose_rows $fps $gauge $poses \"factory_still\" \"still\" 0))
+        mut restored = []
+        for v in $variants {
+            $v.world | save --raw -f $world
+            let got = (try {
+                mut b = []
+                for run in 1..$v.runs {
+                    $b = ($b | append (pose_rows $fps $gauge $poses $v.map $v.tag $run))
+                }
+                $b
+            } catch {|e| [] })
+            $rows = ($rows | append $got)
+            $world_before | save --raw -f $world
+            $restored = ($restored | append ((open --raw $world | decode) == $world_before))
+        }
+        let rebuilt = (do { cd $fps; ^just build --set debug } | complete)
+        $rows | to nuon | save --raw -f ($gauge | path join \"rows.nuon\")
+        let summary = ($rows | where tag != \"still\" | group-by --to-table {|r| $\"($r.pose)|($r.tag)\" } | each {|g|
+            let us = ($g.items | get us | sort)
+            { pose: ($g.items | get 0.pose), tag: ($g.items | get 0.tag), us_min: ($us | first), us_med: ($us | math median | math round), plane_min: ($g.items | get plane_us | math min), wall_min: ($g.items | get wall_us | math min), tiled: ($g.items | get tiled | math max), samples: ($g.items | get samples | math min) }
+        } | sort-by pose tag)
+        { test_ok: $test_ok, rows: ($rows | length), restored: $restored, rebuilt: $rebuilt.exit_code, summary: $summary }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce, sanity: $sanity }"
+}
