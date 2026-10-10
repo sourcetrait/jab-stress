@@ -8,11 +8,15 @@
 #   alternated, each held to its settle and dumped; the last spawn's
 #   picture and its reference's each bound by its stamp to a validated,
 #   settled frame (picture-refusals), and the two equal outside the
-#   stamp.
+#   stamp; then each picture's evidence altered one way at a time and
+#   refused for exactly that (picture-negatives, PictureNegatives).
 # - rebuild, RebuildBound: the same cycle under the lift with a quota of
 #   REBUILD_TILES whole tiles a boundary and the stale mode, so
 #   construction is counted work and every phase's rebuild publishes at
 #   exactly its frames.
+# - held, HeldPartial: the spawn's construction held partial by the lift,
+#   a quota, and ONCE through the screen and E, its picture refused as
+#   unsettled and for nothing else.
 #
 # Run as `nu eviction.nu <kernel> <image> <disk> <out> [fixture...]`,
 # through `stress.just`'s `eviction image out`; every fixture by default.
@@ -20,7 +24,7 @@ use std/assert
 use ../../../jab/sdk/nu/jab.nu
 use ../../../jab/game/fps/test/pose.nu
 use ../../../jab/game/fps/test/gauge.nu
-use ../../../jab/game/fps/test/test.nu [stamp-of ppm-head raise-frame rows-differ STAMP_BITS STAMP_CELL STAMP_ONE STAMP_ZERO]
+use ../../../jab/game/fps/test/test.nu [stamp-of ppm-head record-altered raise-frame rows-differ STAMP_BITS STAMP_CELL STAMP_ONE STAMP_ZERO STORAGE_KIND STORAGE_BUILDING]
 
 const TILES = (path self | path dirname | path join .. .. .. jab game fps test tiles.nu)
 
@@ -28,7 +32,13 @@ const TILES = (path self | path dirname | path join .. .. .. jab game fps test t
 # it and their union past it
 const CAP = 512
 const TILE_TEXELS = 4096
+const TILE_ROW_TEXELS = 64
 const TILE_BYTES = 16384
+# the API's records, the end marker's kind (gauge.nu's KIND_END), and a
+# dump header's state of a tile in construction
+const RECORD = 64
+const KIND_END = 9
+const DUMP_BUILDING = 1
 # a boundary's budget: TILE_ALLOWANCE_US of time, or TILE_QUOTA's 96
 # tiles of texels, which a boundary stopped by it has published 96 of
 const ALLOWANCE_US = 1000
@@ -36,6 +46,7 @@ const QUOTA_TILES = 96
 # the O frame's modes and the record's kept quota
 const LIFTED = 1
 const STALE = 4
+const ONCE = 8
 const QUOTA_KEPT = 16
 # RebuildBound's quota, whole tiles a boundary
 const REBUILD_TILES = 32
@@ -45,6 +56,8 @@ const BAY = { name: "bay", x: 20.0, y: 17.0, z: 1.6, yaw: 180, pitch: 5 }
 # anything else is sent): a frame's number modulo STAMP_SPAN on its screen
 const STAMP_AT = 1200
 const STAMP_SPAN = (1 bit-shl $STAMP_BITS)
+# every launch measured as one leg from the start
+const LEGS = [{ name: "start", places: [], pad: [] }]
 # the cycle: the cap and a cold start first, then a leg a view, placed at
 # its start, a cold start CYCLE_COLD after on the first two, dumped
 # CYCLE_DUMP after, CYCLE_LEG apart; the screen CYCLE_SCREEN after the
@@ -72,6 +85,19 @@ const SIGHT_AT = 1500ms
 const SIGHT_SCREEN_AT = 4000ms
 const SIGHT_END_AT = 4500ms
 const SIGHT_SECONDS = 9
+# HeldPartial: the spawn placed at HELD_AT; HELD_ONCE_AFTER later, never
+# with it, an O with the lift, ONCE, a cold start, and a quota of
+# HELD_TILES tiles and HELD_ROWS rows; the screen at HELD_SCREEN_AT while
+# the run goes on, D with byte 8 at HELD_DUMP_AT and E at HELD_END_AT,
+# both after it
+const HELD_AT = 1500
+const HELD_ONCE_AFTER = 300
+const HELD_SCREEN_AT = 3000
+const HELD_DUMP_AT = 3200
+const HELD_END_AT = 3400
+const HELD_SECONDS = 8
+const HELD_TILES = 32
+const HELD_ROWS = 8
 
 # The console's O frame, a debug build's (test.nu's pool-frame): byte 4
 # the modes, byte 6 a cold start, then words from byte 8: the slots, a
@@ -198,6 +224,71 @@ export def picture-refusals [e: record]: nothing -> list<record<kind: string, de
     $measured ++ $read ++ $framed ++ $timed
 }
 
+# A capture with one pixel's three bytes written.
+def pixel-written [bytes: binary, at: list<int>, colour: binary]: nothing -> binary {
+    let head = (ppm-head $bytes)
+    let width = ($bytes | bytes at 0..<$head | decode | lines | get 1 | split row " " | first | into int)
+    let o = ($head + ((($at.1 * $width) + $at.0) * 3))
+    [($bytes | bytes at 0..<$o) $colour ($bytes | bytes at ($o + 3)..)] | bytes collect
+}
+
+# The binding's negatives on a launch's evidence, which carries its
+# records (`api`) and `legs` besides what picture-refusals reads: the
+# evidence as taken, the control, refused for nothing; then each
+# alteration alone refused for exactly its kind. A stamp cell's pixel
+# neither colour; the capture absent; the capture re-stamped last_build,
+# then final, the window's two edges, each read back by stamp-of; E
+# written before the screen's completion, then at it; the completion
+# absent; E's write absent; the displayed frame's storage record given
+# BUILDING 1, re-measured complete and valid, refused at that frame
+# alone; the records cut at the end marker; a storage record's BUILDING
+# past its slots in use, re-measured complete and invalid. Returns each
+# case and its kinds.
+export def picture-negatives [e: record]: nothing -> list<record<case: string, kinds: list<string>>> {
+    let control = (picture-refusals $e)
+    assert ($control | is-empty) $"($e.label)'s evidence, the control, refused for nothing: ($control | each {|r| $'($r.kind): ($r.detail)' } | str join '; ')"
+    let window = (picture-window $e.measure $e.from)
+    let displayed = (displayed-frame $e.measure $window (stamp-of $e.capture))
+    let shown = ($e.measure.rows | where frame == $displayed | get 0)
+    let restamped = {|v: int|
+        let c = (stamp-written $e.capture $v)
+        assert equal (stamp-of $c) ($v mod $STAMP_SPAN) $"($e.label)'s capture re-stamped ($v) reads back"
+        $c
+    }
+    let building_one = (gauge measure (record-altered $e.api $STORAGE_KIND $displayed $STORAGE_BUILDING 1) $e.legs)
+    assert ($building_one.complete and $building_one.valid) $"($e.label)'s records with BUILDING 1 at the displayed frame ($displayed) complete and valid: ($building_one.problems | str join '; ') ($building_one.invalid | str join '; ')"
+    let overfull = (gauge measure (record-altered $e.api $STORAGE_KIND $displayed $STORAGE_BUILDING ($shown.slots_used + 1)) $e.legs)
+    assert ($overfull.complete and not $overfull.valid) $"($e.label)'s records with BUILDING past the slots in use at frame ($displayed) complete and invalid: ($overfull.problems | str join '; ')"
+    # the run goes on past E, so its records cut at the end marker's, the
+    # first record of its kind
+    let marker = ($e.api | bytes index-of --all ($KIND_END | into binary | bytes at 0..<4) | where {|o| ($o mod $RECORD) == 0 } | first)
+    let cut = (gauge measure ($e.api | bytes at 0..<$marker) $e.legs)
+    let cases = [
+        { case: "a stamp cell's pixel neither colour", e: ($e | upsert capture (pixel-written $e.capture [0 0] 0x[80 80 80])), kinds: ["no stamp"] }
+        { case: "the capture absent", e: ($e | upsert capture null), kinds: ["no capture"] }
+        { case: $"re-stamped last_build, ($window.last_build)", e: ($e | upsert capture (do $restamped $window.last_build)), kinds: ["outside the window"] }
+        { case: $"re-stamped final, ($window.final)", e: ($e | upsert capture (do $restamped $window.final)), kinds: ["outside the window"] }
+        { case: "E before the screen's completion", e: ($e | upsert ended ($e.completed - 0.1)), kinds: ["E not after"] }
+        { case: "E at the screen's completion", e: ($e | upsert ended $e.completed), kinds: ["E not after"] }
+        { case: "the screen's completion absent", e: ($e | upsert completed null), kinds: ["no screen time"] }
+        { case: "E's write absent", e: ($e | upsert ended null), kinds: ["no E time"] }
+        { case: $"BUILDING 1 at the displayed frame, ($displayed)", e: ($e | upsert measure $building_one), kinds: ["unsettled"] }
+        { case: "the records cut at the end marker", e: ($e | upsert measure $cut), kinds: ["incomplete"] }
+        { case: $"BUILDING past the slots in use at frame ($displayed)", e: ($e | upsert measure $overfull), kinds: ["invalid"] }
+    ]
+    # loops, so a failing assertion is the error raised, not an each's
+    mut read = []
+    for c in $cases {
+        let refused = (picture-refusals $c.e)
+        assert (($refused | get kind) == $c.kinds) $"($e.label), ($c.case): refused as ($c.kinds | str join ', '), refused as ($refused | each {|r| $'($r.kind): ($r.detail)' } | str join '; ')"
+        if $c.kinds == ["unsettled"] {
+            assert equal ($refused | get 0.frames) [$displayed] $"($e.label), ($c.case): refused at that frame alone"
+        }
+        $read = ($read | append { case: $c.case, kinds: ($refused | get kind) })
+    }
+    $read
+}
+
 # One cycle launched under the O frame's modes and quota, every O
 # carrying them: the HUD's stamp first; the cap and a cold start before
 # any placement, the start view's tiles within it; the bay placed with a
@@ -226,7 +317,7 @@ def cycle-launch [kernel: path, image: path, disk: path, out: path, label: strin
     let run = (jab launch --kernel $kernel --image $image --out $dir --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen (($dump_at + $CYCLE_SCREEN) * 1ms) --seconds ((($end_at + 4000) / 1000) | math ceil))
     assert equal (open --raw $run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)"
     assert ($run.screen != "") $"($label)'s screen was taken at its last spawn"
-    let m = (gauge measure $run.api [{ name: "start", places: [], pad: [] }])
+    let m = (gauge measure $run.api $LEGS)
     assert ($m.complete and $m.valid and $m.schema == 5) $"($label) complete and valid at schema 5: ($m.problems | str join '; ') ($m.invalid | str join '; ')"
     let read = (dump-keys ($dir | path join "api.out") ($dir | path join "keys.nuon"))
     assert ($read.problems | is-empty) $"($label)'s dumps read whole: ($read.problems | first 3)"
@@ -241,7 +332,7 @@ def cycle-launch [kernel: path, image: path, disk: path, out: path, label: strin
 # picture's reference, stamped from the start: the view placed with a
 # cold start at SIGHT_AT, the screen at SIGHT_SCREEN_AT while the run
 # goes on, E at SIGHT_END_AT after it. Returns its picture's evidence,
-# its window the whole run's.
+# its window the whole run's, with its records and legs.
 def sight-launch [kernel: path, image: path, disk: path, out: path, label: string]: nothing -> record {
     let ended = { at: $SIGHT_END_AT, bytes: (pose command-frame "E") }
     let sends = [
@@ -252,9 +343,9 @@ def sight-launch [kernel: path, image: path, disk: path, out: path, label: strin
     ]
     let run = (jab launch --kernel $kernel --image $image --out $out --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen $SIGHT_SCREEN_AT --seconds $SIGHT_SECONDS)
     assert equal (open --raw $run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)"
-    let m = (gauge measure $run.api [{ name: "start", places: [], pad: [] }])
+    let m = (gauge measure $run.api $LEGS)
     let e_index = ($sends | enumerate | where {|x| $x.item.at == $ended.at and $x.item.bytes == $ended.bytes } | get 0.index)
-    { label: $label, measure: $m, capture: (capture-of $run.screen), from: 0, completed: $run.screen_completed, ended: ($run.send_seconds | get $e_index) }
+    { label: $label, measure: $m, api: $run.api, legs: $LEGS, capture: (capture-of $run.screen), from: 0, completed: $run.screen_completed, ended: ($run.send_seconds | get $e_index) }
 }
 
 # The two sets bracket the cap: each within it and their union past it.
@@ -346,9 +437,9 @@ def assert-tracking [c: record, label: string]: nothing -> nothing {
 # miss to its last build's, that one exempt, spending its budget, one
 # that published nothing among them; the memory; and the last spawn's
 # picture and its reference, pool-holds' settled first sight, each bound
-# to a validated, settled frame and equal outside the stamp. Returns each
-# phase's counts and frames, the run's measures, and the pictures'
-# frames.
+# to a validated, settled frame and equal outside the stamp, then each
+# one's negatives. Returns each phase's counts and frames, the run's
+# measures, the pictures' frames, and the negatives' kinds.
 export def eviction-cycle [kernel: path, image: path, disk: path, out: path]: nothing -> record {
     let label = "the eviction cycle"
     let c = (cycle-launch $kernel $image $disk $out $label "cycle" 0 0)
@@ -383,7 +474,7 @@ export def eviction-cycle [kernel: path, image: path, disk: path, out: path]: no
     let spawn = ($phases | last)
     assert equal $spawn.view "spawn" $"($label): the final phase the spawn's"
     let pictures = [
-        { label: $label, measure: $c.measure, capture: (capture-of $c.run.screen), from: $spawn.start, completed: $c.run.screen_completed, ended: $c.ended }
+        { label: $label, measure: $c.measure, api: $c.run.api, legs: $LEGS, capture: (capture-of $c.run.screen), from: $spawn.start, completed: $c.run.screen_completed, ended: $c.ended }
         (sight-launch $kernel $image $disk ($out | path join "cycle_sight") $"($label)'s reference, the spawn's settled first sight")
     ]
     for e in $pictures {
@@ -401,13 +492,18 @@ export def eviction-cycle [kernel: path, image: path, disk: path, out: path]: no
         let stamp = (stamp-of $e.capture)
         { label: $e.label, last_build: $window.last_build, displayed: (displayed-frame $e.measure $window $stamp), final: $window.final, completed: $e.completed, ended: $e.ended }
     })
+    # each picture's evidence altered one way at a time (PictureNegatives)
+    mut negatives = []
+    for e in $pictures {
+        $negatives = ($negatives | append { label: $e.label, cases: (picture-negatives $e) })
+    }
 
     {
         bay_keys: ($c.sets.bay | length), spawn_keys: ($c.sets.spawn | length), union: $union, cap: $CAP, resets: $resets,
         phases: ($phases | each {|p| { leg: $p.leg, renewed: $p.renewed, free: $p.free, built: $p.built, evicted: $p.evicted, first_miss: $p.first_miss, last_build: $p.last_build, settled: ($p.last_build + 1), frames: ($p.last_build + 1 - $p.first_miss), boundaries: ($p.span | where {|r| $r.frame > $p.first_miss and $r.frame <= $p.last_build } | each {|r| $"($r.frame):($r.tiles_built)/($r.evicted)/($r.tiles_us)" } | str join " ") } }),
         fixed: ($fixed | first), memory_max: ($rows | get memory | math max), peak: ($peaks | first), full_at: $full,
         dumps: ($c.dumps | each {|d| { leg: $d.leg, frame: $d.frame, tiles: ($d.tiles | length) } }),
-        pictures: $framed,
+        pictures: $framed, negatives: $negatives,
     }
 }
 
@@ -453,14 +549,72 @@ export def rebuild-bound [kernel: path, image: path, disk: path, out: path]: not
     }
 }
 
+# HeldPartial: the spawn's construction held partial under the lift, a
+# quota of HELD_TILES tiles and HELD_ROWS rows, and ONCE, through the
+# screen and E. Established first: one publishing frame after the O, the
+# one after its first miss, HELD_TILES whole tiles; BUILDING 1 from it
+# through the end marker; the dump's one BUILDING tile at row HELD_ROWS;
+# the displayed frame after that boundary and before the end marker; the
+# measurement complete and valid; E written after the screen completed.
+# Then its picture refused once, unsettled at every frame from the one
+# after the construction through the displayed one, BUILDING 1 among the
+# fields. Returns the frames and the refusal.
+export def held-partial [kernel: path, image: path, disk: path, out: path]: nothing -> record {
+    let label = "the held partial"
+    let modes = ($LIFTED + $ONCE)
+    let quota = ($HELD_TILES * $TILE_TEXELS + $HELD_ROWS * $TILE_ROW_TEXELS)
+    let ended = { at: ($HELD_END_AT * 1ms), bytes: (pose command-frame "E") }
+    let sends = [
+        { at: ($STAMP_AT * 1ms), bytes: (raise-frame 0 --stamp) }
+        { at: ($HELD_AT * 1ms), bytes: (pose pose-frame $SPAWN) }
+        { at: (($HELD_AT + $HELD_ONCE_AFTER) * 1ms), bytes: (pool-frame --modes $modes --cold --quota $quota) }
+        { at: ($HELD_DUMP_AT * 1ms), bytes: (dump-frame --building) }
+        $ended
+    ]
+    let dir = ($out | path join "held")
+    let run = (jab launch --kernel $kernel --image $image --out $dir --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen ($HELD_SCREEN_AT * 1ms) --seconds $HELD_SECONDS)
+    assert equal (open --raw $run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)"
+    let m = (gauge measure $run.api $LEGS)
+    assert ($m.complete and $m.valid and $m.schema == 5) $"($label) complete and valid at schema 5: ($m.problems | str join '; ') ($m.invalid | str join '; ')"
+    let from = ($m.rows | where {|r| $r.quota == $quota and $r.config_flags == ($modes + $QUOTA_KEPT) } | get -o 0.frame)
+    assert ($from != null) $"($label): the O's lift, ONCE, and kept quota of ($quota) texels in force"
+    let after = ($m.rows | where {|r| $r.frame >= $from })
+    let first_miss = ($after | where {|r| $r.missed_blocks > 0 } | get -o 0.frame)
+    assert ($first_miss != null) $"($label): the cold start's view drew blocks without their tiles from frame ($from)"
+    let published = ($after | where {|r| $r.tiles_built > 0 } | select frame tiles_built)
+    assert ($published == [{ frame: ($first_miss + 1), tiles_built: $HELD_TILES }]) $"($label): one publishing frame after the O, the one after its first miss, ($first_miss + 1), ($HELD_TILES) whole tiles: ($published | first 3)"
+    let unheld = ($m.rows | where {|r| $r.frame > $first_miss and $r.building != 1 })
+    assert ($unheld | is-empty) $"($label): BUILDING 1 on every frame from ($first_miss + 1) through the end marker's, ($m.final): ($unheld | first 3 | select frame building tiles_built)"
+    let read = (dump-keys ($dir | path join "api.out") ($dir | path join "keys.nuon"))
+    assert ($read.problems | is-empty) $"($label)'s dump read whole: ($read.problems | first 3)"
+    assert equal ($read.dumps | length) 1 $"($label) dumped once"
+    let building = ($read.dumps | get 0 | where state == $DUMP_BUILDING | select slot key row)
+    assert ((($building | length) == 1) and (($building | get 0.row) == $HELD_ROWS)) $"($label)'s dump holds one BUILDING tile, at row ($HELD_ROWS): ($building)"
+    let e_index = ($sends | enumerate | where {|x| $x.item.at == $ended.at and $x.item.bytes == $ended.bytes } | get 0.index)
+    let e = { label: $label, measure: $m, api: $run.api, legs: $LEGS, capture: (capture-of $run.screen), from: $from, completed: $run.screen_completed, ended: ($run.send_seconds | get $e_index) }
+    assert ($e.capture != null) $"($label)'s screen taken"
+    let stamp = (stamp-of $e.capture)
+    let window = (picture-window $m $from)
+    assert equal $window.last_build ($first_miss + 1) $"($label)'s window from the construction's frame"
+    let displayed = (if $stamp == null { null } else { displayed-frame $m $window $stamp })
+    assert ($displayed != null) $"($label)'s stamp ($stamp) names a frame after the construction's, ($first_miss + 1), and before the end marker's, ($m.final)"
+    assert ($e.completed != null and $e.ended != null) $"($label)'s screen completion and E's write recorded: ($e.completed) and ($e.ended)"
+    assert ($e.ended > $e.completed) $"($label)'s E written after its screen completed: at ($e.ended) s, the screen at ($e.completed) s"
+    let refused = (picture-refusals $e)
+    let expected = (($first_miss + 2)..$displayed | each {|f| $f })
+    assert ((($refused | length) == 1) and (($refused | get 0.kind) == "unsettled") and (($refused | get 0.frames) == $expected) and ($refused | get 0.detail | str contains "building 1")) $"($label)'s picture refused once, unsettled at every frame from ($first_miss + 2) through the displayed one, ($displayed), BUILDING 1 among the fields: ($refused | each {|r| $'($r.kind): ($r.detail)' } | str join '; ')"
+    { from: $from, first_miss: $first_miss, displayed: $displayed, final: $m.final, completed: $e.completed, ended: $e.ended, building: ($building | get 0), refused: ($refused | get 0 | reject frames) }
+}
+
 def main [kernel: path, image: path, disk: path, out: path, ...fixtures: string] {
-    let asked = (if ($fixtures | is-empty) { ["cycle" "rebuild"] } else { $fixtures })
+    let asked = (if ($fixtures | is-empty) { ["cycle" "rebuild" "held"] } else { $fixtures })
     mkdir $out
     for f in $asked {
         let s = (date now)
         let result = (match $f {
             "cycle" => (eviction-cycle $kernel $image $disk $out)
             "rebuild" => (rebuild-bound $kernel $image $disk $out)
+            "held" => (held-partial $kernel $image $disk $out)
             _ => (error make { msg: $"no fixture ($f)" })
         })
         let took = (((date now) - $s) / 1sec | math round --precision 1)

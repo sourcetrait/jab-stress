@@ -43,12 +43,15 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   run on a debug image. `eviction.nu` holds the tile eviction fixtures:
   `cycle` (EvictionCycle), the spawn view and the bay under 512 slots on
   the ordinary budget, with its picture and a reference launch's each
-  bound to a validated, settled frame by its stamp; and `rebuild`
-  (RebuildBound), the same cycle under the lift with a quota of 32 tiles
-  a boundary and the stale mode, each phase publishing at exactly its
-  frames. `stress.just`'s `eviction image out [fixture...]` runs them on
-  an image, `eviction-debug out [fixture...]` on the checkout's debug
-  build; each fixture's result and runtime land in
+  bound to a validated, settled frame by its stamp, then each picture's
+  negatives, about 210 seconds; `rebuild` (RebuildBound), the same cycle
+  under the lift with a quota of 32 tiles a boundary and the stale mode,
+  each phase publishing at exactly its frames, about 105 seconds; and
+  `held` (HeldPartial), the spawn's construction held partial by the
+  lift, a quota of 32 tiles and 8 rows, and ONCE through its screen and
+  E, about 13 seconds. `stress.just`'s `eviction image out [fixture...]`
+  runs them on an image, `eviction-debug out [fixture...]` on the
+  checkout's debug build; each fixture's result and runtime land in
   `<out>/<fixture>.nuon`.
 - A picture is bound the way jab's handoff fixture binds one: every
   launch sends the M frame's stamp first, takes its screen with
@@ -61,6 +64,13 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   build and before the end marker; a frame from the one after that build
   through the displayed one unsettled; and either time missing, or E not
   after the screen. The stamp's helpers are jab's test.nu's, imported.
+  `picture-negatives` proves each refusal on real evidence: the
+  unaltered evidence refused for nothing, then one alteration at a time,
+  each refused for exactly its kind, a re-written stamp read back each
+  time. `held` is the live case, a picture refused as unsettled alone.
+- A run goes on past its E to the launch's bound, so its records hold
+  frames after the end marker; a cut meant to drop the marker cuts at
+  the marker's own record, the first of its kind.
 - `fps/probe/` holds the probes, one directory per task: `handoff`,
   `pool`, `eviction`, `join`, and `nu` for probes of nushell's own
   behaviour.
