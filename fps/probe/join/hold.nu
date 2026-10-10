@@ -20,20 +20,24 @@ def jobs-frame [delayed: int, delay_us: int, cancel: bool, fault: int, --hold]: 
     [("J" | into binary), 0x[00 00 00], ($delayed | into binary | bytes at 0..<1), 0x[00 00 00], ($delay_us | into binary | bytes at 0..<4), (if $cancel { 0x[01] } else { 0x[00] }), ($fault | into binary | bytes at 0..<1), (if $hold { 0x[01] } else { 0x[00] }), (0..<49 | each {|i| 0x[00] } | bytes collect)] | bytes collect
 }
 
-def main [kernel: path, image: path, disk: path, out: path, --name: string = "hold", --no-hold, --seconds: int = 8] {
+def main [kernel: path, image: path, disk: path, out: path, --name: string = "hold", --no-hold, --seconds: int = 8, --no-capture] {
     let sends = [
         { at: $SET_AT, bytes: (gauge workers-frame 2 0) }
         { at: $SET_AT, bytes: (jobs-frame 2 0 false 0 --hold=(not $no_hold)) }
         { at: $END_AT, bytes: (pose command-frame "E") }
     ]
-    let run = (jab launch --kernel $kernel --image $image --out ($out | path join $name) --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --capture ($END_AT + 500ms) --seconds $seconds)
+    # with --no-capture no screen ends the run: it ends at the guest's exit
+    # or the bound, so a late exit's status comes back
+    let capture = (if $no_capture { 0sec } else { $END_AT + 500ms })
+    let run = (jab launch --kernel $kernel --image $image --out ($out | path join $name) --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --capture $capture --seconds $seconds)
     let lines = ($run.serial | lines | where {|l| $l starts-with 'fps: ' })
     let said = ($lines | where {|l| ($l =~ 'never released') or ($l =~ 'before the round joined') or ($l =~ 'unjoined') or ($l =~ 'lost bands') })
     let packets = (try { (gauge stream $run.api).packets } catch { [] })
     let rounds = ($packets | where {|p| ($p.workers | default 0) == 2 and ($p.grain | default 1) == 0 and ($p.busy_us | default 0) > 0 })
     let share = ($rounds | each {|p| (($p.slowest_us * 100) // $p.busy_us) })
     let summary = {
-        name: $name, held: (not $no_hold), status: $run.status, said: $said,
+        name: $name, held: (not $no_hold), status: $run.status, wall_seconds: $run.wall_seconds, screen: ($run.screen != ""), said: $said,
+        exit_line: ($run.debug | lines | where {|l| $l starts-with 'jab: exit' } | get -o 0),
         rounds: ($rounds | length),
         slowest_share_pct: (if ($share | is-empty) { null } else { { min: ($share | math min), median: ($share | math median), max: ($share | math max) } }),
         last_lines: ($lines | last 3),

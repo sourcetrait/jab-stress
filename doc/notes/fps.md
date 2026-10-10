@@ -34,9 +34,13 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     finished tiles and one asking for the tile in construction too. Its
     `quota` mode runs the work quota's cases under the lift: whole tiles
     to the settle, then one construction a phase under ONCE, each held
-    for a dump of the tile in construction.
+    for a dump of the tile in construction. Its `hold` and `hold-on`
+    recipes run the join's hold (`fps/probe/join/hold.nu`), and
+    `join-cands` lays the join's forced cases out as candidate trees
+    (`fps/probe/join/candidates.nu`) for `pool.just`'s `cand-build`.
 - `fps/probe/` holds the probes, one directory per task: `handoff`,
-  `pool`, `eviction`, and `nu` for probes of nushell's own behaviour.
+  `pool`, `eviction`, `join`, and `nu` for probes of nushell's own
+  behaviour.
 - `fps/readers/` holds the readers of the gauge's batteries and
   captures: `admission.nu`, `poolgauge.nu`, `packetgauge.nu`,
   `workergauge.nu`, `lane.nu`, `tilecensus.nu` with its resolver

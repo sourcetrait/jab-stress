@@ -27,6 +27,10 @@ probe-on image mode out slots="0":
 hold out name="hold" *flags:
     use {{jab}}/sdk/nu/jab.nu; let t = (jab target-root {{jab}} | path join debug); ^nu {{probe}}/join/hold.nu ($t | path join kernel jab.elf) ($t | path join game fps fps.jab) ($t | path join game fps still.romfs) {{out}} --name {{name}} {{flags}}
 
+# the join's forced cases as candidate trees under cands, all or those named
+join-cands cands *names:
+    nu {{probe}}/join/candidates.nu {{cands}} {{names}}
+
 # the same on another debug image, a candidate's
 hold-on image out name="hold" *flags:
     use {{jab}}/sdk/nu/jab.nu; let t = (jab target-root {{jab}} | path join debug); ^nu {{probe}}/join/hold.nu ($t | path join kernel jab.elf) {{image}} ($t | path join game fps still.romfs) {{out}} --name {{name}} {{flags}}
