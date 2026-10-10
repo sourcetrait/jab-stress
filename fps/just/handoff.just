@@ -46,6 +46,10 @@ alter-probe api:
 reader-mutants api work:
     nu {{mutants}}/reader_mutants.nu {{jab}}/game/fps/test/tiles.nu {{probe}}/handoff/alter_probe.nu {{api}} {{work}}
 
+# a capture's dumps keyed: each tile's header and its texels' SHA-256
+keys api out:
+    nu {{jab}}/game/fps/test/tiles.nu keys {{api}} {{out}}
+
 # the pool's counters a frame, the last eight
 rows api:
     nu {{probe}}/handoff/rows.nu {{api}}

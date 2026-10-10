@@ -14,7 +14,7 @@ rows api:
 pair-read pair sets a="0" b="4":
     nu {{probe}}/eviction/pair_read.nu {{pair}} {{sets}} {{a}} {{b}}
 
-# mode sets, views, lift, or budget; slots the cap, 0 for every slot
+# mode sets, views, lift, budget, or building; slots the cap, 0 for every slot
 probe mode out slots="0":
     use {{jab}}/sdk/nu/jab.nu; let t = (jab target-root {{jab}} | path join debug); ^nu {{probe}}/eviction/probe.nu ($t | path join kernel jab.elf) ($t | path join game fps fps.jab) ($t | path join game fps still.romfs) {{out}} {{mode}} {{slots}}
 

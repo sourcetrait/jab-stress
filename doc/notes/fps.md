@@ -11,7 +11,8 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   `just -f fps/just/<name>.just <recipe>`.
   - `handoff.just` builds fps, runs the handoff and builder fixtures
     alone, and runs the handoff probes, the dump reader's mutants, and
-    the fps readers.
+    the fps readers. Its `keys` recipe reads a capture's tile dumps as
+    each tile's header and the SHA-256 of its texels.
   - `handoff_mutants.just`, `pool.just`, and `census.just` are the
     program mutant runner's `jf` for each mutant set. Their `cand-build`
     and `image-test` recipes build and test a candidate with that set's
@@ -28,7 +29,9 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     frame (`rows`); views' key sets at first sight, and two views
     alternated under a slot cap with a dump at every settle, on the
     debug build or another image (`probe`, `probe-on`, `pair`); and a
-    pair run's reading against the views' key sets (`pair-read`).
+    pair run's reading against the views' key sets (`pair-read`). The
+    probe's `building` mode dumps a settle in pairs, one dump of the
+    finished tiles and one asking for the tile in construction too.
 - `fps/probe/` holds the probes, one directory per task: `handoff`,
   `pool`, `eviction`, and `nu` for probes of nushell's own behaviour.
 - `fps/readers/` holds the readers of the gauge's batteries and

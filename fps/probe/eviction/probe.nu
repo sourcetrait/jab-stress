@@ -1,11 +1,15 @@
 # TileEviction's planning probe: the still copy's spawn view (A) and the
 # same eye turned about (B), placed in turn under a slot cap, every
 # settle dumped (D, every surface), the tiles' keys, slots, generations,
-# and texel signatures read back with the pool's counters a frame.
+# and texel signatures read back with the pool's counters a frame. Mode
+# building dumps the spawn view's settle after a cold start under the
+# ordinary budget in pairs, a plain D and one with byte 8 at the same
+# moment, read by tiles.nu's keys in a nu of its own.
 use ../../../../jab/sdk/nu/jab.nu
 use ../../../../jab/game/fps/test/pose.nu
 use ../../../../jab/game/fps/test/gauge.nu
 
+const TILES = (path self | path dirname | path join .. .. .. .. jab game fps test tiles.nu)
 const RECORD = 64
 const LIFTED = 1
 const STALE = 4
@@ -26,8 +30,8 @@ def pool-frame [--modes: int = 0, --cold, --slots: int = 0]: nothing -> binary {
     [("O" | into binary), 0x[00 00 00], ($modes | into binary | bytes at 0..<1), 0x[00], (if $cold { 0x[01] } else { 0x[00] }), 0x[00], (do $word $slots), (do $word 0), (do $word 0), (do $word 0), (0..<40 | each {|i| 0x[00] } | bytes collect)] | bytes collect
 }
 
-def dump-frame []: nothing -> binary {
-    [("D" | into binary), 0x[00 00 00], 0x[ff ff ff ff], (0..<56 | each {|i| 0x[00] } | bytes collect)] | bytes collect
+def dump-frame [--building]: nothing -> binary {
+    [("D" | into binary), 0x[00 00 00], 0x[ff ff ff ff], (if $building { 0x[01] } else { 0x[00] }), (0..<55 | each {|i| 0x[00] } | bytes collect)] | bytes collect
 }
 
 def level-frame [bright: bool, held: bool]: nothing -> binary {
@@ -97,6 +101,13 @@ def main [kernel: path, image: path, disk: path, out: path, mode: string, slots:
             (do $place 2800 $b) (do $place 3600 $b) (do $at 3900 (dump-frame))
             (do $place 4100 $a) (do $place 4900 $a) (do $at 5200 (dump-frame))
         ]
+        "building" => {
+            # the spawn's view is A from the start, so its settle follows the
+            # cold start, about 17 ms a frame
+            let start = [(do $place 1100 $a) (do $at 1300 (pool-frame --cold --slots $slots))]
+            let pairs = (1..20 | each {|i| let t = 1300 + $i * 5; [(do $at $t (dump-frame)) (do $at $t (dump-frame --building))] } | flatten)
+            $start | append $pairs
+        }
         _ => (error make { msg: $"no mode ($mode)" })
     })
     let last = ($phases | get at | math max)
@@ -107,6 +118,25 @@ def main [kernel: path, image: path, disk: path, out: path, mode: string, slots:
     let m = (gauge measure $api [{ name: "start", places: [], pad: [] }])
     let cold = ((gauge stream $api).configs | last | get from)
     let rows = ($m.rows | where {|r| $r.frame >= $cold } | select -o frame tiles_built evicted slots_used slots_effective building missed_blocks admitted merged unprocessed tiles_us tile_resets tile_bytes tile_peak memory memory_peak)
+    if $mode == "building" {
+        let keys = ($out | path join $"($name)_keys.nuon")
+        let k = (^nu $TILES keys ($out | path join $name "api.out") $keys | complete)
+        if $k.exit_code != 0 { error make { msg: $"tiles.nu keys: ($k.stderr)" } }
+        let read = (open $keys)
+        # the dumps alternate plain and asked, in the order sent; a pair sent
+        # at one moment can still fall to two frames
+        let ds = ($read.dumps | enumerate | each {|e| { dump: $e.index, asked: (($e.index mod 2) == 1), frame: ($e.item | get -o 0.frame), tiles: ($e.item | length), building: ($e.item | where state == 1 | select slot key level row generation) } })
+        let pairs = ($ds | where asked | each {|d|
+            let p = ($read.dumps | get ($d.dump - 1))
+            let a = ($read.dumps | get $d.dump)
+            let same = (($p | is-not-empty) and ($a | is-not-empty) and (($p | first | get frame) == ($a | first | get frame)))
+            { dump: $d.dump, frame: $d.frame, same_frame: $same, ready_equal: (($a | where state == 2) == $p), building: $d.building }
+        })
+        let summary = { problems: ($read.problems | length), dumps: ($ds | length), plain_building: ($ds | where not asked | each {|d| $d.building | length } | math sum), asked_building: ($pairs | where {|p| $p.building | is-not-empty } | length), same_frame: ($pairs | where same_frame | length), same_frame_ready_equal: ($pairs | where same_frame | where ready_equal | length), building: ($pairs | where {|p| $p.same_frame and ($p.building | is-not-empty) } | each {|p| { frame: $p.frame, slot: ($p.building | first | get slot), row: ($p.building | first | get row), tiles: (($ds | get $p.dump).tiles) } } | uniq) }
+        { mode: $mode, complete: $m.complete, valid: $m.valid, problems: $read.problems, summary: $summary, dumps: ($ds | reject building), pairs: $pairs, rows: $rows } | to nuon | save -f ($out | path join $"($name).nuon")
+        print ($summary | to nuon)
+        return
+    }
     let ds = (if $mode == "views" { headers $api --bare } else { headers $api })
     { mode: $mode, slots: $slots, view: $view, modes: $modes, complete: $m.complete, valid: $m.valid, invalid: ($m.invalid | first 3), qemu: (open --raw $run.qemu_log), rows: $rows, dumps: $ds } | to nuon | save -f ($out | path join $"($name).nuon")
     print { mode: $mode, complete: $m.complete, valid: $m.valid, dumps: ($ds | each {|d| { tiles: ($d | length), frame: ($d | get -o 0.frame) } }) }
