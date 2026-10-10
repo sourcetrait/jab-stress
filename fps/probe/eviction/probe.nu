@@ -11,6 +11,9 @@ use ../../../../jab/game/fps/test/gauge.nu
 
 const TILES = (path self | path dirname | path join .. .. .. .. jab game fps test tiles.nu)
 const RECORD = 64
+# the quota mode's: 32 whole tiles a boundary, and 32 tiles and 8 rows
+const QUOTA_WHOLE = (32 * 4096)
+const QUOTA_PARTIAL = (32 * 4096 + 8 * 64)
 const LIFTED = 1
 const STALE = 4
 const ONCE = 8
@@ -25,9 +28,9 @@ const VIEWS = [
     { name: "garage", x: 16.0, y: 14.0, z: -1.4, yaw: 0, pitch: 0 }
 ]
 
-def pool-frame [--modes: int = 0, --cold, --slots: int = 0]: nothing -> binary {
+def pool-frame [--modes: int = 0, --cold, --slots: int = 0, --quota: int = 0]: nothing -> binary {
     let word = {|v: int| $v | into binary | bytes at 0..<4 }
-    [("O" | into binary), 0x[00 00 00], ($modes | into binary | bytes at 0..<1), 0x[00], (if $cold { 0x[01] } else { 0x[00] }), 0x[00], (do $word $slots), (do $word 0), (do $word 0), (do $word 0), (0..<40 | each {|i| 0x[00] } | bytes collect)] | bytes collect
+    [("O" | into binary), 0x[00 00 00], ($modes | into binary | bytes at 0..<1), 0x[00], (if $cold { 0x[01] } else { 0x[00] }), 0x[00], (do $word $slots), (do $word 0), (do $word 0), (do $word 0), (do $word $quota), (0..<36 | each {|i| 0x[00] } | bytes collect)] | bytes collect
 }
 
 def dump-frame [--building]: nothing -> binary {
@@ -108,6 +111,19 @@ def main [kernel: path, image: path, disk: path, out: path, mode: string, slots:
             let pairs = (1..20 | each {|i| let t = 1300 + $i * 5; [(do $at $t (dump-frame)) (do $at $t (dump-frame --building))] } | flatten)
             $start | append $pairs
         }
+        # whole tiles to the settle; then one construction a phase under
+        # ONCE, held for its dump: 32 tiles and 8 rows from a cold start,
+        # 32 tiles from that partial, 32 tiles and 8 rows from the next
+        "quota" => [
+            (do $place 1100 $a)
+            (do $at 1300 (pool-frame --modes $LIFTED --cold --quota $QUOTA_WHOLE))
+            (do $at 2300 (pool-frame --modes ($LIFTED + $ONCE) --cold --quota $QUOTA_PARTIAL))
+            (do $at 2800 (dump-frame --building))
+            (do $at 3300 (pool-frame --modes ($LIFTED + $ONCE) --quota $QUOTA_WHOLE))
+            (do $at 3800 (dump-frame --building))
+            (do $at 4300 (pool-frame --modes ($LIFTED + $ONCE) --quota $QUOTA_PARTIAL))
+            (do $at 4800 (dump-frame --building))
+        ]
         _ => (error make { msg: $"no mode ($mode)" })
     })
     let last = ($phases | get at | math max)
@@ -118,6 +134,21 @@ def main [kernel: path, image: path, disk: path, out: path, mode: string, slots:
     let m = (gauge measure $api [{ name: "start", places: [], pad: [] }])
     let cold = ((gauge stream $api).configs | last | get from)
     let rows = ($m.rows | where {|r| $r.frame >= $cold } | select -o frame tiles_built evicted slots_used slots_effective building missed_blocks admitted merged unprocessed tiles_us tile_resets tile_bytes tile_peak memory memory_peak)
+    if $mode == "quota" {
+        let keys = ($out | path join $"($name)_keys.nuon")
+        let k = (^nu $TILES keys ($out | path join $name "api.out") $keys | complete)
+        if $k.exit_code != 0 { error make { msg: $"tiles.nu keys: ($k.stderr)" } }
+        let read = (open $keys)
+        let configs = ((gauge stream $api).configs | select from quota config_flags)
+        let phased = ($m.rows | where {|r| $r.quota == $QUOTA_WHOLE or $r.quota == $QUOTA_PARTIAL } | select -o frame tiles_built building quota config_flags)
+        let builds = ($phased | where {|r| $r.tiles_built > 0 })
+        let held = ($phased | where {|r| $r.tiles_built == 0 } | each {|r| $"quota ($r.quota) flags ($r.config_flags) building ($r.building)" } | uniq --count)
+        let dumps = ($read.dumps | each {|d| { frame: ($d | get -o 0.frame), ready: ($d | where state == 2 | length), building: ($d | where state == 1 | select -o slot key row) } })
+        let summary = { complete: $m.complete, valid: $m.valid, problems: ($read.problems | length), configs: $configs, builds: $builds, held: $held, dumps: $dumps }
+        $summary | to nuon | save -f ($out | path join $"($name).nuon")
+        print ($summary | to nuon)
+        return
+    }
     if $mode == "building" {
         let keys = ($out | path join $"($name)_keys.nuon")
         let k = (^nu $TILES keys ($out | path join $name "api.out") $keys | complete)

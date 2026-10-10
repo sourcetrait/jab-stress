@@ -31,7 +31,10 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     debug build or another image (`probe`, `probe-on`, `pair`); and a
     pair run's reading against the views' key sets (`pair-read`). The
     probe's `building` mode dumps a settle in pairs, one dump of the
-    finished tiles and one asking for the tile in construction too.
+    finished tiles and one asking for the tile in construction too. Its
+    `quota` mode runs the work quota's cases under the lift: whole tiles
+    to the settle, then one construction a phase under ONCE, each held
+    for a dump of the tile in construction.
 - `fps/probe/` holds the probes, one directory per task: `handoff`,
   `pool`, `eviction`, and `nu` for probes of nushell's own behaviour.
 - `fps/readers/` holds the readers of the gauge's batteries and
