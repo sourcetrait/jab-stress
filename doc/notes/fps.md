@@ -21,9 +21,9 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jabstress/`.
   - `census.just` also holds the tile census's reading and the census
     reader's holds.
   - `poses.just` captures a map's poses on an image.
-  - `smoke.just` runs the development smoke. Its recipe is reconstructed:
-    the original file is gone, and its argument order is the smoke
-    runner's, not yet checked against `just do`.
+  - `smoke.just` runs the development smoke. Its recipe is reconstructed,
+    the original file gone; its argument order, seeds then seconds,
+    matches the smoke command's source, a static check, never yet run.
   - `eviction.just` runs the tile eviction probes: the pool's counters a
     frame (`rows`); views' key sets at first sight, and two views
     alternated under a slot cap with a dump at every settle, on the
