@@ -40,9 +40,11 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     (`fps/probe/join/candidates.nu`) for `pool.just`'s `cand-build`.
 - `fps/stress/` holds the release tier's fixtures, the exhaustive tests a
   manual release build runs beside jab's own suite, each asserting and
-  run on a debug image. `eviction.nu` holds the tile eviction fixtures,
-  `cycle` first (EvictionCycle): the spawn view and the bay under 512
-  slots, about 100 seconds. `stress.just`'s `eviction image out
+  run on a debug image. `eviction.nu` holds the tile eviction fixtures:
+  `cycle` (EvictionCycle), the spawn view and the bay under 512 slots on
+  the ordinary budget, about 100 seconds; and `rebuild` (RebuildBound),
+  the same cycle under the lift with a quota of 32 tiles a boundary and
+  the stale mode, about 95 seconds. `stress.just`'s `eviction image out
   [fixture...]` runs them on an image, `eviction-debug out [fixture...]`
   on the checkout's debug build; each fixture's result and runtime land
   in `<out>/<fixture>.nuon`.
