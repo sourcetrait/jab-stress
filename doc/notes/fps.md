@@ -38,6 +38,14 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     recipes run the join's hold (`fps/probe/join/hold.nu`), and
     `join-cands` lays the join's forced cases out as candidate trees
     (`fps/probe/join/candidates.nu`) for `pool.just`'s `cand-build`.
+- `fps/stress/` holds the release tier's fixtures, the exhaustive tests a
+  manual release build runs beside jab's own suite, each asserting and
+  run on a debug image. `eviction.nu` holds the tile eviction fixtures,
+  `cycle` first (EvictionCycle): the spawn view and the bay under 512
+  slots, about 100 seconds. `stress.just`'s `eviction image out
+  [fixture...]` runs them on an image, `eviction-debug out [fixture...]`
+  on the checkout's debug build; each fixture's result and runtime land
+  in `<out>/<fixture>.nuon`.
 - `fps/probe/` holds the probes, one directory per task: `handoff`,
   `pool`, `eviction`, `join`, and `nu` for probes of nushell's own
   behaviour.
