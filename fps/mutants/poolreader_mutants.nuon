@@ -1,0 +1,22 @@
+[
+ [file, name, find, put, expect];
+ ["poolgauge.nu", "pg_valid_unchecked", "if $m.complete and $m.valid and $m.seeded { null }", "if $m.complete and $m.seeded { null }", "poolgauge holds: an invalid run: accepted"],
+ ["poolgauge.nu", "pg_complete_unchecked", "if $m.complete and $m.valid and $m.seeded { null }", "if $m.valid and $m.seeded { null }", "poolgauge holds: an incomplete run: accepted"],
+ ["poolgauge.nu", "pg_seeded_unchecked", "if $m.complete and $m.valid and $m.seeded { null }", "if $m.complete and $m.valid { null }", "poolgauge holds: an unseeded run: accepted"],
+ ["poolgauge.nu", "pg_binding_unchecked", "        if not ($a.refused | is-empty) { return { label: $label, run: $a.run, refused: $a.refused } }\n        let api = ($a.dir | path join \"api.out\")\n", "        let api = ($a.dir | default ($batches | where report == $a.report | first | get g.runs | where run == $a.run | first | get out) | path join \"api.out\")\n", "poolgauge holds: a run whose identity hash is mismatched: accepted"],
+ ["poolgauge.nu", "pg_capture_unended", "        if not $c.ended { return { label: $label, run: $a.run, refused: [\"its capture holds no end marker\"] } }\n", "", "poolgauge holds: a capture cut before its end marker: accepted"],
+ ["poolgauge.nu", "pg_end_unbounded", "            $ended = true\n            break\n", "            $ended = true\n", "poolgauge holds: a record past the end marker leaves the builds by bucket unchanged: read"],
+ ["poolgauge.nu", "pg_building_unchecked", "            ($r.building == 0)\n", "", "poolgauge holds: a steady frame with building refuses its leg: accepted"],
+ ["poolgauge.nu", "pg_missed_unchecked", "            ($r.missed_blocks == 0)\n", "", "poolgauge holds: a steady frame with missed_blocks refuses its leg: accepted"],
+ ["poolgauge.nu", "pg_admitted_unchecked", "            ($r.admitted == 0)\n", "", "poolgauge holds: a steady frame with admitted refuses its leg: accepted"],
+ ["poolgauge.nu", "pg_dropped_unchecked", "            ($r.dropped == 0)\n", "", "poolgauge holds: a steady frame with dropped refuses its leg: accepted"],
+ ["poolgauge.nu", "pg_filtered_unchecked", "            ($r.filtered == 0)\n", "", "poolgauge holds: a steady frame with filtered refuses its leg: accepted"],
+ ["poolgauge.nu", "pg_built_unchecked", "            ($r.tiles_built == 0)\n", "", "poolgauge holds: a steady frame with tiles_built refuses its leg: accepted"],
+ ["poolgauge.nu", "pg_lift_absent_unchecked", "    if ($mine | is-empty) { return ($none | merge { refused: \"no L answered\" }) }\n", "", "poolgauge holds: a leg with no L: refused for"],
+ ["poolgauge.nu", "pg_lifts_many_unchecked", "    if ($mine | length) > 1 { return ($none | merge { refused: $\"($mine | length) L answers, at frames ($mine | str join ', ')\" }) }\n", "", "poolgauge holds: a leg with two L answers: accepted"],
+ ["poolgauge.nu", "pg_tail_unverified", "    if not ($unsettled | is-empty) {\n", "    if false {\n", "poolgauge holds: a steady frame with building refuses its leg: accepted"],
+ ["admission.nu", "ad_valid_unchecked", "if $m.complete and $m.valid and $m.seeded and $m.schema == $SCHEMA { null }", "if $m.complete and $m.seeded and $m.schema == $SCHEMA { null }", "admission holds: an invalid run: accepted"],
+ ["admission.nu", "ad_complete_unchecked", "if $m.complete and $m.valid and $m.seeded and $m.schema == $SCHEMA { null }", "if $m.valid and $m.seeded and $m.schema == $SCHEMA { null }", "admission holds: an incomplete run: accepted"],
+ ["admission.nu", "ad_seeded_unchecked", "if $m.complete and $m.valid and $m.seeded and $m.schema == $SCHEMA { null }", "if $m.complete and $m.valid and $m.schema == $SCHEMA { null }", "admission holds: an unseeded run: accepted"],
+ ["admission.nu", "ad_schema_unchecked", "if $m.complete and $m.valid and $m.seeded and $m.schema == $SCHEMA { null }", "if $m.complete and $m.valid and $m.seeded { null }", "admission holds: a run at schema 4: accepted"],
+]

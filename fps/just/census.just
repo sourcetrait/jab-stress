@@ -5,7 +5,7 @@
 set shell := ["nu", "-c"]
 
 jab := justfile_directory() / "../../../jab"
-ops := env("HOME") / "ai/two/iter/jab/subiter/fps/operational"
+readers := justfile_directory() / "../readers"
 probe := justfile_directory() / "../probe"
 
 cand-build dir:
@@ -18,7 +18,7 @@ image-test image out assets kernel:
     nu {{jab}}/game/fps/test/test.nu --kernel {{kernel}} --image {{image}} --out {{out}} --set CENSUS,DEBUG --assets {{assets}}
 
 tilecensus base out *labels:
-    nu {{ops}}/tilecensus.nu {{base}} {{out}} {{labels}}
+    nu {{readers}}/tilecensus.nu {{base}} {{out}} {{labels}}
 
 tilecensus-holds script base scratch:
     nu {{script}} holds {{base}} {{scratch}}

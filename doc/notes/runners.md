@@ -33,8 +33,8 @@ justfiles in `fps/just/` provide them.
 | `kernel_mutants.nuon` | M2BHJwnugU | a kernel mutant set in the checkout, `just test <program>` for each |
 | `gauge_mutants.nuon` | bi7K9IFr9wU | the gauge's mutants over a mirror of fps's test files, `rules-mirror` for each |
 | `mutant_titles.nuon` | cSxa2WQQMwq | each mutant log's error title read for its expected head |
-| `poolreader_mutants.nuon` | b45PFb5sQqo | the pool readers' mutants, each on mirrors of the readers |
-| `tilecensus_reader_mutants.nuon` | 8k8FFBThsgC | the tile census reader's mutants, each on a mirror |
+| `poolreader_mutants.nuon` | 2rM2CVU5KzA | the pool readers' mutants, each on mirrors laid out as `fps/readers/` beside a link to jab (revised from b45PFb5sQqo) |
+| `tilecensus_reader_mutants.nuon` | 7SQJSudlVhg | the tile census reader's mutants, each on a mirror laid out as `fps/readers/` beside a link to jab (revised from 8k8FFBThsgC) |
 | `census_reader_mutants.nuon` | 6pn8EVDeSdL | the census reader's mutants over a census serial log |
 | `image_mutants.nuon` | 2G5ATFw8HaK | prebuilt mutant images through `image-test` |
 

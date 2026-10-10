@@ -31,17 +31,27 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     pair run's reading against the views' key sets (`pair-read`).
 - `fps/probe/` holds the probes, one directory per task: `handoff`,
   `pool`, `eviction`, and `nu` for probes of nushell's own behaviour.
-- `fps/mutants/` holds the dump reader's mutant runner and the interval
-  mutant set.
+- `fps/readers/` holds the readers of the gauge's batteries and
+  captures: `admission.nu`, `poolgauge.nu`, `packetgauge.nu`,
+  `workergauge.nu`, `lane.nu`, `tilecensus.nu` with its resolver
+  `tilecensus_resolve.nu`, `identity_corrections.nu`, `workerparity.nu`,
+  and `export.nu`, which exports a commit's image with its provenance.
+  Each runs as `nu <reader> ...` through a justfile's recipe; the readers
+  with fixtures of their own run them as `nu <reader> holds ...`.
+- `fps/mutants/` holds the standing mutant sets, one `<set>_mutants.nuon`
+  a set, each mutant a file, its exact-once finds and puts, and the
+  assertion it must fail at; beside them the dump reader's mutant runner
+  and the interval mutant set.
 - `fps/poses/` holds pose lists for the capture recipes.
 
 ## What the recipes expect
 
 - Jab is checked out beside this repository, at `../jab`. The probes
-  import its modules by that relative path, and the justfiles reach it
-  the same way.
+  and the readers import its modules by paths relative to their own
+  files, and the justfiles reach it the same way.
+- A mutant runner that copies readers to mutate them lays the copies at
+  `<scratch>/<mutant>/fps/readers/` beside one link, `<scratch>/jab`, to
+  the checkout, so a copy's relative imports resolve as the original's
+  do.
 - A recipe that runs the debug build finds Jab's target through the
   SDK's `target-root`.
-- The fps readers and the standing mutant sets are kept outside this
-  repository, in `$HOME/ai/two/iter/jab/subiter/fps/operational`, which
-  the justfiles name as `ops`.

@@ -1,0 +1,56 @@
+[
+  [name,                      file,     edits,                                                                                                                                                                                                                                                                                                                                                       expect];
+  [builder_corner,            "tile.S", [
+      [find,                                                                                                       put];
+      ["    slli t1, t1, 1
+    addi t1, t1, 1                  # its centre in half texels from the cell's edge
+", "    slli t1, t1, 1
+"]
+    ],                                                                                  "reads the light of its centre from its tile"],
+  [builder_row_top,           "tile.S", [
+      [find,                                                                           put];
+      ["    slli t2, t1, 1
+    addi t2, t2, 1
+    ld t3, 16(sp)
+    addi t3, t3, 15
+", "    slli t2, t1, 1
+    ld t3, 16(sp)
+    addi t3, t3, 15
+"]
+    ],                                                                                                    "reads the light of its centre from its tile"],
+  [builder_past_k_corner,     "tile.S", [
+      [find,                                                       put];
+      ["    slli t0, s5, 1
+    addi t0, t0, 1
+    ld t1, 16(sp)
+", "    slli t0, s5, 1
+    ld t1, 16(sp)
+"]
+    ],                                                                                                                                                                "every texel within the build's rounding of its centre's light"],
+  [builder_clamp_penultimate, "tile.S", [
+      [find,                                                                                               put];
+      ["    ld t0, 24(sp)
+    tile_edge s7, t0                # the clamp's limit, the last node column
+", "    ld t0, 24(sp)
+    addi t0, t0, -1
+    tile_edge s7, t0                # the clamp's limit, the last node column
+"]
+    ], "every texel within the build's rounding of its centre's light"],
+  [builder_lane_swap,         "tile.S", [
+      [find,                                                                                        put];
+      ["    slli a2, s7, (64 - CHANNEL_BITS)
+    srli a2, a2, (64 - CHANNEL_BITS + 8)    # red's
+", "    slli a2, s7, (64 - 2 * CHANNEL_BITS)
+    srli a2, a2, (64 - CHANNEL_BITS + 8)    # red's
+"]
+    ],                                      "under the room's light, tiled against lit over the opening"],
+  [build_all_short,           "tile.S", [
+      [find,                                                                                 put];
+      ["    lbu t0, TS_LEVELS(s3)
+    bgeu s4, t0, 90f                # every level built
+", "    lbu t0, TS_LEVELS(s3)
+    addi t0, t0, -1
+    bgeu s4, t0, 90f                # every level built
+"]
+    ],                                           "every tile of the wall at every level dumped once"]
+]

@@ -1,0 +1,102 @@
+# TwoWorkers' rules, each broken by exact-once finds and puts on a
+# candidate copy of src/ (operation.md: the program's mutants against the
+# suite); `expect` is the head of the assertion in test.nu that must fail
+# first. A change to a rule's source moves its finds here in the same pass.
+[
+  {
+    name: clear_unowned,
+    file: "workers.S",
+    edits: [{ find: "    sw t2, ROUND_FLAGS(s0)          # the clear with it
+", put: "    sw zero, ROUND_FLAGS(s0)        # the clear with it
+" }],
+    expect: "the sky's top band at [960, 100] from the yard"
+  },
+  {
+    name: band_short,
+    file: "workers.S",
+    edits: [{ find: "    mul a1, t4, t3
+    divu a1, a1, t2
+    mv a2, s5
+    call band_render
+    li s6, 1
+", put: "    mul a1, t4, t3
+    divu a1, a1, t2
+    addi a1, a1, -1
+    mv a2, s5
+    call band_render
+    li s6, 1
+" }],
+    expect: "the spawn view by 1 workers in bands of 0 rows counts as the default's"
+  },
+  {
+    name: join_skipped,
+    file: "workers.S",
+    edits: [{ find: "5:
+    bgeu s3, s1, 6f
+", put: "5:
+    addi t0, s1, -1
+    bgeu s3, t0, 6f
+" }],
+    expect: "a screen was taken on the plain run"
+  },
+  {
+    name: counts_unsummed,
+    file: "workers.S",
+    edits: [{ find: "    call context_counts             # its counts, the frame's
+", put: "" }],
+    expect: "the walk's measurement valid"
+  },
+  {
+    name: context_shared,
+    file: "workers.S",
+    edits: [{ find: "    slli t0, s2, CTX_SHIFT
+    la tp, worker_contexts
+    add tp, tp, t0                  # its context
+", put: "    la tp, worker_contexts          # its context
+" }],
+    expect: "no program or worker fault drawing the plain run's frames"
+  },
+  {
+    name: cancel_dropped,
+    file: "workers.S",
+    edits: [{ find: "    call round_finish               # the bands the cancelled jobs left, on hart 0
+", put: "    li a0, 0
+" }],
+    expect: "the first frame and the pose's two placements reported on the spawn view with every round cancelled"
+  },
+  {
+    name: claim_short,
+    file: "workers.S",
+    edits: [{ find: "    bgeu t2, s9, 8f                 # every band claimed
+", put: "    addi t3, s9, -1
+    bgeu t2, t3, 8f                 # every band claimed
+" }],
+    expect: "a screen was taken on the plain run"
+  },
+  {
+    name: record_workers_zero,
+    file: "main.S",
+    edits: [{ find: "    sw t2, PACKET_WORKERS(t1)       # the frame's workers, 0 for the serial backend
+", put: "    sw zero, PACKET_WORKERS(t1)     # the frame's workers, 0 for the serial backend
+" }],
+    expect: "frames of the serial backend carrying a round's time"
+  },
+  {
+    name: record_times_unconverted,
+    file: "main.S",
+    edits: [{ find: "    ld t2, STAT_SLOWEST(t3)
+    divu t2, t2, t6
+    sw t2, PACKET_SLOWEST(t1)", put: "    ld t2, STAT_SLOWEST(t3)
+    sw t2, PACKET_SLOWEST(t1)" }],
+    expect: "frames whose slowest worker, dispatch, or barrier is past their raster"
+  },
+  {
+    name: record_busy_unconverted,
+    file: "main.S",
+    edits: [{ find: "    ld t2, STAT_BUSY(t3)
+    divu t2, t2, t6
+    sw t2, PACKET_BUSY(t1)", put: "    ld t2, STAT_BUSY(t3)
+    sw t2, PACKET_BUSY(t1)" }],
+    expect: "frames whose workers' busy time is past W times their slowest's"
+  }
+]

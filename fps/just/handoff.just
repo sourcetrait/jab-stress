@@ -6,7 +6,7 @@
 set shell := ["nu", "-c"]
 
 jab := justfile_directory() / "../../../jab"
-ops := env("HOME") / "ai/two/iter/jab/subiter/fps/operational"
+readers := justfile_directory() / "../readers"
 probe := justfile_directory() / "../probe"
 mutants := justfile_directory() / "../mutants"
 
@@ -76,10 +76,10 @@ gauge-rules-at test out:
     use {{test}} [gauge-rules]; gauge-rules {{out}}
 
 packetgauge mode base out *labels:
-    nu {{ops}}/packetgauge.nu {{mode}} {{base}} {{out}} {{labels}}
+    nu {{readers}}/packetgauge.nu {{mode}} {{base}} {{out}} {{labels}}
 
 workergauge mode base out *labels:
-    nu {{ops}}/workergauge.nu {{mode}} {{base}} {{out}} {{labels}}
+    nu {{readers}}/workergauge.nu {{mode}} {{base}} {{out}} {{labels}}
 
 reader script mode base out *labels:
     nu {{script}} {{mode}} {{base}} {{out}} {{labels}}

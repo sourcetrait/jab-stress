@@ -1,0 +1,70 @@
+# The program's cadence rules, each broken by exact-once finds and puts
+# on a candidate copy of src/ (operation.md: the cadence fixtures alone
+# and the program's mutants against them); `expect` is the head of the
+# assertion in test.nu's cadence-holds that must fail. A change to a
+# rule's source moves its finds here in the same pass.
+[
+  {
+    name: one_takes_skip,
+    file: "main.S",
+    edits: [{ find: "    bne s3, t0, 5f                  # cadence 1, ready: the flip\n", put: "" }],
+    expect: "the stall's intervals on the schedule at cadence 1"
+  },
+  {
+    name: two_waits_once,
+    file: "main.S",
+    edits: [{ find: "    call pacing_await               # at once on the passed tick, reporting it\n", put: "" }],
+    expect: "the stall's intervals on the schedule at cadence 2"
+  },
+  {
+    name: consume_no_latch,
+    file: "main.S",
+    edits: [{ find: "    sw t3, 0(t2)                    # for camera_look's presses\n", put: "" }],
+    expect: "ten rounds from ten trigger reports on the schedule at cadence 1"
+  },
+  {
+    name: consume_drains_nothing,
+    file: "main.S",
+    edits: [{ find: "    jab.sys.pad.input\n    beqz a0, 2f\n", put: "    j 2f\n" }],
+    expect: "presses taken in waits on the schedule at cadence 1"
+  },
+  {
+    name: pad_wake_restarts,
+    file: "main.S",
+    edits: [{ find: "    beqz t0, 3b                     # a wake on the pad alone, consumed: wait again\n", put: "    beqz t0, 8f\n" }],
+    expect: "the window complete and valid at schema 2 on the schedule at cadence 1"
+  },
+  {
+    name: refusal_not_retried,
+    file: "main.S",
+    edits: [{ find: "    bne a0, t0, 8f\n1:\n.endif\n", put: "    j 8f\n1:\n.endif\n" }],
+    expect: "the window complete and valid at schema 2 on the schedule at cadence 1"
+  },
+  {
+    name: forced_after_tick,
+    file: "main.S",
+    edits: [{ find: "    call flip_attempt               # an S's forced attempt, before any wait\n    li t0, FLIP_EARLY\n    bne a0, t0, 8f\n", put: "" }],
+    expect: "the forced frame tried before its wait, refused once, then presented on the schedule at cadence 1"
+  },
+  {
+    name: spin_in_wait,
+    file: "main.S",
+    edits: [{ find: "3:\n    rdtime t2\n    bltu t2, t1, 3b                 # an S's known work inside the consume\n4:\n", put: "    mv t3, t2\n3:\n    rdtime t2\n    bltu t2, t1, 3b                 # an S's known work inside the consume\n    sub t3, t2, t3\n    la t4, frame_clock\n    ld t5, CLOCK_WAIT(t4)\n    add t5, t5, t3\n    sd t5, CLOCK_WAIT(t4)\n4:\n" }],
+    expect: "every frame with wakes holds the consume's spin in its pacing and its critical path on the schedule at cadence 1"
+  },
+  {
+    name: critical_holds_wait,
+    file: "main.S",
+    edits: [{ find: "    sub t4, t4, t2                  # the wait apart\n", put: "" }],
+    expect: "the window complete and valid at schema 2 on the schedule at cadence 1"
+  },
+  {
+    name: wrong_mark,
+    file: "main.S",
+    edits: [
+      { find: "    sd zero, CLOCK_WAIT(t1)\n    sd zero, CLOCK_PACING(t1)\n", put: "    ld t6, CLOCK_WAIT(t1)\n    ld t5, CLOCK_AWAIT(t1)\n    add t6, t6, s9\n    sub t6, t6, t5\n    sd zero, CLOCK_WAIT(t1)\n    sd zero, CLOCK_PACING(t1)\n" },
+      { find: "    sub t1, t0, s7\n    mv s7, t0\n", put: "    sub t1, t0, s7\n    sub t1, t1, t6\n    mv s7, t0\n" }
+    ],
+    expect: "the body walks 4 m/s by the clock walking at cadence 0"
+  }
+]

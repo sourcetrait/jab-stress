@@ -1,11 +1,13 @@
 {
- nonce: "8k8FFBThsgC",
- args_type: "record<operational: string, mutants: string, scratch: string, jf: string, base: string, label: string, mcp_nom: string>",
+ nonce: "7SQJSudlVhg",
+ revised_from: "8k8FFBThsgC",
+ args_type: "record<readers: string, jab: string, mutants: string, scratch: string, jf: string, base: string, label: string, mcp_nom: string>",
  result_type: "record<label: string, nonce: string>",
  body: "use rig/sourcetrait/emptwo/prototype/long
 let a = $args
 if ($a.scratch | path exists) { error make { msg: $\"the scratch exists: ($a.scratch)\" } }
 mkdir $a.scratch
+^ln -s $a.jab ($a.scratch | path join \"jab\")
 let handle = (long launch {
     label: $a.label,
     mcp_nom: $a.mcp_nom,
@@ -14,14 +16,14 @@ let handle = (long launch {
     check: {|state| { logs: (glob ($a.scratch | path join \"*.log\") | length) } },
     teardown: null,
     work: {
-        let src = { \"tilecensus.nu\": (open --raw ($a.operational | path join \"tilecensus.nu\") | decode), \"tilecensus_resolve.nu\": (open --raw ($a.operational | path join \"tilecensus_resolve.nu\") | decode) }
+        let src = { \"tilecensus.nu\": (open --raw ($a.readers | path join \"tilecensus.nu\") | decode), \"tilecensus_resolve.nu\": (open --raw ($a.readers | path join \"tilecensus_resolve.nu\") | decode) }
         let mutants = (open $a.mutants)
         let counts = ($mutants | each {|m| { name: $m.name, n: ((($src | get $m.file) | split row $m.find | length) - 1) } })
         let bad = ($counts | where n != 1)
         if not ($bad | is-empty) { error make { msg: $\"finds not matching exactly once: ($bad | to nuon)\" } }
         let jobs = ([{ name: \"control\", file: null, find: null, put: null, expect: null }] | append $mutants)
         let results = ($jobs | par-each --threads 4 {|m|
-            let tree = ($a.scratch | path join $m.name)
+            let tree = ($a.scratch | path join $m.name \"fps\" \"readers\")
             mkdir $tree
             for f in [\"tilecensus.nu\" \"tilecensus_resolve.nu\"] {
                 let text = (if $m.file == $f { $src | get $f | str replace $m.find $m.put } else { $src | get $f })

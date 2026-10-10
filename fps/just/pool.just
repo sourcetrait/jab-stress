@@ -7,7 +7,7 @@
 set shell := ["nu", "-c"]
 
 jab := justfile_directory() / "../../../jab"
-ops := env("HOME") / "ai/two/iter/jab/subiter/fps/operational"
+readers := justfile_directory() / "../readers"
 probe := justfile_directory() / "../probe"
 
 cand-build dir:
@@ -20,13 +20,13 @@ image-test image out assets kernel:
     nu {{jab}}/game/fps/test/test.nu --kernel {{kernel}} --image {{image}} --out {{out}} --set DEBUG --assets {{assets}}
 
 export repo commit cands jf expected="":
-    nu {{ops}}/export.nu {{repo}} {{commit}} {{cands}} {{jf}} '{{expected}}'
+    nu {{readers}}/export.nu {{repo}} {{commit}} {{cands}} {{jf}} '{{expected}}'
 
 admission base out *labels:
-    nu {{ops}}/admission.nu {{base}} {{out}} {{labels}}
+    nu {{readers}}/admission.nu {{base}} {{out}} {{labels}}
 
 poolgauge mode base out *labels:
-    nu {{ops}}/poolgauge.nu {{mode}} {{base}} {{out}} {{labels}}
+    nu {{readers}}/poolgauge.nu {{mode}} {{base}} {{out}} {{labels}}
 
 poolgauge-holds script gauge scratch:
     nu {{script}} holds {{gauge}} {{scratch}}
