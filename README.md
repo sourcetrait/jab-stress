@@ -4,6 +4,8 @@ SourceTrait Jab Stress
 
 Assorted in-development testing for Jab and its components.
 
+Agent-maintained documentation is available in [NOTES.md](./doc/NOTES.md).
+
 Repository
 --------------------------------------------------------------------------------
 
