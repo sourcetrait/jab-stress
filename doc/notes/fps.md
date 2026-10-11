@@ -13,10 +13,12 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     alone, and runs the handoff probes, the dump reader's mutants, and
     the fps readers. Its `keys` recipe reads a capture's tile dumps as
     each tile's header and the SHA-256 of its texels.
-  - `handoff_mutants.just`, `pool.just`, and `census.just` are the
-    program mutant runner's `jf` for each mutant set. Their `cand-build`
-    and `image-test` recipes build and test a candidate with that set's
-    build symbols.
+  - `handoff_mutants.just`, `pool.just`, `census.just`, and
+    `eviction_mutants.just` are the program mutant runner's `jf` for each
+    mutant set. Their `cand-build` and `image-test` recipes build and
+    test a candidate with that set's build symbols; the eviction set's
+    `image-test` runs the eviction fixtures a mutant names on the still
+    disk the runner passes as `assets`.
   - `pool.just` also holds the tile pool's readers, the export of a
     commit's image, and the gauge's rules over a mirror of the test files.
   - `census.just` also holds the tile census's reading and the census
@@ -100,7 +102,9 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
 - `fps/mutants/` holds the standing mutant sets, one `<set>_mutants.nuon`
   a set, each mutant a file, its exact-once finds and puts, and the
   assertion it must fail at; beside them the dump reader's mutant runner
-  and the interval mutant set.
+  and the interval mutant set. `eviction_mutants.nuon` adds to a mutant
+  the fixtures it runs alone against and its expected class, the
+  join's watchdog case unexercised.
 - `fps/poses/` holds pose lists for the capture recipes.
 
 ## What the recipes expect

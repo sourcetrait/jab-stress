@@ -28,7 +28,7 @@ justfiles in `fps/just/` provide them.
 
 | File | Nonce | What it runs |
 |---|---|---|
-| `program_mutants.nuon` | 6Is3PEi6L03 | a program mutant set against the suite: each candidate built and tested through `cand-build` and `image-test`, its first failure read against its expect |
+| `program_mutants.nuon` | cbCMyxedXg | a program mutant set: each candidate built through the `jf`'s `cand-build` and tested through its `image-test`, the mutant's `fixtures` passed on, its first failure classed caught at its expect, unexercised by a title saying so, or missed, and held to the mutant's expected `class`; the control passing on a line starting with `ok` (`fps: ok` for the suite's sets, the last fixture's for the eviction set; revised from 6Is3PEi6L03) |
 | `program_mutants_reasons.nuon` | 2CXUCU4XCM9 | the same, holding a mutant's reason in its failure's title |
 | `kernel_mutants.nuon` | M2BHJwnugU | a kernel mutant set in the checkout, `just test <program>` for each |
 | `gauge_mutants.nuon` | bi7K9IFr9wU | the gauge's mutants over a mirror of fps's test files, `rules-mirror` for each |

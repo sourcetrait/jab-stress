@@ -1,6 +1,6 @@
 {
- nonce: "6Is3PEi6L03",
- args_type: "record<game: string, jf: string, mutants: string, manifest: string, cands: string, logs: string, assets: string, kernel: string, label: string, mcp_nom: string>",
+ nonce: cbCMyxedXg,
+ args_type: "record<game: string, jf: string, mutants: string, manifest: string, cands: string, logs: string, assets: string, kernel: string, label: string, mcp_nom: string, ok: string>",
  result_type: "record<label: string, nonce: string>",
  body: "use rig/sourcetrait/emptwo/prototype/long
 let a = $args
@@ -31,17 +31,19 @@ let handle = (long launch {
                 let count = (($text | split row $e.find | length) - 1)
                 if $count != 1 { $applied = false } else { $text = ($text | str replace $e.find $e.put) }
             }
+            let expected = ($mu.class? | default (if $mu.name == \"control\" { \"passed\" } else { \"caught\" }))
             if not $applied {
-                { name: $mu.name, applied: false, built: false, exit: null, failed_where: false, title: \"\" }
+                { name: $mu.name, applied: false, built: false, exit: null, class: \"unapplied\", expected: $expected, title: \"\" }
             } else {
                 $text | save --raw -f $target
                 let b = (^just -f $a.jf cand-build $dir | complete)
                 let image = (glob ($dir | path join \"**\" \"fps.jab\") | get -o 0)
                 if $b.exit_code != 0 or $image == null {
                     ($b.stdout + $b.stderr) | save --raw -f ($a.logs | path join $\"($mu.name).build.log\")
-                    { name: $mu.name, applied: true, built: false, exit: $b.exit_code, failed_where: false, title: \"\" }
+                    { name: $mu.name, applied: true, built: false, exit: $b.exit_code, class: \"unbuilt\", expected: $expected, title: \"\" }
                 } else {
-                    let r = (^just -f $a.jf image-test $image ($a.logs | path join $mu.name) $a.assets $a.kernel | complete)
+                    let fixtures = ($mu.fixtures? | default [])
+                    let r = (^just -f $a.jf image-test $image ($a.logs | path join $mu.name) $a.assets $a.kernel ...$fixtures | complete)
                     let log = ($r.stdout + $r.stderr)
                     $log | save --raw -f ($a.logs | path join $\"($mu.name).log\")
                     let ls = ($log | lines)
@@ -50,20 +52,29 @@ let handle = (long launch {
                         [($ls | get $start | str substring 4..)] | append ($ls | skip ($start + 1) | take while {|l| $l starts-with \"  | \" } | each {|l| $l | str substring 4.. }) | str join \" \"
                     })
                     let at_assert = ($ls | where {|l| $l =~ '^\\s*\\d+ \\|' } | any {|l| $l | str contains \"assert\" })
-                    {
-                        name: $mu.name, applied: true, built: true, exit: $r.exit_code,
-                        failed_where: (if $mu.expect == \"\" { $r.exit_code == 0 and ($ls | any {|l| $l == \"fps: ok\" }) } else { ($title | str contains $mu.expect) and $at_assert }),
-                        title: ($title | str substring 0..300),
-                    }
+                    let class = (if $mu.name == \"control\" {
+                        if $r.exit_code == 0 and ($ls | any {|l| $l starts-with $a.ok }) { \"passed\" } else { \"failed\" }
+                    } else if $r.exit_code == 0 {
+                        \"missed\"
+                    } else if ($title | str contains \"unexercised\") {
+                        \"unexercised\"
+                    } else if ($title | str contains $mu.expect) and $at_assert {
+                        \"caught\"
+                    } else {
+                        \"missed\"
+                    })
+                    { name: $mu.name, applied: true, built: true, exit: $r.exit_code, class: $class, expected: $expected, title: ($title | str substring 0..300) }
                 }
             }
         })
         let control = ($results | where name == \"control\" | get 0)
+        let mutants = ($results | where name != \"control\")
         {
-            control_ok: $control.failed_where,
-            every: ($results | where name != \"control\" | all {|x| $x.applied and $x.built and $x.exit != 0 and $x.failed_where }),
-            results: ($results | select name applied built exit failed_where),
-            misses: ($results | where {|x| $x.name != \"control\" and (not ($x.applied and $x.built and $x.exit != 0 and $x.failed_where)) }),
+            control_ok: ($control.class == \"passed\"),
+            every: ($mutants | all {|x| $x.class == $x.expected }),
+            caught: ($mutants | where class == \"caught\" | length),
+            results: ($results | select name applied built exit class expected title),
+            misses: ($mutants | where {|x| $x.class != $x.expected }),
         }
     },
 })

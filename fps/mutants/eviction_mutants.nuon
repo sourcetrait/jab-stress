@@ -1,0 +1,211 @@
+# TileEviction's rules, each broken by exact-once finds and puts on a
+# candidate copy of src/, run through the program mutant runner with
+# `fps/just/eviction_mutants.just` (runners.md): `fixtures` the eviction
+# fixtures it runs alone against, every one when absent; `expect` the
+# head of the assertion in fps/stress/eviction.nu that must fail first;
+# `class` its expected class, caught unless named, release_dropped's
+# exit 16 unexercised by the title the fixture writes. A change to a
+# rule's source moves its finds here in the same pass.
+[
+  {
+    name: reference_kept,
+    file: "tile.S",
+    edits: [{ find: "    sd t4, 0(t1)                    # the reference: read by the frame just drawn, no older read kept
+", put: "    ld t6, 0(t1)
+    or t4, t4, t6
+    sd t4, 0(t1)                    # the reference: read by the frame just drawn, no older read kept
+" }],
+    fixtures: [cycle],
+    expect: "renewed keys and evicted those past its"
+  },
+  {
+    name: retire_keeps_generation,
+    file: "tile.S",
+    edits: [{ find: "1:
+    srli t1, t1, 16
+    addi t1, t1, 1
+    slli t1, t1, 48
+    srli t1, t1, 32                 # the next generation, FREE
+", put: "1:
+    srli t1, t1, 16
+    slli t1, t1, 48
+    srli t1, t1, 32                 # the next generation, FREE
+" }],
+    fixtures: [rebuild],
+    expect: "settle's dump holds every key of the"
+  },
+  {
+    name: make_trusts_stale,
+    file: "tile.S",
+    edits: [{ find: "    srli t2, t0, 16
+    slli t2, t2, 16
+    ori t2, t2, SLOT_READY
+    beq t1, t2, 80f                 # built already
+", put: "    li t2, 0xffff
+    and t1, t1, t2
+    li t2, SLOT_READY
+    beq t1, t2, 80f                 # built already
+" }],
+    fixtures: [rebuild],
+    expect: "settle's dump holds every key of the"
+  },
+  {
+    name: full_pool_forgets,
+    file: "tile.S",
+    edits: [{ find: "2:
+    call tile_evict
+    bltz a0, 90f                    # no slot to take: the build stops
+    mv s4, a0
+", put: "2:
+    call tiles_forget
+    j 1b
+" }],
+    fixtures: [cycle],
+    expect: "no reset in the window"
+  },
+  {
+    name: partial_published,
+    file: "tile.S",
+    edits: [{ find: "    call tile_build
+    beqz a0, 90f                    # unfinished: kept BUILDING, the budget spent
+    mv a0, s4
+    call tile_publish
+    li t1, -1
+    la t0, tile_building
+    sd t1, 0(t0)
+80:
+", put: "    call tile_build
+    mv s3, a0
+    mv a0, s4
+    call tile_publish
+    li t1, -1
+    la t0, tile_building
+    sd t1, 0(t0)
+    beqz s3, 90f                    # unfinished, published all the same, never resumed
+80:
+" }],
+    fixtures: [reuse],
+    expect: "the screen the bright spawn view held off its tiles outside the stamp's cells"
+  },
+  {
+    name: join_released,
+    file: "workers.S",
+    edits: [
+      { find: "    li s3, 0
+5:
+    bgeu s3, s1, 6f
+    slli s6, s3, 7
+    la t0, mailboxes
+    add s6, s6, t0
+.ifdef DEBUG
+    addi t0, s3, 1
+    sw t0, ROUND_RELEASE(s0)        # the join reached this index: its held worker released
+.endif
+    jab.job.join s6
+    addi s3, s3, 1
+    j 5b
+6:
+", put: "6:
+" },
+      { find: "85:
+.ifdef DEBUG
+    li s3, 0
+86:
+    bgeu s3, s1, 87f
+    slli s6, s3, 7
+    la t0, mailboxes
+    add s6, s6, t0
+    lw t0, JAB_JOB_DONE(s6)
+    lw t1, JAB_JOB_GEN(s6)
+    addi s3, s3, 1
+    beq t0, t1, 86b                 # its job joined, the round's
+    jab.sys.uart.print msg_unjoined
+    jab.sys.exit 13
+87:
+    ld t1, 16(sp)
+    lwu t2, ROUND_BANDS(s0)
+    beq t1, t2, 90f
+    jab.sys.uart.print msg_lost_bands
+    jab.sys.exit 13
+.endif
+90:
+", put: "85:
+90:
+" }
+    ],
+    fixtures: [reuse],
+    expect: "the boundary ran before its round joined, exit 15"
+  },
+  {
+    name: release_dropped,
+    file: "workers.S",
+    edits: [{ find: ".ifdef DEBUG
+    addi t0, s3, 1
+    sw t0, ROUND_RELEASE(s0)        # the join reached this index: its held worker released
+.endif
+    jab.job.join s6
+", put: "    jab.job.join s6
+" }],
+    fixtures: [reuse],
+    expect: "unexercised, the hold expired unreleased, exit 16",
+    class: unexercised
+  },
+  {
+    name: construction_skipped,
+    file: "tile.S",
+    edits: [{ find: ".endif
+    call tile_construct
+    rdtime t0
+", put: ".endif
+    la t0, frame_clock
+    ld t0, CLOCK_SNAPSHOT(t0)
+    li t1, 5
+    remu t0, t0, t1
+    beqz t0, 24f                    # every fifth frame's construction skipped
+    call tile_construct
+24:
+    rdtime t0
+" }],
+    fixtures: [cycle],
+    expect: "spent its budget"
+  },
+  {
+    name: construction_skipped_rebuild,
+    file: "tile.S",
+    edits: [{ find: ".endif
+    call tile_construct
+    rdtime t0
+", put: ".endif
+    la t0, frame_clock
+    ld t0, CLOCK_SNAPSHOT(t0)
+    li t1, 5
+    remu t0, t0, t1
+    beqz t0, 24f                    # every fifth frame's construction skipped
+    call tile_construct
+24:
+    rdtime t0
+" }],
+    fixtures: [rebuild],
+    expect: "keys published at frames"
+  },
+  {
+    name: generation_unchecked,
+    file: "raster.S",
+    edits: [{ find: "    srli a0, a2, 16
+    slli a0, a0, 16
+    ori a0, a0, SLOT_READY
+    beq a0, a4, 80f                 # its generation's, READY: the tile
+", put: "    andi a4, a4, 0xff
+    li a0, SLOT_READY
+    beq a0, a4, 80f                 # its generation's, READY: the tile
+" }],
+    expect: "settle's dump holds every key of the"
+  },
+  {
+    name: built_pass_evicted,
+    file: "tile.S",
+    edits: [{ find: "    beq t6, t4, 1b                  # built this pass
+", put: "" }],
+    expect: "renewed keys and evicted those past its"
+  }
+]
