@@ -1,0 +1,45 @@
+# The program mutant runner's own cases, a mutant set run through
+# cases.just: each case's canned log is logs/<name>.log, its `expect` the
+# mutant's, its `class` the one the runner must give it. Cut from the saved
+# eviction set's logs: watchdog (release_dropped's), catch_assert
+# (built_pass_evicted's), catch_assert_equal (full_pool_forgets'), and the
+# control's passing lines. Composed: shapes.nu's own failures through
+# cases.just's `compose`, and four logs above with one label or title line
+# changed, each failing one part of the provenance alone.
+[
+  # The watchdog at its assertion.
+  {name: watchdog, file: "raster.S", edits: [], expect: "unexercised, the hold expired unreleased, exit 16", class: unexercised},
+  # A catch at a plain assertion.
+  {name: catch_assert, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: caught},
+  # A catch at `assert equal`.
+  {name: catch_assert_equal, file: "raster.S", edits: [], expect: "no reset in the window", class: caught},
+  # A catch at an assertion inline after a block's opening brace.
+  {name: inline_assert, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: caught},
+  # An unrelated exception, nushell's own, saying unexercised.
+  {name: unrelated_unexercised, file: "raster.S", edits: [], expect: "unexercised, the hold expired unreleased, exit 16", class: missed},
+  # Another assertion saying unexercised, the expect absent.
+  {name: other_assert_unexercised, file: "raster.S", edits: [], expect: "unexercised, the hold expired unreleased, exit 16", class: missed},
+  # The complete expect raised between two assertions, the failure elsewhere.
+  {name: neighbour_expect, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed},
+  # The same carrying unexercised.
+  {name: neighbour_unexercised, file: "raster.S", edits: [], expect: "unexercised, the hold expired unreleased, exit 16", class: missed},
+  # An exception raised while an assertion's argument evaluates, the
+  # complete expect its title, its span inside the argument.
+  {name: argument_exception, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed},
+  # An empty expect at an assertion, catch_assert's log.
+  {name: empty_expect, file: "raster.S", edits: [], expect: "", class: missed},
+  # A mutant that passes, the control's lines.
+  {name: passes, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed},
+  # An assertion's column under a label not its own: catch_assert's log,
+  # its label changed.
+  {name: label_foreign, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed},
+  # The assertion's label at a column inside its argument:
+  # argument_exception's log, its label changed.
+  {name: label_displaced, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed},
+  # `assert equal`'s labels under a title not closing with its words:
+  # catch_assert_equal's log, `These are not equal.` taken out.
+  {name: equal_unclosed, file: "raster.S", edits: [], expect: "no reset in the window", class: missed},
+  # `assert equal`'s closing title over labels other than left and right:
+  # catch_assert_equal's log, both labels changed.
+  {name: equal_unlabelled, file: "raster.S", edits: [], expect: "no reset in the window", class: missed}
+]

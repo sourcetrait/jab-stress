@@ -1,0 +1,10 @@
+Error: nu::shell::error
+
+  x the eviction cycle: unexercised, the worker was never held
+    ,-[runners/program_mutants_cases/shapes.nu:26:12]
+ 25 |     let said = ["fps: tile pool on"]
+ 26 |     assert ($said | any {|l| $l | str contains "fps: worker held" }) $"($LABEL): unexercised, the worker was never held"
+    :            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^|^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    :                                        `-- It is not true.
+ 27 | }
+    `----

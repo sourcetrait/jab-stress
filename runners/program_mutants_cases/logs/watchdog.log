@@ -1,0 +1,11 @@
+Error: nu::shell::error
+
+  x the slot reuse: unexercised, the hold expired unreleased, exit 16: `fps:
+  | held job never released`, status 16
+     ,-[fps/stress/eviction.nu:810:12]
+ 809 |     assert (not ($said | any {|l| $l | str contains $BOUNDARY_UNJOINED })) $"($label): the boundary ran before its round joined, exit 15: `($BOUNDARY_UNJOINED)`, status ($run.status)"
+ 810 |     assert (not ($said | any {|l| $l | str contains $HOLD_EXPIRED })) $"($label): unexercised, the hold expired unreleased, exit 16: `($HOLD_EXPIRED)`, status ($run.status)"
+     :            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^|^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     :                                         `-- It is not true.
+ 811 |     assert equal (open --raw $run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)"
+     `----

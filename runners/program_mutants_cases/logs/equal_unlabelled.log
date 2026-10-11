@@ -1,0 +1,13 @@
+Error: nu::shell::error
+
+  x the eviction cycle: no reset in the window from frame 262, tile_resets [5,
+  | 6, 7, 8, 9]
+  | These are not equal.
+     ,-[fps/stress/eviction.nu:464:18]
+ 463 |     let resets = ($c.rows | where {|r| $r.frame >= $from } | get tile_resets | uniq)
+ 464 |     assert equal ($resets | length) 1 $"($label): no reset in the window from frame ($from), tile_resets ($resets)"
+     :                  ^^^^^^^^^|^^^^^^^^ |
+     :                           |         `-- these counts
+     :                           `-- these counts
+ 465 |     for d in ($c.dumps | skip 2) {
+     `----

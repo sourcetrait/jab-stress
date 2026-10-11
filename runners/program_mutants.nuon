@@ -1,8 +1,47 @@
 {
- nonce: cbCMyxedXg,
+ nonce: "ap6BdZ4ELNf",
  args_type: "record<game: string, jf: string, mutants: string, manifest: string, cands: string, logs: string, assets: string, kernel: string, label: string, mcp_nom: string, ok: string>",
  result_type: "record<label: string, nonce: string>",
  body: "use rig/sourcetrait/emptwo/prototype/long
+
+# The log's first error: its title, the `  x ` line with its `  | `
+# continuations joined, and the index of the line after them.
+def failure-of [ls: list<string>]: nothing -> record<title: string, after: int> {
+    let start = ($ls | enumerate | where {|e| $e.item starts-with \"  x \" } | get -o 0.index)
+    if $start == null { return {title: \"\", after: -1} }
+    let more = ($ls | skip ($start + 1) | take while {|l| $l starts-with \"  | \" })
+    {
+        title: ([($ls | get $start | str substring 4..)] | append ($more | each {|l| $l | str substring 4.. }) | str join \" \"),
+        after: ($start + 1 + ($more | length)),
+    }
+}
+
+# The assertion whose own failure the error is: `assert` or `assert equal`
+# when the header right after its title names an excerpt line whose code
+# up to the header's column is that assertion's head, alone or after a
+# block's brace or a semicolon, and the labels under that line are the
+# assertion's own, `It is not true.`, or `left:` and `right:` under a
+# title closing `These are not equal.`; null for any other failure.
+def assertion-kind [ls: list<string>, failure: record<title: string, after: int>] {
+    if $failure.after < 0 { return null }
+    let header = ($ls | get -o $failure.after | default \"\" | parse --regex '^\\s*,-\\[(?P<file>.+):(?P<line>\\d+):(?P<col>\\d+)\\]$' | get -o 0)
+    if $header == null { return null }
+    let excerpt = ($ls | skip ($failure.after + 1) | take until {|l| $l =~ '^\\s*`----' })
+    let at = ($excerpt | enumerate | where {|e| ($e.item | parse --regex '^\\s*(?P<n>\\d+) \\|' | get -o 0.n) == $header.line } | get -o 0.index)
+    if $at == null { return null }
+    let code = ($excerpt | get $at | parse --regex '^\\s*\\d+ \\| ?(?P<code>.*)$' | get 0.code)
+    let head = ($code | str substring 0..<(($header.col | into int) - 1))
+    let kind = ($head | parse --regex '(?:^|[{;])\\s*(?P<kind>assert(?: equal)?) $' | get -o 0.kind)
+    if $kind == null { return null }
+    let labels = ($excerpt | skip ($at + 1) | take while {|l| $l =~ '^\\s*:' })
+    let own = (if $kind == \"assert\" {
+        $labels | any {|l| $l | str contains \"`-- It is not true.\" }
+    } else {
+        ($labels | any {|l| $l | str contains \"`-- left:\" }) and ($labels | any {|l| $l | str contains \"`-- right:\" }) and ($failure.title | str ends-with \"These are not equal.\")
+    })
+    if $own { $kind } else { null }
+}
+
 let a = $args
 if ($a.logs | path exists) { error make { msg: $\"($a.logs) exists; a mutant set is written once\" } }
 mkdir $a.logs
@@ -47,23 +86,21 @@ let handle = (long launch {
                     let log = ($r.stdout + $r.stderr)
                     $log | save --raw -f ($a.logs | path join $\"($mu.name).log\")
                     let ls = ($log | lines)
-                    let start = ($ls | enumerate | where {|e| $e.item starts-with \"  x \" } | get -o 0.index)
-                    let title = (if $start == null { \"\" } else {
-                        [($ls | get $start | str substring 4..)] | append ($ls | skip ($start + 1) | take while {|l| $l starts-with \"  | \" } | each {|l| $l | str substring 4.. }) | str join \" \"
-                    })
-                    let at_assert = ($ls | where {|l| $l =~ '^\\s*\\d+ \\|' } | any {|l| $l | str contains \"assert\" })
+                    let failure = (failure-of $ls)
+                    let kind = (assertion-kind $ls $failure)
+                    let carries = ($mu.expect != \"\" and ($failure.title | str contains $mu.expect))
                     let class = (if $mu.name == \"control\" {
                         if $r.exit_code == 0 and ($ls | any {|l| $l starts-with $a.ok }) { \"passed\" } else { \"failed\" }
                     } else if $r.exit_code == 0 {
                         \"missed\"
-                    } else if ($title | str contains \"unexercised\") {
+                    } else if $kind != null and $carries and ($failure.title | str contains \"unexercised\") {
                         \"unexercised\"
-                    } else if ($title | str contains $mu.expect) and $at_assert {
+                    } else if $kind != null and $carries {
                         \"caught\"
                     } else {
                         \"missed\"
                     })
-                    { name: $mu.name, applied: true, built: true, exit: $r.exit_code, class: $class, expected: $expected, title: ($title | str substring 0..300) }
+                    { name: $mu.name, applied: true, built: true, exit: $r.exit_code, class: $class, expected: $expected, title: ($failure.title | str substring 0..300) }
                 }
             }
         })

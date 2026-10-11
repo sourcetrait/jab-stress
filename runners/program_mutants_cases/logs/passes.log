@@ -1,0 +1,4 @@
+eviction cycle: ok in 207.8 s
+eviction rebuild: ok in 106.7 s
+eviction held: ok in 12.9 s
+eviction reuse: ok in 58.1 s
