@@ -392,10 +392,29 @@ def cycle-phases [c: record]: nothing -> list<record> {
     }
 }
 
+# A phase's settled range read as refusals, each a kind, the frame it
+# names, and its detail: a dump not after the last build refused by name
+# before any frame is read; then each frame from the one after the last
+# build through the dump absent from the phase's rows or not settled.
+# Empty when every one of those frames, one at least, is settled.
+def settled-refusals [p: record]: nothing -> list<record<kind: string, frame: int, detail: string>> {
+    if $p.dump <= $p.last_build {
+        return [{ kind: "dump not after", frame: $p.dump, detail: $"the dump at frame ($p.dump) not after the last build at ($p.last_build)" }]
+    }
+    ($p.last_build + 1)..$p.dump | each {|f|
+        let r = ($p.span | where frame == $f | get -o 0)
+        if $r == null {
+            { kind: "absent", frame: $f, detail: $"frame ($f) absent from the phase's rows" }
+        } else if not (settled $r) {
+            { kind: "unsettled", frame: $f, detail: (unsettled-fields $r) }
+        }
+    }
+}
+
 # The accounting: each phase builds exactly its renewed keys and evicts
 # exactly those past its free slots; its renewed keys merge at the
-# boundary after its first miss; every frame from the one after its last
-# build through its dump settled.
+# boundary after its first miss; its dump after its last build, and every
+# frame from the one after that build through the dump settled.
 def assert-accounting [phases: list<record>, label: string]: nothing -> nothing {
     for p in $phases {
         assert ($p.built == $p.renewed and $p.evicted == ([($p.renewed - $p.free) 0] | math max)) $"($label): the ($p.leg) phase built its ($p.renewed) renewed keys and evicted those past its ($p.free) free slots, built ($p.built), evicted ($p.evicted)"
@@ -403,10 +422,30 @@ def assert-accounting [phases: list<record>, label: string]: nothing -> nothing 
         let merging = ($p.span | where {|r| $r.frame == ($p.first_miss + 1) } | get -o 0)
         assert ($merging != null and $merging.merged == $p.renewed) $"($label): the ($p.leg) phase's boundary after its first miss, frame ($p.first_miss + 1), merged its ($p.renewed) renewed keys: ($merging | select -o frame merged unprocessed batch_admitted)"
         assert ($p.last_build != null) $"($label): the ($p.leg) phase published"
-        let after = ($p.span | where {|r| $r.frame > $p.last_build })
-        let unsettled = ($after | where {|r| not (settled $r) })
-        assert ((($after | length) == ($p.dump - $p.last_build)) and ($unsettled | is-empty)) $"($label): every frame of the ($p.leg) phase from the one after its last build, ($p.last_build + 1), through its dump, ($p.dump), settled: ($unsettled | first 3 | each {|r| unsettled-fields $r } | str join '; ')"
+        let refused = (settled-refusals $p)
+        assert ($refused | is-empty) $"($label): the ($p.leg) phase's dump after its last build and every frame between settled, from ($p.last_build + 1) through ($p.dump): ($refused | first 3 | get detail | str join '; ')"
     }
+}
+
+# The settled range's negatives beside a valid phase, its control refused
+# for nothing: the phase with its dump on its final publication frame
+# refused as a dump not after its last build, and a frame of its settled
+# tail given BUILDING 1 refused naming that frame alone. Returns each
+# case's kinds and frames.
+def settled-negatives [p: record, label: string]: nothing -> list<record<case: string, kinds: list<string>, frames: list<int>>> {
+    assert equal (settled-refusals $p) [] $"($label): the ($p.leg) phase's settled range, the control, refused for nothing"
+    let tail = ($p.last_build + 1)
+    let cases = [
+        { case: $"the dump on the final publication frame, ($p.last_build)", p: ($p | upsert dump $p.last_build | upsert span ($p.span | where {|r| $r.frame <= $p.last_build })), kinds: ["dump not after"], frames: [$p.last_build] }
+        { case: $"BUILDING 1 at the settled tail's frame ($tail)", p: ($p | upsert span ($p.span | each {|r| if $r.frame == $tail { $r | upsert building 1 } else { $r } })), kinds: ["unsettled"], frames: [$tail] }
+    ]
+    mut read = []
+    for c in $cases {
+        let refused = (settled-refusals $c.p)
+        assert ((($refused | get kind) == $c.kinds) and (($refused | get frame) == $c.frames)) $"($label), ($c.case): refused as ($c.kinds | str join ', ') at ($c.frames), refused as ($refused | each {|r| $'($r.kind) at ($r.frame): ($r.detail)' } | str join '; ')"
+        $read = ($read | append { case: $c.case, kinds: ($refused | get kind), frames: ($refused | get frame) })
+    }
+    $read
 }
 
 # The tracking, dump to dump from the spawn's first settle: a slot
@@ -432,7 +471,8 @@ def assert-tracking [c: record, label: string]: nothing -> nothing {
 }
 
 # EvictionCycle: the cycle under the ordinary budget. The sets bracket
-# the cap; real eviction and no reset; the accounting; the tracking; the
+# the cap; real eviction and no reset; the accounting, the settled
+# range's negatives beside it; the tracking; the
 # progress rule, every boundary of a phase from the one after its first
 # miss to its last build's, that one exempt, spending its budget, one
 # that published nothing among them; the memory; and the last spawn's
@@ -447,6 +487,8 @@ export def eviction-cycle [kernel: path, image: path, disk: path, out: path]: no
     let resets = (assert-held $c $label)
     let phases = (cycle-phases $c)
     assert-accounting $phases $label
+    # the settled range's negatives beside the last phase (SettledInterval)
+    let settled_cases = (settled-negatives ($phases | last) $label)
     for p in $phases {
         let interval = ($p.span | where {|r| $r.frame > $p.first_miss and $r.frame < $p.last_build })
         let unspent = ($interval | where {|r| $r.tiles_us < $ALLOWANCE_US and $r.tiles_built < $QUOTA_TILES })
@@ -503,7 +545,7 @@ export def eviction-cycle [kernel: path, image: path, disk: path, out: path]: no
         phases: ($phases | each {|p| { leg: $p.leg, renewed: $p.renewed, free: $p.free, built: $p.built, evicted: $p.evicted, first_miss: $p.first_miss, last_build: $p.last_build, settled: ($p.last_build + 1), frames: ($p.last_build + 1 - $p.first_miss), boundaries: ($p.span | where {|r| $r.frame > $p.first_miss and $r.frame <= $p.last_build } | each {|r| $"($r.frame):($r.tiles_built)/($r.evicted)/($r.tiles_us)" } | str join " ") } }),
         fixed: ($fixed | first), memory_max: ($rows | get memory | math max), peak: ($peaks | first), full_at: $full,
         dumps: ($c.dumps | each {|d| { leg: $d.leg, frame: $d.frame, tiles: ($d.tiles | length) } }),
-        pictures: $framed, negatives: $negatives,
+        pictures: $framed, negatives: $negatives, settled_negatives: $settled_cases,
     }
 }
 
