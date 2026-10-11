@@ -7,6 +7,7 @@ use std/assert
 
 const LABEL = "the eviction cycle"
 const HOLD_EXPIRED = "fps: held job never released"
+const CENSUS = "the census reader"
 
 # A bay return's counts, the accounting assertion's inputs.
 def phase []: nothing -> record {
@@ -64,6 +65,30 @@ def inline-assert [] {
     if $p.renewed > 0 { assert ($p.built == $p.renewed) $"($LABEL): the ($p.leg) phase built its ($p.renewed) renewed keys and evicted those past its ($p.free) free slots, built ($p.built)" }
 }
 
+# The census's expect, its reason absent from the title.
+def reason-absent [] {
+    let refused = [12]
+    assert ($refused | is-empty) $"($CENSUS): every census frame whole and accounting, chunk ($refused.0) refused"
+}
+
+# The census's expect beside another reason.
+def reason-wrong [] {
+    let refused = [12]
+    assert ($refused | is-empty) $"($CENSUS): every census frame whole and accounting, chunk ($refused.0): an item that is no surface:count pair"
+}
+
+# The census's reason in the assertion's source alone.
+def reason-excerpt [] {
+    let why = "does not reassemble"
+    assert ($why != "does not reassemble") $"($CENSUS): every census frame whole and accounting, chunk 12 refused"
+}
+
+# The census's reason in the title, across its wrap.
+def reason-wrapped [] {
+    let refused = [12]
+    assert ($refused | is-empty) $"($CENSUS): every census frame whole and accounting, chunk ($refused.0) does not reassemble"
+}
+
 def main [case: string] {
     match $case {
         "unrelated_unexercised" => { unrelated-unexercised }
@@ -72,6 +97,10 @@ def main [case: string] {
         "neighbour_unexercised" => { neighbour-unexercised }
         "argument_exception" => { argument-exception }
         "inline_assert" => { inline-assert }
+        "reason_absent" => { reason-absent }
+        "reason_wrong" => { reason-wrong }
+        "reason_excerpt" => { reason-excerpt }
+        "reason_wrapped" => { reason-wrapped }
         _ => { error make {msg: $"no case named ($case)"} }
     }
 }

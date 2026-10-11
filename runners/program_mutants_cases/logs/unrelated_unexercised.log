@@ -1,13 +1,13 @@
 Error: nu::shell::column_not_found
 
   x Cannot find column 'unexercised'
-    ,-[runners/program_mutants_cases/shapes.nu:19:16]
- 18 |     let run = {status: 16, serial: $HOLD_EXPIRED}
- 19 |     let held = $run.unexercised
+    ,-[runners/program_mutants_cases/shapes.nu:20:16]
+ 19 |     let run = {status: 16, serial: $HOLD_EXPIRED}
+ 20 |     let held = $run.unexercised
     :                ^^|^ ^^^^^|^^^^^
     :                  |       `-- column 'unexercised' is missing in one or more values
     :                  `-- value originates here
- 20 |     $held
+ 21 |     $held
     `----
   help: If some rows have this column, try using 'unexercised?' for optional
         access, or pre-fill using the `default` command

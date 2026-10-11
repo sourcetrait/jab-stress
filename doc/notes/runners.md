@@ -28,28 +28,39 @@ justfiles in `fps/just/` provide them.
 
 | File | Nonce | What it runs |
 |---|---|---|
-| `program_mutants.nuon` | ap6BdZ4ELNf | a program mutant set: each candidate built through the `jf`'s `cand-build` and tested through its `image-test`, the mutant's `fixtures` passed on, its first failure classed caught only where it is an assertion's own failure whose title carries the mutant's expect, unexercised where that title also says unexercised, missed otherwise, and held to the mutant's expected `class`; the control passing on a line starting with `ok` (`fps: ok` for the suite's sets, the last fixture's for the eviction set; revised from cbCMyxedXg) |
-| `program_mutants_reasons.nuon` | 2CXUCU4XCM9 | the same, holding a mutant's reason in its failure's title |
+| `program_mutants.nuon` | gQQhjycy0Bk | a program mutant set: each candidate built through the `jf`'s `cand-build` and tested through its `image-test`, the mutant's `fixtures` passed on, its first failure classed caught only where it is an assertion's own failure (`provenance.nu`) whose title carries the mutant's expect, unexercised where that title also says unexercised, missed otherwise, and held to the mutant's expected `class`; the control passing on a line starting with `ok` (`fps: ok` for the suite's sets, the last fixture's for the eviction set; revised from ap6BdZ4ELNf) |
+| `program_mutants_reasons.nuon` | 5g6hE6ot8h5 | the census set's runner: each mutant credited where its first failure is an assertion's own (`provenance.nu`) whose title, its whitespace collapsed, carries the mutant's non-empty expect and its reason when it names one, held to its expected `credited`, true unless named, once applied, built, and run; the control, the file `control_file` names, passing on a line starting with `ok` (revised from 2CXUCU4XCM9) |
 | `kernel_mutants.nuon` | M2BHJwnugU | a kernel mutant set in the checkout, `just test <program>` for each |
 | `gauge_mutants.nuon` | bi7K9IFr9wU | the gauge's mutants over a mirror of fps's test files, `rules-mirror` for each |
-| `mutant_titles.nuon` | cSxa2WQQMwq | each mutant log's error title read for its expected head |
+| `mutant_titles.nuon` | e1petZD11qo | each mutant log's first error read for `at_assert`, an assertion's own failure (`provenance.nu`), and `matches`, the mutant's non-empty expect in its title, each held to the mutant's expected value, true unless named (revised from cSxa2WQQMwq) |
 | `poolreader_mutants.nuon` | 2rM2CVU5KzA | the pool readers' mutants, each on mirrors laid out as `fps/readers/` beside a link to jab (revised from b45PFb5sQqo) |
 | `tilecensus_reader_mutants.nuon` | 7SQJSudlVhg | the tile census reader's mutants, each on a mirror laid out as `fps/readers/` beside a link to jab (revised from 8k8FFBThsgC) |
 | `census_reader_mutants.nuon` | 6pn8EVDeSdL | the census reader's mutants over a census serial log |
 | `image_mutants.nuon` | 2G5ATFw8HaK | prebuilt mutant images through `image-test` |
 
-## The program mutant runner's own cases
+## The mutant runners' own cases
 
-`program_mutants_cases/` holds the cases that test how
-`program_mutants.nuon` classes a failure. Run the runner with
-`cases.just` as its `jf`, `cases.nuon` as its `mutants`, and `game` as its
-`game`. Its `ok` is `eviction reuse: ok`, its `manifest` may be empty,
-its `assets` and `kernel` may be any word, and its `cands` and `logs` go
-under the session's scratch directory. Nothing is built or run:
-`cand-build` writes an empty image, and `image-test` prints the case's log
-from `logs/` and exits 1 when the log holds nushell's error, 0 otherwise.
-The result must read `control_ok` and `every` true. A run takes about a
-minute on the long engine.
+`program_mutants_cases/` holds the cases that test how the mutant runners
+read a failure: `program_mutants.nuon`, the census set's
+`program_mutants_reasons.nuon`, and the gauge set's `mutant_titles.nuon`,
+which share the rule in `provenance.nu`. Each case carries what each of
+them must make of it: the program runner's `class`, the census runner's
+`credited`, and the titles reader's `at_assert` and `matches`.
+
+Run a runner with `cases.just` as its `jf`, `cases.nuon` as its `mutants`,
+and `game` as its `game`. Its `ok` is `eviction reuse: ok`, and its
+`cands` and `logs` go under the session's scratch directory. The program
+runner's `manifest` may be empty and its `assets` and `kernel` any word;
+the census runner takes `raster.S` as its `control_file` and any existing
+file, such as `game/src/raster.S`, as its `manifest_file`, `assets`, and
+`kernel`. The titles reader reads `logs/` with `cases.nuon`. Nothing is
+built or run: `cand-build` writes an empty image, and `image-test` prints
+the case's log from `logs/` and exits 1 when the log holds nushell's
+error, 0 otherwise. `just -f cases.just check <logs> <results>` then holds
+the run to those logs and exits, `results` the run's results saved as
+NUON, and only then do its expectations count. Every result must read
+`control_ok` and `every`, or `all`, true. A runner takes about a minute on
+the long engine.
 
 A failure is an assertion's own when the header after the error's title
 names a line of its excerpt whose code, up to the header's column, is
@@ -65,6 +76,11 @@ cases cover:
   expect raised between two assertions with and without unexercised, and
   an error raised while an assertion's argument evaluates;
 - an empty expect at an assertion, and a mutant that passes, each missed;
+- a mutant with an empty expect that passes on the control's lines, which
+  only the control may do, left uncredited;
+- four census cases, the expect at an assertion: the reason missing, a
+  wrong reason, and the reason only in the source excerpt, each left
+  uncredited, and the reason in the title across its wrap, credited;
 - four logs that each break one part of the rule alone, each missed: a
   label other than the assertion's own at an assertion's column, the
   assertion's label at a column inside its argument, `assert equal`'s

@@ -1,0 +1,11 @@
+Error: nu::shell::error
+
+  x the census reader: every census frame whole and accounting, chunk 12: an
+  | item that is no surface:count pair
+    ,-[runners/program_mutants_cases/shapes.nu:77:12]
+ 76 |     let refused = [12]
+ 77 |     assert ($refused | is-empty) $"($CENSUS): every census frame whole and accounting, chunk ($refused.0): an item that is no surface:count pair"
+    :            ^^^^^^^^^^|^^^^^^^^^^
+    :                      `-- It is not true.
+ 78 | }
+    `----

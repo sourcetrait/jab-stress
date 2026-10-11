@@ -1,45 +1,60 @@
-# The program mutant runner's own cases, a mutant set run through
-# cases.just: each case's canned log is logs/<name>.log, its `expect` the
-# mutant's, its `class` the one the runner must give it. Cut from the saved
-# eviction set's logs: watchdog (release_dropped's), catch_assert
-# (built_pass_evicted's), catch_assert_equal (full_pool_forgets'), and the
-# control's passing lines. Composed: shapes.nu's own failures through
-# cases.just's `compose`, and four logs above with one label or title line
-# changed, each failing one part of the provenance alone.
+# The mutant runners' own cases, a mutant set every consumer of the
+# provenance rule reads: each case's canned log is logs/<name>.log, its
+# `expect` and `reason` the mutant's, and beside them what each consumer
+# must make of it: `class` for the program runner, `credited` for the
+# census runner, `at_assert` and `matches` for the gauge titles reader.
+# Cut from the saved eviction set's logs: watchdog (release_dropped's),
+# catch_assert (built_pass_evicted's), catch_assert_equal
+# (full_pool_forgets'), and the control's passing lines. Composed:
+# shapes.nu's own failures through cases.just's `compose`, and four logs
+# above with one label or title line changed, each failing one part of the
+# rule alone. A consumer's run is held to these logs and their exits by
+# check.nu before any expectation counts.
 [
   # The watchdog at its assertion.
-  {name: watchdog, file: "raster.S", edits: [], expect: "unexercised, the hold expired unreleased, exit 16", class: unexercised},
+  {name: watchdog, file: "raster.S", edits: [], expect: "unexercised, the hold expired unreleased, exit 16", class: unexercised, credited: true, at_assert: true, matches: true},
   # A catch at a plain assertion.
-  {name: catch_assert, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: caught},
+  {name: catch_assert, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: caught, credited: true, at_assert: true, matches: true},
   # A catch at `assert equal`.
-  {name: catch_assert_equal, file: "raster.S", edits: [], expect: "no reset in the window", class: caught},
+  {name: catch_assert_equal, file: "raster.S", edits: [], expect: "no reset in the window", class: caught, credited: true, at_assert: true, matches: true},
   # A catch at an assertion inline after a block's opening brace.
-  {name: inline_assert, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: caught},
+  {name: inline_assert, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: caught, credited: true, at_assert: true, matches: true},
   # An unrelated exception, nushell's own, saying unexercised.
-  {name: unrelated_unexercised, file: "raster.S", edits: [], expect: "unexercised, the hold expired unreleased, exit 16", class: missed},
+  {name: unrelated_unexercised, file: "raster.S", edits: [], expect: "unexercised, the hold expired unreleased, exit 16", class: missed, credited: false, at_assert: false, matches: false},
   # Another assertion saying unexercised, the expect absent.
-  {name: other_assert_unexercised, file: "raster.S", edits: [], expect: "unexercised, the hold expired unreleased, exit 16", class: missed},
+  {name: other_assert_unexercised, file: "raster.S", edits: [], expect: "unexercised, the hold expired unreleased, exit 16", class: missed, credited: false, at_assert: true, matches: false},
   # The complete expect raised between two assertions, the failure elsewhere.
-  {name: neighbour_expect, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed},
+  {name: neighbour_expect, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed, credited: false, at_assert: false, matches: true},
   # The same carrying unexercised.
-  {name: neighbour_unexercised, file: "raster.S", edits: [], expect: "unexercised, the hold expired unreleased, exit 16", class: missed},
+  {name: neighbour_unexercised, file: "raster.S", edits: [], expect: "unexercised, the hold expired unreleased, exit 16", class: missed, credited: false, at_assert: false, matches: true},
   # An exception raised while an assertion's argument evaluates, the
   # complete expect its title, its span inside the argument.
-  {name: argument_exception, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed},
+  {name: argument_exception, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed, credited: false, at_assert: false, matches: true},
   # An empty expect at an assertion, catch_assert's log.
-  {name: empty_expect, file: "raster.S", edits: [], expect: "", class: missed},
+  {name: empty_expect, file: "raster.S", edits: [], expect: "", class: missed, credited: false, at_assert: true, matches: false},
   # A mutant that passes, the control's lines.
-  {name: passes, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed},
+  {name: passes, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed, credited: false, at_assert: false, matches: false},
+  # A non-control mutant with an empty expect, passing on the control's
+  # lines.
+  {name: empty_passes, file: "raster.S", edits: [], expect: "", class: missed, credited: false, at_assert: false, matches: false},
   # An assertion's column under a label not its own: catch_assert's log,
   # its label changed.
-  {name: label_foreign, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed},
+  {name: label_foreign, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed, credited: false, at_assert: false, matches: true},
   # The assertion's label at a column inside its argument:
   # argument_exception's log, its label changed.
-  {name: label_displaced, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed},
+  {name: label_displaced, file: "raster.S", edits: [], expect: "renewed keys and evicted those past its", class: missed, credited: false, at_assert: false, matches: true},
   # `assert equal`'s labels under a title not closing with its words:
   # catch_assert_equal's log, `These are not equal.` taken out.
-  {name: equal_unclosed, file: "raster.S", edits: [], expect: "no reset in the window", class: missed},
+  {name: equal_unclosed, file: "raster.S", edits: [], expect: "no reset in the window", class: missed, credited: false, at_assert: false, matches: true},
   # `assert equal`'s closing title over labels other than left and right:
   # catch_assert_equal's log, both labels changed.
-  {name: equal_unlabelled, file: "raster.S", edits: [], expect: "no reset in the window", class: missed}
+  {name: equal_unlabelled, file: "raster.S", edits: [], expect: "no reset in the window", class: missed, credited: false, at_assert: false, matches: true},
+  # The census's expect at its assertion, its reason absent from the title.
+  {name: reason_absent, file: "raster.S", edits: [], expect: "every census frame whole and accounting", reason: "does not reassemble", class: caught, credited: false, at_assert: true, matches: true},
+  # The census's expect beside another reason.
+  {name: reason_wrong, file: "raster.S", edits: [], expect: "every census frame whole and accounting", reason: "does not reassemble", class: caught, credited: false, at_assert: true, matches: true},
+  # The census's reason in the assertion's source excerpt alone.
+  {name: reason_excerpt, file: "raster.S", edits: [], expect: "every census frame whole and accounting", reason: "does not reassemble", class: caught, credited: false, at_assert: true, matches: true},
+  # The census's reason in the title across its wrap.
+  {name: reason_wrapped, file: "raster.S", edits: [], expect: "every census frame whole and accounting", reason: "does not reassemble", class: caught, credited: true, at_assert: true, matches: true}
 ]
