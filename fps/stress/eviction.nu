@@ -17,6 +17,13 @@
 # - held, HeldPartial: the spawn's construction held partial by the lift,
 #   a quota, and ONCE through the screen and E, its picture refused as
 #   unsettled and for nothing else.
+# - reuse, SlotReuse: every lumel full bright, W 2 in fixed bands with
+#   worker 2 held until the join releases it; the spawn's return from the
+#   yard under a cap, the stale mode, and ONCE, one construction leaving
+#   a tile BUILDING in a slot a yard tile left; both pictures' evidence
+#   anchored at the spawn placement the guest recorded, then the picture
+#   the bright view held off its tiles outside the stamp, its partial
+#   tile's rows read apart.
 #
 # Run as `nu eviction.nu <kernel> <image> <disk> <out> [fixture...]`,
 # through `stress.just`'s `eviction image out`; every fixture by default.
@@ -31,13 +38,20 @@ const TILES = (path self | path dirname | path join .. .. .. jab game fps test t
 # the cap under which the two views' keys bracket the pool, each within
 # it and their union past it
 const CAP = 512
+const TILE_SIDE = 64
 const TILE_TEXELS = 4096
 const TILE_ROW_TEXELS = 64
 const TILE_BYTES = 16384
-# the API's records, the end marker's kind (gauge.nu's KIND_END), and a
-# dump header's state of a tile in construction
+# the API's records, the end marker's kind (gauge.nu's KIND_END), a dump
+# header's kind and its texel records a tile (tiles.nu's DUMP_KIND and
+# DUMP_RECORDS, twelve texels a record from its byte 12), and a header's
+# state of a tile in construction
 const RECORD = 64
 const KIND_END = 9
+const DUMP_KIND = 16
+const DUMP_RECORDS = 342
+const DUMP_TEXELS_AT = 12
+const DUMP_TEXELS_END = 60
 const DUMP_BUILDING = 1
 # a boundary's budget: TILE_ALLOWANCE_US of time, or TILE_QUOTA's 96
 # tiles of texels, which a boundary stopped by it has published 96 of
@@ -45,6 +59,7 @@ const ALLOWANCE_US = 1000
 const QUOTA_TILES = 96
 # the O frame's modes and the record's kept quota
 const LIFTED = 1
+const FROZEN = 2
 const STALE = 4
 const ONCE = 8
 const QUOTA_KEPT = 16
@@ -52,6 +67,8 @@ const QUOTA_KEPT = 16
 const REBUILD_TILES = 32
 const SPAWN = { name: "spawn", x: 29.0, y: 2.5, z: 1.6, yaw: 150, pitch: 0 }
 const BAY = { name: "bay", x: 20.0, y: 17.0, z: 1.6, yaw: 180, pitch: 5 }
+# SlotReuse's other view, its walls' materials none of the spawn's
+const YARD = { name: "yard", x: 40.0, y: 6.0, z: 1.6, yaw: 90, pitch: 10 }
 # the HUD's stamp from the start of every launch (raise-frame's M, before
 # anything else is sent): a frame's number modulo STAMP_SPAN on its screen
 const STAMP_AT = 1200
@@ -98,6 +115,41 @@ const HELD_END_AT = 3400
 const HELD_SECONDS = 8
 const HELD_TILES = 32
 const HELD_ROWS = 8
+# SlotReuse, every time in ms: the L's full bright, W 2 in fixed bands,
+# and J's hold of worker 2 first, the stamp at STAMP_AT; the cap of CAP,
+# the lift, the stale mode, and REBUILD_TILES whole tiles a boundary with
+# a cold start at REUSE_CAP_AT, the start view the spawn, dumped at
+# REUSE_SPAWN_DUMP; the yard at REUSE_YARD, dumped at REUSE_YARD_DUMP;
+# the quota of REUSE_TILES tiles and REUSE_ROWS rows with ONCE at
+# REUSE_ONCE, the yard settled so its one construction waits on the
+# spawn, placed at REUSE_RETURN; D with byte 8 at REUSE_DUMP, the screen at
+# REUSE_SCREEN, E at REUSE_END. The reference, the bright spawn view
+# held off its tiles: the same knobs with the L's construction frozen,
+# the spawn placed at REUSE_HELD_AT, its screen and E at
+# REUSE_HELD_SCREEN and REUSE_HELD_END.
+const REUSE_LEVEL_AT = 1000
+const REUSE_WORKERS_AT = 1050
+const REUSE_HOLD_AT = 1100
+const REUSE_CAP_AT = 1300
+const REUSE_SPAWN_DUMP = 2300
+const REUSE_YARD = 2500
+const REUSE_YARD_DUMP = 3600
+const REUSE_ONCE = 3800
+const REUSE_RETURN = 4100
+const REUSE_DUMP = 4500
+const REUSE_SCREEN = 4700
+const REUSE_END = 4900
+const REUSE_SECONDS = 9
+const REUSE_TILES = 50
+const REUSE_ROWS = 8
+const REUSE_HELD_AT = 1500
+const REUSE_HELD_SCREEN = 2700
+const REUSE_HELD_END = 2900
+const REUSE_HELD_SECONDS = 7
+# the exits a held round's join check and its watchdog end a guest with
+# (workers.S's round_joined)
+const BOUNDARY_UNJOINED = "fps: tile boundary before the round joined"
+const HOLD_EXPIRED = "fps: held job never released"
 
 # The console's O frame, a debug build's (test.nu's pool-frame): byte 4
 # the modes, byte 6 a cold start, then words from byte 8: the slots, a
@@ -112,6 +164,24 @@ def pool-frame [--modes: int = 0, --cold, --slots: int = 0, --quota: int = 0]: n
 # and with `--building` the tile in construction too.
 def dump-frame [--building]: nothing -> binary {
     [("D" | into binary), 0x[00 00 00], 0x[ff ff ff ff], (if $building { 0x[01] } else { 0x[00] }), (0..<55 | each {|i| 0x[00] } | bytes collect)] | bytes collect
+}
+
+# The console's L frame (test.nu's level-frame): every tile forgotten at
+# the next boundary, every lumel full bright first when `bright`,
+# construction frozen when `held`, else the quota and the allowance
+# lifted.
+def level-frame [bright: bool, held: bool]: nothing -> binary {
+    let flag = {|on: bool| if $on { 0x[01] } else { 0x[00] } }
+    [("L" | into binary), 0x[00 00 00], (do $flag $bright), (do $flag $held), 0x[00], 0x[00], (0..<56 | each {|i| 0x[00] } | bytes collect)] | bytes collect
+}
+
+# The console's J frame, a debug build's (test.nu's jobs-frame): the
+# delayed worker's index plus one in byte 4, its delay in microseconds
+# from byte 8, the cancel in byte 12, the faulting worker in byte 13, and
+# in byte 14 (`--hold`) the delayed worker held in fixed bands until the
+# round's join reaches its index.
+def jobs-frame [delayed: int, delay_us: int, cancel: bool, fault: int, --hold]: nothing -> binary {
+    [("J" | into binary), 0x[00 00 00], ($delayed | into binary | bytes at 0..<1), 0x[00 00 00], ($delay_us | into binary | bytes at 0..<4), (if $cancel { 0x[01] } else { 0x[00] }), ($fault | into binary | bytes at 0..<1), (if $hold { 0x[01] } else { 0x[00] }), (0..<49 | each {|i| 0x[00] } | bytes collect)] | bytes collect
 }
 
 # A capture's dumps keyed through tiles.nu in a nu of its own: each
@@ -175,12 +245,15 @@ def displayed-frame [m: record, window: record, stamp: int]: nothing -> oneof<in
 # A picture's refusals, each a kind, its detail, and the frames it
 # names, in prerequisite order, a refusal ending the checks that need what
 # it refuses. `e` is a launch's evidence: its `measure`, its `capture`
-# (null when it took none), `from` (the phase's first frame), and the
-# screen's `completed` and E's `ended`, seconds from the start (null when
-# unrecorded). The measurement incomplete, else invalid; the capture
-# absent, else its stamp unreadable; with both usable, the stamp naming no
-# frame f with last_build + 1 <= f < final (picture-window), else each
-# frame from last_build + 1 through the displayed one unsettled; and
+# (null when it took none), `from` (the window's first frame: a phase's,
+# or the frame after a recorded placement), `published` (a publication
+# from `from` required; none when absent), and the screen's `completed`
+# and E's `ended`, seconds from the start (null when unrecorded). The
+# measurement incomplete, else invalid; the capture absent, else its stamp
+# unreadable; with both usable, nothing published from `from` when one is
+# required, else the stamp naming no frame f with last_build + 1 <= f <
+# final (picture-window), else each frame from last_build + 1 through the
+# displayed one unsettled; and
 # whatever those hold, the screen's completion or E's write unrecorded,
 # else E written at or before the screen completed. Empty when the
 # picture is bound.
@@ -200,7 +273,9 @@ export def picture-refusals [e: record]: nothing -> list<record<kind: string, de
     let framed = (if ($measured | is-not-empty) or ($read | is-not-empty) { [] } else {
         let window = (picture-window $m $e.from)
         let shown = (displayed-frame $m $window $stamp)
-        if $shown == null {
+        if ($e.published? | default false) and $window.last_build < $e.from {
+            [{ kind: "no publication", detail: $"nothing published from frame ($e.from) before the end marker's, ($window.final)", frames: [] }]
+        } else if $shown == null {
             [{ kind: "outside the window", detail: $"the stamp ($stamp) names no frame from ($window.last_build + 1) before the end marker's, ($window.final)", frames: [] }]
         } else {
             let unsettled = ($m.rows | where {|r| $r.frame > $window.last_build and $r.frame <= $shown } | where {|r| not (settled $r) })
@@ -222,6 +297,31 @@ export def picture-refusals [e: record]: nothing -> list<record<kind: string, de
         }
     }
     $measured ++ $read ++ $framed ++ $timed
+}
+
+# A dumped tile's texels as its TILE_SIDE rows of bytes, read from the
+# capture's records: the one dump header naming the tile's slot, key, and
+# frame, then its DUMP_RECORDS texel records, twelve texels a record. The
+# capture's dumps are read whole first (dump-keys), so a header's records
+# follow it unbroken.
+def tile-rows [api: binary, tile: record]: nothing -> list<binary> {
+    let word = {|o: int| $api | bytes at $o..<($o + 4) | into int --endian little }
+    let headers = ($api | bytes index-of --all ($DUMP_KIND | into binary | bytes at 0..<4) | where {|o| ($o mod $RECORD) == 0 } | where {|o| (do $word ($o + 4)) == $tile.slot and (do $word ($o + 8)) == $tile.key and (do $word ($o + 40)) == $tile.frame })
+    assert equal ($headers | length) 1 $"one dump header of slot ($tile.slot), key ($tile.key), frame ($tile.frame)"
+    let at = ($headers | first)
+    let texels = (1..$DUMP_RECORDS | each {|i| $api | bytes at ($at + $i * $RECORD + $DUMP_TEXELS_AT)..<($at + $i * $RECORD + $DUMP_TEXELS_END) } | bytes collect | bytes at 0..<($TILE_TEXELS * 4))
+    0..<$TILE_SIDE | each {|y| $texels | bytes at ($y * $TILE_SIDE * 4)..<(($y + 1) * $TILE_SIDE * 4) }
+}
+
+# The pixels of row `y` over which two captures differ, at most `most`,
+# each as [x, y].
+def pixels-differ [p: binary, q: binary, y: int, most: int]: nothing -> list<list<int>> {
+    let row = {|c: binary|
+        let head = (ppm-head $c)
+        let width = ($c | bytes at 0..<$head | decode | lines | get 1 | split row " " | first | into int)
+        $c | bytes at ($head + $y * $width * 3)..<($head + ($y + 1) * $width * 3) | chunks 3
+    }
+    do $row $p | zip (do $row $q) | enumerate | where {|e| $e.item.0 != $e.item.1 } | first $most | each {|e| [$e.index $y] }
 }
 
 # A capture with one pixel's three bytes written.
@@ -648,8 +748,172 @@ export def held-partial [kernel: path, image: path, disk: path, out: path]: noth
     { from: $from, first_miss: $first_miss, displayed: $displayed, final: $m.final, completed: $e.completed, ended: $e.ended, building: ($building | get 0), refused: ($refused | get 0 | reject frames) }
 }
 
+# SlotReuse: a partial tile and stale entries unseen, a held worker
+# joined, each case deterministic, in one launch. Every lumel full bright,
+# W 2 in fixed bands, and J holding worker 2 until the join releases it,
+# from the start; the cap of CAP, the lift, the stale mode, and
+# REBUILD_TILES whole tiles a boundary from a cold start, the spawn
+# dumped at its settle; the yard, whose walls draw none of the spawn's
+# materials, dumped at its settle; then a quota of REUSE_TILES tiles and
+# REUSE_ROWS rows with ONCE, and the spawn: its one construction
+# publishes REUSE_TILES of its renewed keys, leaves the rest's stale
+# entries naming slots the yard's tiles hold, and holds one tile BUILDING
+# at row REUSE_ROWS in a slot a yard tile left; D with byte 8, the
+# stamped screen, E. The reference, the bright spawn view held off its
+# tiles under the same knobs, stamped, screened, E after. Asserted in
+# order: 0, the exits, neither of round_joined's lines on the UART; 1,
+# both pictures' evidence, each window anchored at the spawn placement
+# the guest recorded, the run's after its final spawn placement with a
+# publication there required, the reference's from its own placement
+# under the frozen configuration, and two negatives only that anchor
+# refuses, none needing the tested image's exact count or BUILDING
+# state; 2, the pixels alone, the screen the reference's outside the
+# stamp; 3, the frozen state: the one construction since the ONCE
+# publishing REUSE_TILES at the frame after the spawn's first miss,
+# BUILDING 1 from it through the end marker, the displayed frame's
+# records BUILDING 1 and blocks missed; 4, the partial tile row by row:
+# no tile of the yard's own keys with a spawn tile's texels whole, the
+# BUILDING tile a spawn key's in a slot a yard tile left, its rows below
+# REUSE_ROWS that key's, its rows from there the yard tile's, at least
+# one of them apart from the key's. Returns the frames, the tile, and the
+# refusals.
+export def slot-reuse [kernel: path, image: path, disk: path, out: path]: nothing -> record {
+    let label = "the slot reuse"
+    let at = {|ms: int, bytes: binary| { at: ($ms * 1ms), bytes: $bytes } }
+    let knobs = {|held: bool| [
+        (do $at $REUSE_LEVEL_AT (level-frame true $held))
+        (do $at $REUSE_WORKERS_AT (gauge workers-frame 2 0))
+        (do $at $REUSE_HOLD_AT (jobs-frame 2 0 false 0 --hold))
+        (do $at $STAMP_AT (raise-frame 0 --stamp))
+    ] }
+    let stale = ($LIFTED + $STALE)
+    let once = ($LIFTED + $STALE + $ONCE)
+    let quota = ($REUSE_TILES * $TILE_TEXELS + $REUSE_ROWS * $TILE_ROW_TEXELS)
+    let ended = (do $at $REUSE_END (pose command-frame "E"))
+    let sends = ((do $knobs false) ++ [
+        (do $at ($REUSE_CAP_AT - 50) (pose pose-frame $SPAWN))
+        (do $at $REUSE_CAP_AT (pool-frame --modes $stale --cold --slots $CAP --quota ($REBUILD_TILES * $TILE_TEXELS)))
+        (do $at $REUSE_SPAWN_DUMP (dump-frame))
+        (do $at $REUSE_YARD (pose pose-frame $YARD))
+        (do $at $REUSE_YARD_DUMP (dump-frame))
+        (do $at $REUSE_ONCE (pool-frame --modes $once --slots $CAP --quota $quota))
+        (do $at $REUSE_RETURN (pose pose-frame $SPAWN))
+        (do $at $REUSE_DUMP (dump-frame --building))
+        $ended
+    ] | sort-by at)
+    let dir = ($out | path join "reuse")
+    let run = (jab launch --kernel $kernel --image $image --out $dir --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen ($REUSE_SCREEN * 1ms) --seconds $REUSE_SECONDS)
+    # 0, the exits, read by the line: the kernel's exit lands seconds after
+    # it, and a screen taken first ends the machine with status 0
+    let said = ($run.serial | lines)
+    assert (not ($said | any {|l| $l | str contains $BOUNDARY_UNJOINED })) $"($label): the boundary ran before its round joined, exit 15: `($BOUNDARY_UNJOINED)`, status ($run.status)"
+    assert (not ($said | any {|l| $l | str contains $HOLD_EXPIRED })) $"($label): unexercised, the hold expired unreleased, exit 16: `($HOLD_EXPIRED)`, status ($run.status)"
+    assert equal (open --raw $run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)"
+    assert ($run.screen != "") $"($label)'s screen taken"
+    # the reference, the bright spawn view held off its tiles
+    let ref_ended = (do $at $REUSE_HELD_END (pose command-frame "E"))
+    let ref_sends = ((do $knobs true) ++ [(do $at $REUSE_HELD_AT (pose pose-frame $SPAWN)) $ref_ended] | sort-by at)
+    let ref_run = (jab launch --kernel $kernel --image $image --out ($out | path join "reuse_held") --set DEBUG --sound --api --disk $disk --serial "fps" --send $ref_sends --screen ($REUSE_HELD_SCREEN * 1ms) --seconds $REUSE_HELD_SECONDS)
+    assert equal (open --raw $ref_run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)'s reference"
+    assert ($ref_run.screen != "") $"($label)'s reference's screen taken"
+
+    # 1, both pictures' evidence ahead of any pixel, each measured with a
+    # leg a placement so a frame's leg is the placements it drew under
+    let legs = [
+        { name: "start", places: [], pad: [] }
+        { name: "spawn", places: [$SPAWN], pad: [] }
+        { name: "yard", places: [$YARD], pad: [] }
+        { name: "return", places: [$SPAWN], pad: [] }
+    ]
+    let m = (gauge measure $run.api $legs)
+    assert ($m.complete and $m.valid and $m.schema == 5) $"($label) complete and valid at schema 5: ($m.problems | str join '; ') ($m.invalid | str join '; ')"
+    let placed = ($m.rows | where leg == "return" | get -o 0.frame)
+    assert ($placed != null) $"($label): the final spawn placement recorded"
+    let configured = ($m.rows | where {|r| $r.quota == $quota and $r.config_flags == ($once + $QUOTA_KEPT) } | get -o 0.frame)
+    assert ($configured != null and $configured <= ($placed - 1)) $"($label): the ONCE's configuration in force from frame ($configured), before the final spawn placement at ($placed)"
+    let e_index = ($sends | enumerate | where {|x| $x.item.at == $ended.at and $x.item.bytes == $ended.bytes } | get 0.index)
+    let evidence = { label: $label, measure: $m, capture: (capture-of $run.screen), from: ($placed + 1), published: true, completed: $run.screen_completed, ended: ($run.send_seconds | get $e_index) }
+    let refused = (picture-refusals $evidence)
+    assert (($refused | where kind != "unsettled") | is-empty) $"($label)'s picture bound after its final spawn placement, refused for nothing but unsettled: ($refused | each {|r| $'($r.kind): ($r.detail)' } | str join '; ')"
+    let ref_legs = [{ name: "start", places: [], pad: [] }, { name: "spawn", places: [$SPAWN], pad: [] }]
+    let ref_m = (gauge measure $ref_run.api $ref_legs)
+    assert ($ref_m.complete and $ref_m.valid and $ref_m.schema == 5) $"($label)'s reference complete and valid at schema 5: ($ref_m.problems | str join '; ') ($ref_m.invalid | str join '; ')"
+    let ref_placed = ($ref_m.rows | where leg == "spawn" | get -o 0)
+    assert ($ref_placed != null and (($ref_placed.config_flags bit-and $FROZEN) != 0)) $"($label)'s reference's spawn placement recorded under the frozen configuration: ($ref_placed | select -o frame config_flags)"
+    let ref_index = ($ref_sends | enumerate | where {|x| $x.item.at == $ref_ended.at and $x.item.bytes == $ref_ended.bytes } | get 0.index)
+    let ref_evidence = { label: $"($label)'s reference", measure: $ref_m, capture: (capture-of $ref_run.screen), from: $ref_placed.frame, published: false, completed: $ref_run.screen_completed, ended: ($ref_run.send_seconds | get $ref_index) }
+    let ref_refused = (picture-refusals $ref_evidence)
+    assert (($ref_refused | where kind != "unsettled") | is-empty) $"($label)'s reference's picture bound from its spawn placement, refused for nothing but unsettled: ($ref_refused | each {|r| $'($r.kind): ($r.detail)' } | str join '; ')"
+    let ref_shown = (displayed-frame $ref_m (picture-window $ref_m $ref_placed.frame) (stamp-of $ref_evidence.capture))
+    let tiled = ($ref_m.rows | where {|r| $r.frame >= $ref_placed.frame and $r.frame <= $ref_shown and ($r.tiled_pixels != 0 or $r.tiles_built != 0 or $r.building != 0) })
+    assert ($tiled | is-empty) $"($label)'s reference held off its tiles from its placement, frame ($ref_placed.frame), through its displayed one, ($ref_shown): ($tiled | first 3 | select frame tiled_pixels tiles_built building)"
+    # the negatives only the anchor refuses, each inside the configuration's
+    # window and outside the placement's
+    let early_capture = (stamp-written $ref_evidence.capture ($ref_placed.frame - 1))
+    assert equal (stamp-of $early_capture) (($ref_placed.frame - 1) mod $STAMP_SPAN) $"($label)'s reference re-stamped to frame ($ref_placed.frame - 1) reads back"
+    let early = (picture-refusals ($ref_evidence | upsert capture $early_capture))
+    assert (($early | get kind) == ["outside the window"]) $"($label)'s reference re-stamped to the frame before its placement, ($ref_placed.frame - 1), refused as outside the window: ($early | each {|r| $'($r.kind): ($r.detail)' } | str join '; ')"
+    let moved = ($m.rows | each {|r| if $r.frame > $placed { $r | upsert tiles_built 0 } else if $r.frame == ($placed - 1) { $r | upsert tiles_built $REUSE_TILES } else { $r } })
+    let unpublished = (picture-refusals ($evidence | upsert measure ($m | upsert rows $moved)))
+    assert (($unpublished | get kind) == ["no publication"]) $"($label): its publication moved to frame ($placed - 1), after the ONCE's configuration and before the final spawn placement, refused as no publication: ($unpublished | each {|r| $'($r.kind): ($r.detail)' } | str join '; ')"
+
+    # 2, the pixels alone
+    let a = (stamp-written $evidence.capture 0)
+    let b = (stamp-written $ref_evidence.capture 0)
+    if $a != $b {
+        let rows_apart = (rows-differ $a $b [0 0 1920 1080])
+        let first_row = ($rows_apart | get -o 0)
+        let pixels = (if $first_row == null { [] } else { pixels-differ $a $b $first_row 5 })
+        assert false $"($label): the screen the bright spawn view held off its tiles outside the stamp's cells, ($rows_apart | length) rows differing from row ($first_row), its first pixels apart ($pixels)"
+    }
+
+    # 3, the frozen state
+    let first_miss = ($m.rows | where {|r| $r.frame >= $placed and $r.missed_blocks > 0 } | get -o 0.frame)
+    assert ($first_miss != null) $"($label): the spawn's return drew blocks without their tiles from its placement at ($placed)"
+    let published = ($m.rows | where {|r| $r.frame >= $configured and $r.tiles_built > 0 } | select frame tiles_built)
+    assert ($published == [{ frame: ($first_miss + 1), tiles_built: $REUSE_TILES }]) $"($label): one construction since the ONCE, at the frame after the spawn's first miss, ($first_miss + 1), publishing ($REUSE_TILES): ($published | first 3)"
+    let unheld = ($m.rows | where {|r| $r.frame > $first_miss and $r.building != 1 })
+    assert ($unheld | is-empty) $"($label): BUILDING 1 on every frame from ($first_miss + 1) through the end marker's, ($m.final): ($unheld | first 3 | select frame building tiles_built)"
+    let displayed = (displayed-frame $m (picture-window $m ($placed + 1)) (stamp-of $evidence.capture))
+    let shown = ($m.rows | where frame == $displayed | get 0)
+    assert ($shown.building == 1 and $shown.missed_blocks > 0) $"($label): the displayed frame ($displayed)'s records BUILDING 1 and blocks missed: ($shown | select frame building missed_blocks)"
+
+    # 4, the partial tile row by row
+    let read = (dump-keys ($dir | path join "api.out") ($dir | path join "keys.nuon"))
+    assert ($read.problems | is-empty) $"($label)'s dumps read whole: ($read.problems | first 3)"
+    assert equal ($read.dumps | length) 3 $"($label) dumped the spawn, the yard, and the return"
+    let spawn_tiles = ($read.dumps | get 0)
+    let yard_tiles = ($read.dumps | get 1)
+    let spawn_keys = ($spawn_tiles | get key)
+    let spawn_hashes = ($spawn_tiles | get texels_sha256)
+    let alike = ($yard_tiles | where {|t| ($t.key not-in $spawn_keys) and ($t.texels_sha256 in $spawn_hashes) })
+    assert ($alike | is-empty) $"($label): no tile of the yard's own keys with a spawn tile's texels whole: ($alike | length) alike, ($alike | first 3 | select -o slot key surface)"
+    let building = ($read.dumps | get 2 | where state == $DUMP_BUILDING)
+    assert equal ($building | length) 1 $"($label)'s last dump holds one BUILDING tile: ($building | select -o slot key row)"
+    let partial = ($building | first)
+    let complete = ($spawn_tiles | where key == $partial.key | get -o 0)
+    assert ($complete != null and $partial.row == $REUSE_ROWS) $"($label): the BUILDING tile a spawn key's at row ($REUSE_ROWS): key ($partial.key), row ($partial.row)"
+    let left = ($yard_tiles | where slot == $partial.slot | get -o 0)
+    assert ($left != null and ($left.key not-in $spawn_keys)) $"($label): the BUILDING tile's slot ($partial.slot) a yard tile's at the yard's settle: ($left | select -o key generation)"
+    let rows = (tile-rows $run.api $partial)
+    let whole = (tile-rows $run.api $complete)
+    let old = (tile-rows $run.api $left)
+    let built_wrong = (0..<$REUSE_ROWS | where {|y| ($rows | get $y) != ($whole | get $y) })
+    assert ($built_wrong | is-empty) $"($label): the partial tile's rows below ($REUSE_ROWS) its key's complete rows, rows ($built_wrong) differing"
+    let unbuilt_new = ($REUSE_ROWS..<$TILE_SIDE | where {|y| ($rows | get $y) != ($old | get $y) })
+    assert ($unbuilt_new | is-empty) $"($label): the partial tile's rows from ($REUSE_ROWS) the evicted yard tile's, rows ($unbuilt_new | first 5) differing"
+    let unbuilt_apart = ($REUSE_ROWS..<$TILE_SIDE | where {|y| ($rows | get $y) != ($whole | get $y) })
+    assert ($unbuilt_apart | is-not-empty) $"($label): the partial tile's rows from ($REUSE_ROWS) differ from its key's complete rows in at least one texel"
+    {
+        configured: $configured, placed: $placed, first_miss: $first_miss, displayed: $displayed, final: $m.final, completed: $evidence.completed, ended: $evidence.ended,
+        partial: ($partial | select slot key row generation), left: ($left | select key generation), unbuilt_apart: ($unbuilt_apart | length),
+        refused: ($refused | each {|r| $r | reject frames }), reference: { placed: $ref_placed.frame, displayed: $ref_shown, final: $ref_m.final },
+        negatives: { early: ($early | get kind), unpublished: ($unpublished | get kind) },
+    }
+}
+
 def main [kernel: path, image: path, disk: path, out: path, ...fixtures: string] {
-    let asked = (if ($fixtures | is-empty) { ["cycle" "rebuild" "held"] } else { $fixtures })
+    let asked = (if ($fixtures | is-empty) { ["cycle" "rebuild" "held" "reuse"] } else { $fixtures })
     mkdir $out
     for f in $asked {
         let s = (date now)
@@ -657,6 +921,7 @@ def main [kernel: path, image: path, disk: path, out: path, ...fixtures: string]
             "cycle" => (eviction-cycle $kernel $image $disk $out)
             "rebuild" => (rebuild-bound $kernel $image $disk $out)
             "held" => (held-partial $kernel $image $disk $out)
+            "reuse" => (slot-reuse $kernel $image $disk $out)
             _ => (error make { msg: $"no fixture ($f)" })
         })
         let took = (((date now) - $s) / 1sec | math round --precision 1)

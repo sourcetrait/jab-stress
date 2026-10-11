@@ -53,7 +53,14 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   each phase publishing at exactly its frames, about 105 seconds; and
   `held` (HeldPartial), the spawn's construction held partial by the
   lift, a quota of 32 tiles and 8 rows, and ONCE through its screen and
-  E, about 13 seconds. `stress.just`'s `eviction image out [fixture...]`
+  E, about 13 seconds; and `reuse` (SlotReuse), full-bright lumels with
+  worker 2 held until the join releases it, the spawn's return from the
+  yard leaving one tile in construction in a slot a yard tile left, its
+  picture checked against the bright view held off its tiles and the
+  partial tile read row by row, about 60 seconds. The yard draws none
+  of the spawn's materials: under full-bright lumels a tile's texels are
+  its material's at its level and tile, so a view sharing materials can
+  leave a partial its own key's texels. `stress.just`'s `eviction image out [fixture...]`
   runs them on an image, `eviction-debug out [fixture...]` on the
   checkout's debug build; each fixture's result and runtime land in
   `<out>/<fixture>.nuon`.
@@ -75,6 +82,11 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
 - A run goes on past its E to the launch's bound, so its records hold
   frames after the end marker; a cut meant to drop the marker cuts at
   the marker's own record, the first of its kind.
+- A picture's window can start at a placement the guest recorded: the
+  launch is measured with a leg a placement, so a frame's leg names the
+  placements it drew under and a placement's frame is the first of its
+  leg. `reuse` binds its run after its final spawn placement, with a
+  publication there required, and its reference from its own placement.
 - `fps/probe/` holds the probes, one directory per task: `handoff`,
   `pool`, `eviction`, `join`, and `nu` for probes of nushell's own
   behaviour.
