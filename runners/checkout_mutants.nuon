@@ -1,30 +1,120 @@
 {
- nonce: "81OGFuGAAzi",
- args_type: "record<jab: string, set: string, only: list<string>>",
- result_type: "record<results: table<name: string, exit: int, caught: bool, at: string>, restored: bool>",
- body: "let root = $args.jab
+ nonce: "ehquII7YV8C",
+ args_type: "record<jab: string, set: string, only: list<string>, control: record<program: string, ok: string>, logs: string, budget: int>",
+ result_type: "record<control_ok: bool, every: bool, restored: bool, caught: int, unrun: list<string>, head: oneof<string, nothing>, logs: string, results: table<name: string, applied: bool, exit: oneof<int, nothing>, class: string, expected: string, title: string, seconds: float>, misses: table<name: string, applied: bool, exit: oneof<int, nothing>, class: string, expected: string, title: string, seconds: float>>",
+ body: "use /home/box/proj/sourcetrait/jab-stress/runners/provenance.nu [failure-of assertion-kind]
+
+let a = $args
+let root = ($a.jab | path expand)
 let jf = ($root | path join \"justfile\")
-let all = (open $args.set | where {|m| $m.name in $args.only })
-let files = ($all | each {|m| $m.edits | get file } | flatten | uniq)
-let saved = ($files | each {|f| let p = ($root | path join $f); { path: $p, text: (open --raw $p | decode), hash: (open --raw $p | hash sha256) } })
-mut results = []
-for m in $all {
-    let r = (try {
-        for e in $m.edits {
-            let p = ($root | path join $e.file)
-            let text = (open --raw $p | decode)
-            let n = (($text | split row $e.find | length) - 1)
-            if $n != 1 { error make {msg: $\"($e.file): the find matches ($n) times\"} }
-            $text | str replace -n $e.find $e.put | save -f $p
+if ($a.logs | path type) != null { error make {msg: $\"($a.logs) exists; a set's logs are written once\"} }
+if ($a.only | is-empty) { error make {msg: \"`only` names no mutant\"} }
+let set = (open $a.set)
+let names = ($set | get name)
+let twice = ($names | uniq --repeated)
+if not ($twice | is-empty) { error make {msg: $\"the set names ($twice | str join ', ') more than once\"} }
+if \"control\" in $names { error make {msg: \"the set holds a mutant named control, the control's own name\"} }
+let unknown = ($a.only | where {|n| $n not-in $names })
+if not ($unknown | is-empty) { error make {msg: $\"`only` names ($unknown | str join ', '), which the set does not hold\"} }
+let chosen = ($set | where {|m| $m.name in $a.only })
+let foreign = ($chosen | where {|m| $m.program != $a.control.program })
+if not ($foreign | is-empty) { error make {msg: $\"($foreign | get name | str join ', ') test a program other than the control's, ($a.control.program)\"} }
+let files = ($chosen | each {|m| $m.edits | get file } | flatten | uniq)
+let saved = ($files | each {|f|
+    let p = ($root | path join $f)
+    let bytes = (open --raw $p | into binary)
+    { file: $f, path: $p, hash: ($bytes | hash sha256), bytes: $bytes }
+})
+let top = (^git -C $root rev-parse --show-toplevel | complete)
+let tracked = ($top.exit_code == 0 and ($top.stdout | str trim | path expand) == $root)
+let head = (if $tracked { ^git -C $root rev-parse HEAD | str trim } else { null })
+let before = (if $tracked { ^git -C $root status --porcelain | lines } else { [] })
+mkdir $a.logs
+let started = (date now)
+let runs = ([{ name: \"control\", program: $a.control.program, expect: \"\", edits: [] }] | append $chosen)
+mut rows = []
+mut unrun = []
+mut longest = 0sec
+mut restored = true
+mut halted = false
+for mu in $runs {
+    let elapsed = ((date now) - $started)
+    let over = ($a.budget > 0 and ($elapsed + $longest) > ($a.budget * 1sec))
+    if $halted or ($mu.name != \"control\" and $over) {
+        $unrun = ($unrun | append $mu.name)
+        continue
+    }
+    let expected = ($mu.class? | default (if $mu.name == \"control\" { \"passed\" } else { \"caught\" }))
+    mut texts = []
+    mut fault = \"\"
+    for e in $mu.edits {
+        let prior = ($texts | where {|t| $t.file == $e.file } | get -o 0.text)
+        let text = (if $prior != null { $prior } else { open --raw ($root | path join $e.file) | decode })
+        let n = (($text | split row $e.find | length) - 1)
+        if $n != 1 {
+            if $fault == \"\" { $fault = $\"($e.file): the find matches ($n) times\" }
+        } else {
+            $texts = ($texts | where {|t| $t.file != $e.file } | append { file: $e.file, text: ($text | str replace -n $e.find $e.put) })
         }
-        ^just --justfile $jf --working-directory $root test $m.program | complete
-    } catch {|e| { exit_code: -1, stdout: \"\", stderr: $\"runner: ($e.msg)\" } })
-    for s in $saved { $s.text | save -f $s.path }
-    let out = ($r.stdout + $r.stderr)
-    let caught = ($r.exit_code > 0 and ($out | str contains $m.expect))
-    let at = ($out | lines | where {|l| $l =~ '^\\s+x ' or ($l | str starts-with 'runner:') } | first 1 | str join '' | str trim | str substring 0..<160)
-    $results = ($results | append { name: $m.name, exit: $r.exit_code, caught: $caught, at: $at })
+    }
+    if $fault != \"\" {
+        $rows = ($rows | append { name: $mu.name, applied: false, exit: null, class: \"unapplied\", expected: $expected, title: $fault, seconds: 0.0 })
+        continue
+    }
+    let t0 = (date now)
+    let r = (try {
+        for t in $texts { $t.text | save --raw -f ($root | path join $t.file) }
+        ^just --justfile $jf --working-directory $root test $mu.program | complete | insert faulted false
+    } catch {|e| { exit_code: -1, stdout: \"\", stderr: $\"runner: ($e.msg)\", faulted: true } })
+    let took = ((date now) - $t0)
+    for t in $texts {
+        let s = ($saved | where file == $t.file | first)
+        $s.bytes | save --raw -f $s.path
+    }
+    let held = ($saved | all {|s| (open --raw $s.path | into binary | hash sha256) == $s.hash })
+    let log = ($r.stdout + $r.stderr)
+    $log | save --raw -f ($a.logs | path join $\"($mu.name).log\")
+    let ls = ($log | lines)
+    let failure = (failure-of $ls)
+    let kind = (assertion-kind $ls $failure)
+    let carries = ($mu.expect != \"\" and ($failure.title | str contains $mu.expect))
+    let class = (if $r.faulted {
+        \"faulted\"
+    } else if $mu.name == \"control\" {
+        if $r.exit_code == 0 and ($ls | any {|l| $l starts-with $a.control.ok }) { \"passed\" } else { \"failed\" }
+    } else if $r.exit_code == 0 {
+        \"missed\"
+    } else if $kind != null and $carries and ($failure.title | str contains \"unexercised\") {
+        \"unexercised\"
+    } else if $kind != null and $carries {
+        \"caught\"
+    } else {
+        \"missed\"
+    })
+    let title = (if $r.faulted { $r.stderr } else { $failure.title })
+    $rows = ($rows | append { name: $mu.name, applied: true, exit: $r.exit_code, class: $class, expected: $expected, title: ($title | str substring -g 0..<300), seconds: ($took / 1sec | into float | math round --precision 1) })
+    if $took > $longest { $longest = $took }
+    if not $held { $restored = false; $halted = true }
+    if $mu.name == \"control\" and $class != \"passed\" { $halted = true }
 }
-let restored = ($saved | all {|s| (open --raw $s.path | hash sha256) == $s.hash })
-{ results: $results, restored: $restored }"
+let after = (if $tracked { ^git -C $root status --porcelain | lines } else { [] })
+let hashes = ($saved | all {|s| (open --raw $s.path | into binary | hash sha256) == $s.hash })
+let done = $rows
+let control = ($done | where name == \"control\" | get -o 0)
+let mutants = ($done | where name != \"control\")
+let holds = {|x| $x.class == $x.expected and $x.class not-in [\"unapplied\" \"faulted\"] }
+let result = {
+    control_ok: ($control != null and $control.class == \"passed\"),
+    every: (($unrun | is-empty) and ($mutants | all $holds)),
+    restored: ($restored and $hashes and $after == $before),
+    caught: ($mutants | where class == \"caught\" | length),
+    unrun: $unrun,
+    head: $head,
+    logs: $a.logs,
+    results: $done,
+    misses: ($mutants | where {|x| not (do $holds $x) }),
+}
+let record = ($result | merge { set: ($a.set | path expand), set_sha256: (open --raw $a.set | into binary | hash sha256), control: $a.control, only: $a.only, budget: $a.budget, started: ($started | format date \"%Y-%m-%dT%H:%M:%S%z\"), status: $before, status_after: $after })
+$record | to nuon --indent 1 | save --raw ($a.logs | path join \"results.nuon\")
+$result"
 }

@@ -31,7 +31,7 @@ justfiles in `fps/just/` provide them.
 | `program_mutants.nuon` | gQQhjycy0Bk | a program mutant set: each candidate built through the `jf`'s `cand-build` and tested through its `image-test`, the mutant's `fixtures` passed on, its first failure classed caught only where it is an assertion's own failure (`provenance.nu`) whose title carries the mutant's expect, unexercised where that title also says unexercised, missed otherwise, and held to the mutant's expected `class`; the control passing on a line starting with `ok` (`fps: ok` for the suite's sets, the last fixture's for the eviction set; revised from ap6BdZ4ELNf) |
 | `program_mutants_reasons.nuon` | 5g6hE6ot8h5 | the census set's runner: each mutant credited where its first failure is an assertion's own (`provenance.nu`) whose title, its whitespace collapsed, carries the mutant's non-empty expect and its reason when it names one, held to its expected `credited`, true unless named, once applied, built, and run; the control, the file `control_file` names, passing on a line starting with `ok` (revised from 2CXUCU4XCM9) |
 | `kernel_mutants.nuon` | M2BHJwnugU | a kernel mutant set in the checkout, `just test <program>` for each |
-| `checkout_mutants.nuon` | 81OGFuGAAzi | the mutants of a set that `only` names, in the checkout, inline within the run tool's 600 s bound: each mutant's finds applied exact-once, `just test <program>` run, every touched file written back before the next, the mutant caught where its expect is anywhere in the output of a failing run, and the restore's hashes checked at the end; that credit is weaker than `provenance.nu`'s rule and no log is kept, so its results are not evidence |
+| `checkout_mutants.nuon` | ehquII7YV8C | a set's mutants that `only` names, in the checkout itself, inline within the run tool's 600 s bound, on the program runner's contract: the `control`, a record of its `program` and `ok`, run first unmutated and `passed` on exit 0 with a line starting with its `ok`, every selected mutant's program the control's or nothing runs; each mutant's finds applied exact-once in memory, else `unapplied` with nothing written or run, then `just test <program>`, and the files it touched written back before the next; every run's whole output, stdout then stderr, kept as `<name>.log` under `logs`, which must not exist, beside `results.nuon`, the whole result with the set's hash and the checkout's commit and status before and after; each mutant classed by `provenance.nu`'s rule, caught, unexercised, or missed, a setup failure, `unapplied` or `faulted`, satisfying no class, and held to its `class`, `caught` unless named; a `budget` in seconds, 0 for none, stops it starting a mutant the longest run so far would carry past it, those listed `unrun` for the next call's `only`; a failed control or a failed restore runs nothing more (revised from 81OGFuGAAzi, whose substring credit and lost logs left its results no evidence) |
 | `gauge_mutants.nuon` | bi7K9IFr9wU | the gauge's mutants over a mirror of fps's test files, `rules-mirror` for each |
 | `mutant_titles.nuon` | e1petZD11qo | each mutant log's first error read for `at_assert`, an assertion's own failure (`provenance.nu`), and `matches`, the mutant's non-empty expect in its title, each held to the mutant's expected value, true unless named (revised from cSxa2WQQMwq) |
 | `poolreader_mutants.nuon` | 2rM2CVU5KzA | the pool readers' mutants, each on mirrors laid out as `fps/readers/` beside a link to jab (revised from b45PFb5sQqo) |
@@ -42,11 +42,12 @@ justfiles in `fps/just/` provide them.
 ## The mutant runners' own cases
 
 `program_mutants_cases/` holds the cases that test how the mutant runners
-read a failure: `program_mutants.nuon`, the census set's
-`program_mutants_reasons.nuon`, and the gauge set's `mutant_titles.nuon`,
-which share the rule in `provenance.nu`. Each case carries what each of
-them must make of it: the program runner's `class`, the census runner's
-`credited`, and the titles reader's `at_assert` and `matches`.
+read a failure: `program_mutants.nuon`, `checkout_mutants.nuon`, the
+census set's `program_mutants_reasons.nuon`, and the gauge set's
+`mutant_titles.nuon`, which share the rule in `provenance.nu`. Each case
+carries what each of them must make of it: the program runner's and the
+checkout runner's `class`, the census runner's `credited`, and the titles
+reader's `at_assert` and `matches`.
 
 Run a runner with `cases.just` as its `jf`, `cases.nuon` as its `mutants`,
 and `game` as its `game`. Its `ok` is `eviction reuse: ok`, and its
@@ -62,6 +63,18 @@ the run to those logs and exits, `results` the run's results saved as
 NUON, and only then do its expectations count. Every result must read
 `control_ok` and `every`, or `all`, true. A runner takes about a minute on
 the long engine.
+
+The checkout runner reads the cases through a scratch checkout instead,
+laid out by `just -f cases.just checkout <dir>` (`checkout.nu`): a `case`
+file reading `control`, a justfile whose `test cases` prints the canned
+log `case` names and exits with its status, and `set.nuon`, the cases as a
+set of the one program `cases`, each one edit making `case` its own name,
+so every run exercises the runner's finds and its restore. Run it with
+`jab` the checkout, `set` its `set.nuon`, `only` every case, `control`
+`{program: cases, ok: "eviction reuse: ok"}`, and `budget` 0; then
+`check` holds its `logs` to the canned logs, given the `results` table of
+its `results.nuon` saved as NUON. Its result must read `control_ok`,
+`every`, and `restored` true. It takes a few seconds.
 
 A failure is an assertion's own when the header after the error's title
 names a line of its excerpt whose code, up to the header's column, is

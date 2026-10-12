@@ -3,7 +3,9 @@
 # runners/program_mutants_cases/cases.nuon): nothing builds and nothing
 # runs. A case's test prints its canned log from logs/ and exits with its
 # status, 1 when the log holds nushell's error and 0 otherwise; `check`
-# holds a run to those logs and statuses.
+# holds a run to those logs and statuses. `checkout` lays out the scratch
+# checkout the checkout runner (runners/checkout_mutants.nuon) reads them
+# from.
 
 set shell := ["nu", "-c"]
 
@@ -21,6 +23,11 @@ image-test image out assets kernel *fixtures:
 # `logs` the run's logs directory, `results` its results as NUON.
 check logs results:
     nu '{{cases}}/check.nu' '{{logs}}' '{{results}}'
+
+# The checkout runner's scratch checkout at `dir`, which must not exist:
+# its `case` file, its justfile, and the cases as its set.nuon.
+checkout dir:
+    nu '{{cases}}/checkout.nu' '{{dir}}'
 
 # A composed case's log: shapes.nu's failure for the case, its paths made
 # relative to this repository.
