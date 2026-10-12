@@ -80,8 +80,9 @@ A failure is an assertion's own when the header after the error's title
 names a line of its excerpt whose code, up to the header's column, is
 `assert ` or `assert equal ` at the line's start or after a `{` or a `;`,
 and the label under that line is the assertion's own: `It is not true.`,
-or `left:` and `right:` under a title ending `These are not equal.`. The
-cases cover:
+or `left:` and `right:` under a title ending `These are not equal.`, each
+hanging from `` `-- `` or, where its value runs across lines, from
+`` `-| ``. The cases cover:
 
 - a catch at `assert`, at `assert equal`, and at an `assert` inline after
   a block's brace, and the watchdog unexercised at its assertion;
@@ -99,7 +100,9 @@ cases cover:
   label other than the assertion's own at an assertion's column, the
   assertion's label at a column inside its argument, `assert equal`'s
   labels under a title not ending with its words, and its title over
-  other labels.
+  other labels;
+- an `assert equal` whose left value, and one whose right value, runs
+  across lines, its label hanging from `` `-| ``, each caught.
 
 Three logs are cut from the eviction set's saved failures, their paths
 made relative to this repository, and the control's from its passing

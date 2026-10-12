@@ -57,5 +57,10 @@
   # The census's reason in the assertion's source excerpt alone.
   {name: reason_excerpt, file: "raster.S", edits: [], expect: "every census frame whole and accounting", reason: "does not reassemble", class: caught, credited: false, at_assert: true, matches: true},
   # The census's reason in the title across its wrap.
-  {name: reason_wrapped, file: "raster.S", edits: [], expect: "every census frame whole and accounting", reason: "does not reassemble", class: caught, credited: true, at_assert: true, matches: true}
+  {name: reason_wrapped, file: "raster.S", edits: [], expect: "every census frame whole and accounting", reason: "does not reassemble", class: caught, credited: true, at_assert: true, matches: true},
+  # `assert equal` with its left value across lines, its label hanging from
+  # `-| rather than `--.
+  {name: equal_left_multiline, file: "raster.S", edits: [], expect: "a reused slot's record reads as no refusal", class: caught, credited: true, at_assert: true, matches: true},
+  # The same of its right value.
+  {name: equal_right_multiline, file: "raster.S", edits: [], expect: "a reused slot's record reads as the refusal expected", class: caught, credited: true, at_assert: true, matches: true}
 ]

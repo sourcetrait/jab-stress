@@ -89,6 +89,20 @@ def reason-wrapped [] {
     assert ($refused | is-empty) $"($CENSUS): every census frame whole and accounting, chunk ($refused.0) does not reassemble"
 }
 
+# A refusal's text across two lines, as a record's reader gives it.
+const REFUSAL = "refused: the slot's record does not hold for its tile:\n  generation: 3"
+
+# `assert equal` with its left value across lines, so its label hangs
+# from `-| and runs across them too.
+def equal-left-multiline [] {
+    assert equal $REFUSAL null $"($LABEL): a reused slot's record reads as no refusal: ($REFUSAL | to nuon)"
+}
+
+# The same of its right value.
+def equal-right-multiline [] {
+    assert equal null $REFUSAL $"($LABEL): a reused slot's record reads as the refusal expected"
+}
+
 def main [case: string] {
     match $case {
         "unrelated_unexercised" => { unrelated-unexercised }
@@ -101,6 +115,8 @@ def main [case: string] {
         "reason_wrong" => { reason-wrong }
         "reason_excerpt" => { reason-excerpt }
         "reason_wrapped" => { reason-wrapped }
+        "equal_left_multiline" => { equal-left-multiline }
+        "equal_right_multiline" => { equal-right-multiline }
         _ => { error make {msg: $"no case named ($case)"} }
     }
 }

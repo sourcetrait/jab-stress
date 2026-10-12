@@ -22,7 +22,8 @@ export def failure-of [ls: list<string>]: nothing -> record<title: string, after
 # up to the header's column is that assertion's head, alone or after a
 # block's brace or a semicolon, and the labels under that line are the
 # assertion's own, `It is not true.`, or `left:` and `right:` under a
-# title closing `These are not equal.`; null for any other failure.
+# title closing `These are not equal.`, each hanging from `-- or, a label
+# whose value runs across lines, from `-|; null for any other failure.
 export def assertion-kind [ls: list<string>, failure: record<title: string, after: int>] {
     if $failure.after < 0 { return null }
     let header = ($ls | get -o $failure.after | default "" | parse --regex '^\s*,-\[(?P<file>.+):(?P<line>\d+):(?P<col>\d+)\]$' | get -o 0)
@@ -36,9 +37,9 @@ export def assertion-kind [ls: list<string>, failure: record<title: string, afte
     if $kind == null { return null }
     let labels = ($excerpt | skip ($at + 1) | take while {|l| $l =~ '^\s*:' })
     let own = (if $kind == "assert" {
-        $labels | any {|l| $l | str contains "`-- It is not true." }
+        $labels | any {|l| $l =~ '`-[-|] It is not true\.' }
     } else {
-        ($labels | any {|l| $l | str contains "`-- left:" }) and ($labels | any {|l| $l | str contains "`-- right:" }) and ($failure.title | str ends-with "These are not equal.")
+        ($labels | any {|l| $l =~ '`-[-|] left:' }) and ($labels | any {|l| $l =~ '`-[-|] right:' }) and ($failure.title | str ends-with "These are not equal.")
     })
     if $own { $kind } else { null }
 }

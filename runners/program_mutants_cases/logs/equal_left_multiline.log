@@ -1,0 +1,15 @@
+Error: nu::shell::error
+
+  x the eviction cycle: a reused slot's record reads as no refusal: "refused:
+  | the slot's record does not hold for its tile:
+  |   generation: 3"
+  | These are not equal.
+    ,-[runners/program_mutants_cases/shapes.nu:98:18]
+ 97 | def equal-left-multiline [] {
+ 98 |     assert equal $REFUSAL null $"($LABEL): a reused slot's record reads as no refusal: ($REFUSAL | to nuon)"
+    :                  ^^^^|^^^ ^^|^
+    :                      |      `-- right: null
+    :                      `-| left: "refused: the slot's record does not hold for its tile:
+    :                        |   generation: 3"
+ 99 | }
+    `----
