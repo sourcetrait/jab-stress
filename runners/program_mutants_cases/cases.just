@@ -24,8 +24,9 @@ image-test image out assets kernel *fixtures:
 check logs results:
     nu '{{cases}}/check.nu' '{{logs}}' '{{results}}'
 
-# The checkout runner's scratch checkout at `dir`, which must not exist:
-# its `case` file, its justfile, and the cases as its set.nuon.
+# The checkout runner's scratch checkout at `dir`, which must not exist: a
+# git repository of its own committing its `case` file and its justfile,
+# the cases as its set.nuon, and each forced case's set_<case>.nuon.
 checkout dir:
     nu '{{cases}}/checkout.nu' '{{dir}}'
 

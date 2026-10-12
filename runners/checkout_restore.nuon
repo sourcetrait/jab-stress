@@ -1,0 +1,87 @@
+{
+ nonce: "3ExTLRGTHZA",
+ args_type: "record<logs: string, proc: string>",
+ result_type: "record<call: string, complete: bool, swept: int, strays: list<string>, restored: list<string>, record: string>",
+ body: "use /home/box/proj/sourcetrait/jab-stress/runners/guard.nu [MARK STAGE proc-stat sweep strays stage land]
+
+const SWEEP_WAIT = 2sec
+
+let a = $args
+let started = (date now)
+let since = {|| ((date now) - $started) / 1sec | into float | math round --precision 2 }
+let me = $env.NONCE
+let base = ($a.logs | path join \"baseline.nuon\")
+if ($base | path type) != \"file\" { error make {msg: $\"($base) is no baseline; nothing names a call to recover\"} }
+let b = (open $base)
+if $b.mark != $MARK or $b.stage != $STAGE { error make {msg: $\"the baseline marks with ($b.mark) and stages with ($b.stage), not this guard's ($MARK) and ($STAGE)\"} }
+let root = $b.root
+let call = $b.call
+let record = ($a.logs | path join $\"recovery-($me).nuon\")
+let head = (^git -C $root rev-parse HEAD | str trim)
+let base_record = {
+    recovery: $me,
+    call: $call,
+    root: $root,
+    commit: $b.commit,
+    head: $head,
+    results_present: (($a.logs | path join \"results.nuon\") | path exists),
+    started: ($started | format date \"%Y-%m-%dT%H:%M:%S%.3f%z\"),
+}
+# The call's processes ended first; while any remains nothing is touched.
+let host = (proc-stat $a.proc $nu.pid)
+let sw = (sweep $a.proc $\"($call):\" $nu.pid $host.pgid $started $SWEEP_WAIT)
+if not ($sw.left | is-empty) {
+    $base_record | merge { sweep: $sw, strays: [], paths: [], complete: false, finished: (do $since) } | to nuon --indent 1 | save --raw $record
+    error make {msg: $\"call ($call): processes ($sw.left | str join ', ') remain after the sweep; nothing restored, see ($record)\"}
+}
+# The call's staged files moved into its logs, never deleted.
+let into = ($a.logs | path join \"strays\" $me)
+mut moved = []
+for s in (strays $root $call) {
+    let from = ($root | path join $s)
+    let to = ($into | path join $s)
+    if ($to | path type) != null { error make {msg: $\"($to) exists; a stray is never moved over another\"} }
+    let bytes = (open --raw $from | into binary)
+    mkdir ($to | path dirname)
+    mv $from $to
+    $moved = ($moved | append { file: $s, bytes: ($bytes | bytes length), sha256: ($bytes | hash sha256) })
+}
+# Each recorded path holding a recorded mutation written back from the
+# recorded commit, staged and renamed; a path holding anything else refused.
+mut rows = []
+for p in $b.paths {
+    let path = ($root | path join $p.file)
+    let now = (if ($path | path type) == \"file\" { open --raw $path | into binary | hash sha256 } else { \"\" })
+    let by = ($p.mutated | where hash == $now | get -o 0.mutant)
+    if $now == $p.committed {
+        $rows = ($rows | append { file: $p.file, found: \"committed\", hash: $now, action: \"none\" })
+    } else if $by != null {
+        let bytes = (^git -C $root show $\"($b.commit):($p.file)\" | into binary)
+        let h = ($bytes | hash sha256)
+        if $h != $p.committed {
+            $rows = ($rows | append { file: $p.file, found: $\"mutation ($by)\", hash: $now, action: $\"refused: ($b.commit) holds ($h), not the recorded ($p.committed)\" })
+        } else {
+            let s = (stage $path $bytes $h $call)
+            land $s $path $h
+            $rows = ($rows | append { file: $p.file, found: $\"mutation ($by)\", hash: $now, action: \"restored\" })
+        }
+    } else {
+        $rows = ($rows | append { file: $p.file, found: \"unrecognised\", hash: $now, action: \"refused\" })
+    }
+}
+let done = $rows
+let moved_now = $moved
+let refused = ($done | where {|r| $r.action starts-with \"refused\" })
+$base_record | merge { sweep: $sw, strays: $moved_now, paths: $done, complete: ($refused | is-empty), finished: (do $since) } | to nuon --indent 1 | save --raw $record
+if not ($refused | is-empty) {
+    error make {msg: $\"call ($call): ($refused | each {|r| $'($r.file) ($r.found), ($r.action)' } | str join '; '); see ($record)\"}
+}
+{
+    call: $call,
+    complete: true,
+    swept: ($sw.records | length),
+    strays: ($moved_now | each {|m| $m.file }),
+    restored: ($done | where action == \"restored\" | each {|r| $r.file }),
+    record: $record,
+}"
+}
