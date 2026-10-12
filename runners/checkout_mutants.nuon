@@ -1,0 +1,30 @@
+{
+ nonce: "81OGFuGAAzi",
+ args_type: "record<jab: string, set: string, only: list<string>>",
+ result_type: "record<results: table<name: string, exit: int, caught: bool, at: string>, restored: bool>",
+ body: "let root = $args.jab
+let jf = ($root | path join \"justfile\")
+let all = (open $args.set | where {|m| $m.name in $args.only })
+let files = ($all | each {|m| $m.edits | get file } | flatten | uniq)
+let saved = ($files | each {|f| let p = ($root | path join $f); { path: $p, text: (open --raw $p | decode), hash: (open --raw $p | hash sha256) } })
+mut results = []
+for m in $all {
+    let r = (try {
+        for e in $m.edits {
+            let p = ($root | path join $e.file)
+            let text = (open --raw $p | decode)
+            let n = (($text | split row $e.find | length) - 1)
+            if $n != 1 { error make {msg: $\"($e.file): the find matches ($n) times\"} }
+            $text | str replace -n $e.find $e.put | save -f $p
+        }
+        ^just --justfile $jf --working-directory $root test $m.program | complete
+    } catch {|e| { exit_code: -1, stdout: \"\", stderr: $\"runner: ($e.msg)\" } })
+    for s in $saved { $s.text | save -f $s.path }
+    let out = ($r.stdout + $r.stderr)
+    let caught = ($r.exit_code > 0 and ($out | str contains $m.expect))
+    let at = ($out | lines | where {|l| $l =~ '^\\s+x ' or ($l | str starts-with 'runner:') } | first 1 | str join '' | str trim | str substring 0..<160)
+    $results = ($results | append { name: $m.name, exit: $r.exit_code, caught: $caught, at: $at })
+}
+let restored = ($saved | all {|s| (open --raw $s.path | hash sha256) == $s.hash })
+{ results: $results, restored: $restored }"
+}
