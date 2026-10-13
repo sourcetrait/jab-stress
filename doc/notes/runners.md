@@ -119,8 +119,11 @@ or composed logs with one label or title line changed.
 The checkout runner holds its call to a `deadline`, seconds from the
 call's start, which ends when `results.nuon` is written: by then the
 marked processes its sweeps observed are ended, the files restored and
-verified, and the results recorded, so the run tool never cancels it
-mid-mutant. Give the call a `timeout_ms` at least 30 s past the deadline.
+verified, and the results recorded. A receipt reading `ok` confirms that
+the cleanup and the restore succeeded and that the results were written
+within the deadline; a call interrupted before its receipt, by the run
+tool or the host, may need the recovery. Give the call a `timeout_ms` at
+least 30 s past the deadline.
 The runner keeps a margin of 15 s for the cleanup, an estimate of its
 need: `timeout`'s 5 s before its KILL, the sweep's 4 s, and 6 s for the
 restore and the results. The time left is the deadline less the time
@@ -167,8 +170,9 @@ call is read by its receipt's `ok`, a forced proof by its parts.
 - The atomic write. Each mutation and each restore is written to a staged
   file beside its destination, `.<name>.jabstage.<call>`, given the
   destination's mode, checked against its hash, and renamed into place,
-  after which the destination must carry the staged file's inode. A file
-  so always holds its committed text or a recorded mutation.
+  after which the destination must carry the staged file's inode. Through
+  the runner's writes a file so holds its committed text or a recorded
+  mutation, the rename replacing the name whole.
 - The strays. `git ls-files --others` finds staged files anywhere in a
   checkout, ignored files included, which `git status` does not show.
 - The cancel. The Grammar MCP cancels a call, at its `timeout_ms` or by
