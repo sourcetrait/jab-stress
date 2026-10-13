@@ -8,11 +8,18 @@
 # invalidated counted over every frame read, null where any frame lacks
 # the counter (a schema 2 run records neither), per build the mean of its
 # batches' medians with half their range, and every build's difference
-# from the first build named. Checked first: each run complete, valid,
-# seeded, and at the cadence asked, and the identities' kernel, assets,
-# route, toolchain, cadence, and machine alike across the batches, the
-# image apart. Run under the real nu from a scratch justfile:
-# `nu packetgauge.nu <settled|play> <base> <out.nuon> <label>...`.
+# from the first build named. Each run's cadence and identity are its
+# own, read through gauge.nu's run-request, never the report's summary
+# unless that is the identity's fallback. Checked first: each run
+# complete, valid, seeded, and at the cadence it asked, and the runs'
+# identities' kernel, assets, route, toolchain, cadence, and machine alike
+# across the batches, the image apart. Run under the real nu from a
+# scratch justfile: `nu packetgauge.nu <settled|play> <base> <out.nuon>
+# <label>...`; its own fixtures `nu packetgauge.nu holds <scratch>`.
+
+const GAUGE = "../../../jab/game/fps/test/gauge.nu"
+use $GAUGE [run-request]
+use ./batches.nu [write-batch]
 
 const FIELDS = [draw_us critical_us report_us preparation_us raster_us commands packet_bytes]
 const RECORD = 64
@@ -63,13 +70,16 @@ def held-alike [id: record]: nothing -> record {
 export def analyse [mode: string, base: string, labels: list<string>]: nothing -> record {
     if $mode not-in [settled play] { error make { msg: $"the mode is settled or play, not ($mode)" } }
     let batches = ($labels | each {|label|
-        let g = (open ($base | path join $label "gauge.nuon"))
+        let file = ($base | path join $label "gauge.nuon")
+        let g = (open $file)
         let build = ($label | str replace --regex '_\d+$' '')
         let runs = ($g.runs | each {|r|
             let rows = ($g.rows | where run == $r.run)
             let m = $r.measured
+            let request = (run-request $file $r ($g | get -o identity))
             {
                 run: $r.run,
+                cadence: $request.cadence, image: ($request.identity | get -o build.image_sha256), alike: (held-alike $request.identity),
                 standing: { complete: $m.complete, valid: $m.valid, seeded: $m.seeded, schema: $m.schema, cadences: $m.cadences },
                 l_answers: (if $mode == "settled" { l-answers ($r.out | path join "api.out") } else { null }),
                 outcomes: $m.outcomes,
@@ -79,23 +89,20 @@ export def analyse [mode: string, base: string, labels: list<string>]: nothing -
                 }),
             }
         })
-        {
-            label: $label, build: $build, image: ($g.identity | get -o build.image_sha256),
-            alike: (held-alike $g.identity), cadence: ($g.identity | get -o mode.cadence), runs: $runs,
-        }
+        { label: $label, build: $build, images: ($runs | get image | uniq), runs: $runs }
     })
     let problems = ($batches | each {|b|
         $b.runs | each {|r|
             let s = $r.standing
             [
                 (if $s.complete and $s.valid and $s.seeded { null } else { $"($b.label) run ($r.run): complete ($s.complete), valid ($s.valid), seeded ($s.seeded)" }),
-                (if $s.cadences == [$b.cadence] { null } else { $"($b.label) run ($r.run): cadences ($s.cadences) where ($b.cadence) was asked" }),
+                (if $s.cadences == [$r.cadence] { null } else { $"($b.label) run ($r.run): cadences ($s.cadences) where ($r.cadence) was asked" }),
                 (if $mode == "settled" and $r.l_answers != (($r.legs | length)) { $"($b.label) run ($r.run): ($r.l_answers) L answers for ($r.legs | length) views" } else { null }),
                 ($r.legs | where {|l| $mode == "settled" and ($l.built == 0 or ($l.frames | is-empty)) } | each {|l| $"($b.label) run ($r.run) ($l.leg): built ($l.built), settled ($l.frames | length)" }),
             ] | flatten | compact
         } | flatten
     } | flatten)
-    let alike = ($batches | get alike | uniq)
+    let alike = ($batches | get runs | flatten | get alike | uniq)
     let legs = ($batches | get runs | flatten | get legs | flatten | get leg | uniq)
     let per_batch = ($batches | each {|b|
         {
@@ -148,7 +155,7 @@ export def analyse [mode: string, base: string, labels: list<string>]: nothing -
     })
     {
         mode: $mode, problems: $problems, identities_alike: (($alike | length) == 1), identities: $alike,
-        images: ($batches | each {|b| { label: $b.label, image: $b.image } }),
+        images: ($batches | each {|b| { label: $b.label, images: $b.images } }),
         outcomes: ($batches | each {|b| $b.runs | each {|r| { label: $b.label, run: $r.run, rounds: $r.outcomes.rounds, androids: $r.outcomes.androids, struck: $r.outcomes.struck, pickups: $r.outcomes.pickups } } } | flatten),
         batches: $per_batch, builds: $per_build, differences: $differences,
     }
@@ -158,4 +165,21 @@ def main [mode: string, base: string, out: string, ...labels: string] {
     let doc = (analyse $mode $base $labels)
     $doc | to nuon --indent 1 | save --raw -f $out
     print $"packetgauge ($mode): ($labels | length) batches, ($doc.problems | length) problems, identities alike ($doc.identities_alike); ($out)"
+}
+
+# The reader's own fixture over a synthetic batch it writes under
+# `scratch` (batches.nu): a summary asking cadence 1 over runs asking and
+# playing cadence 0, read with no problem and the runs' cadence standing.
+def "main holds" [scratch: string] {
+    if ($scratch | path exists) { error make { msg: $"the scratch exists: ($scratch)" } }
+    mkdir $scratch
+    let fail = {|name: string, why: string| error make { msg: $"packetgauge holds: ($name): ($why)" } }
+    let named = {|name: string, work: closure| try { do $work } catch {|e| do $fail $name $"raised: ($e.msg | str substring 0..300)" } }
+    let asked = { build: { image_sha256: "holds_image" }, mode: { cadence: 0, workers: 2, grain: 0 } }
+    let run = { identity: $asked, cadence: 0, drawn: [[2 0] [2 0] [2 0]] }
+    write-batch $scratch "disagree_1" ($asked | update mode.cadence 1) [$run $run] | ignore
+    let read = (do $named "a summary disagreeing with its runs" { analyse "play" $scratch [disagree_1] })
+    let says = [$read.problems $read.identities_alike]
+    if $says != [[] true] { do $fail "a summary disagreeing with its runs leaves their cadence standing" ($says | to nuon) }
+    print "packetgauge holds: ok"
 }
