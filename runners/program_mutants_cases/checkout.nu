@@ -8,26 +8,39 @@
 # each forced case `set_<case>.nuon`, the same set with that case last.
 # Every case's run so exercises the runner's finds and its restore.
 #
-# The forced cases are the runner's deadline and recovery proofs, kept
-# out of cases.nuon so no other consumer of the cases reads them:
+# The forced cases are the runner's deadline, sweep, and recovery proofs,
+# kept out of cases.nuon so no other consumer of the cases reads them:
 # - overrun_sleep sleeps a minute, which TERM ends;
 # - overrun_ignore runs a sleep that ignores TERM;
 # - overrun_nested leaves a nested `timeout` of 120 s, in a group of its
 #   own, over a long sleep, then sleeps a minute;
 # - orphan starts a long sleep in a session of its own, then sleeps a
-#   minute.
+#   minute;
+# - cleanup_child starts, in a session of its own, a shell whose TERM trap
+#   starts a long sleep in a session of its own and exits, the shell's own
+#   sleep under a `wait` the trap interrupts; it waits for the trap to be
+#   set, then reads as catch_assert, so the sweep's TERM begets a child;
+# - survivor writes an entry carrying the run's mark into the stand-in
+#   beside the checkout (standin.nu), a process no signal ends, then reads
+#   as catch_assert.
 #
 # Usage: nu checkout.nu <dir>
 #
 # <dir> must not exist. The runner then takes `jab` <dir>, `set`
 # <dir>/set.nuon or a forced case's set, `only` its names, and `control`
 # {program: cases, ok: "eviction reuse: ok"}, the canned control log its
-# passing run.
+# passing run; for set_survivor.nuon its `proc` is `<dir>.proc`, which
+# standin.nu lays out.
+
+use ../guard.nu [MARK]
+use ./standin.nu [STANDIN_PID]
+
 def main [dir: path] {
     if ($dir | path type) != null { error make {msg: $"($dir) exists; a scratch checkout starts empty"} }
+    if ($dir | path expand | str contains "'") { error make {msg: $"($dir) holds a quote the justfile cannot carry"} }
     let logs = ($env.FILE_PWD | path join "logs")
     if ($logs | str contains "'") { error make {msg: $"($logs) holds a quote the justfile cannot carry"} }
-    let recipe = r#'    let name = (open --raw ('{{justfile_directory()}}' | path join case) | decode); if '{{program}}' != 'cases' { print -e 'cases is the one program here'; exit 2 }; if $name == 'overrun_sleep' { sleep 60sec; exit 0 }; if $name == 'overrun_ignore' { ^sh -c 'trap "" TERM; exec sleep 60'; exit 0 }; if $name == 'overrun_nested' { ^sh -c 'timeout 120 sleep 300 & exec sleep 60'; exit 0 }; if $name == 'orphan' { ^setsid -f sleep 300; sleep 60sec; exit 0 }; let log = (open --raw ('{{logs}}' | path join $"($name).log") | decode); print -n $log; exit (if ($log | str contains "Error: ") { 1 } else { 0 })'#
+    let recipe = r#'    let name = (open --raw ('{{justfile_directory()}}' | path join case) | decode); if '{{program}}' != 'cases' { print -e 'cases is the one program here'; exit 2 }; if $name == 'overrun_sleep' { sleep 60sec; exit 0 }; if $name == 'overrun_ignore' { ^sh -c 'trap "" TERM; exec sleep 60'; exit 0 }; if $name == 'overrun_nested' { ^sh -c 'timeout 120 sleep 300 & exec sleep 60'; exit 0 }; if $name == 'orphan' { ^setsid -f sleep 300; sleep 60sec; exit 0 }; if $name == 'cleanup_child' { let ready = ('{{justfile_directory()}}' | path join '.git' 'cleanup_child.ready'); ^setsid -f sh -c $"trap 'setsid -f sleep 300; exit 0' TERM; : > '($ready)'; sleep 300 & wait"; mut waited = 0; while (not ($ready | path exists)) and $waited < 50 { sleep 100ms; $waited += 1 }; if not ($ready | path exists) { print -e 'cleanup_child: its shell never set its trap'; exit 2 } }; if $name == 'survivor' { let standin = $"('{{justfile_directory()}}').proc"; if ($standin | path type) != 'dir' { print -e $"survivor: no stand-in at ($standin)"; exit 2 }; let entry = ($standin | path join '{{standin_pid}}'); let nul = (char --unicode '0'); mkdir $entry; $"{{mark}}=($env | get '{{mark}}')($nul)" | save --raw ($entry | path join 'environ'); '{{standin_pid}} (sleep) S 1 {{standin_pid}} {{standin_pid}} 0 -1 0' | save --raw ($entry | path join 'stat'); $"sleep($nul)300($nul)" | save --raw ($entry | path join 'cmdline') }; let canned = (if $name in ['cleanup_child' 'survivor'] { 'catch_assert' } else { $name }); let log = (open --raw ('{{logs}}' | path join $"($canned).log") | decode); print -n $log; exit (if ($log | str contains "Error: ") { 1 } else { 0 })'#
     let justfile = [
         "# The checkout runner's scratch checkout, written by checkout.nu: `test"
         "# cases` prints the canned log the file `case` names and exits 1 when it"
@@ -37,6 +50,8 @@ def main [dir: path] {
         "set quiet := true"
         ""
         $"logs := '($logs)'"
+        $"mark := '($MARK)'"
+        $"standin_pid := '($STANDIN_PID)'"
         ""
         "test program:"
         $recipe
@@ -45,14 +60,25 @@ def main [dir: path] {
     let case_of = {|name: string, expect: string, class: string|
         { name: $name, program: "cases", expect: $expect, class: $class, edits: [{ file: "case", find: "control", put: $name }] }
     }
-    let set = (open ($env.FILE_PWD | path join "cases.nuon") | each {|c| do $case_of $c.name $c.expect $c.class })
-    let forced = ["overrun_sleep" "overrun_ignore" "overrun_nested" "orphan"]
+    let cases = (open ($env.FILE_PWD | path join "cases.nuon"))
+    let set = ($cases | each {|c| do $case_of $c.name $c.expect $c.class })
+    let catch = ($cases | where name == "catch_assert" | first)
+    let forced = [
+        [name, expect, class];
+        ["overrun_sleep", "", "overrun"]
+        ["overrun_ignore", "", "overrun"]
+        ["overrun_nested", "", "overrun"]
+        ["orphan", "", "overrun"]
+        ["cleanup_child", $catch.expect, "caught"]
+        ["survivor", $catch.expect, "caught"]
+    ]
     mkdir $dir
     "control" | save --raw ($dir | path join "case")
     $justfile | str join (char nl) | save --raw ($dir | path join "justfile")
     $set | to nuon --indent 2 | save --raw ($dir | path join "set.nuon")
     for f in $forced {
-        $set | append (do $case_of $f "" "overrun") | to nuon --indent 2 | save --raw ($dir | path join $"set_($f).nuon")
+        let forced_set = ($set | append (do $case_of $f.name $f.expect $f.class))
+        $forced_set | to nuon --indent 2 | save --raw ($dir | path join $"set_($f.name).nuon")
     }
     ^git -C $dir init -q -b main
     ^git -C $dir add -A

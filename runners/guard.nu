@@ -1,7 +1,7 @@
 # The checkout runner's guards, which its recovery shares: a run's mark,
-# the sweep that ends every marked process, the atomic write, the staged
-# files left in a checkout, and the cancel no catch may swallow. Import it
-# by its absolute path, `use <checkout>/runners/guard.nu [...]`.
+# the sweep that ends the marked processes it observes, the atomic write,
+# the staged files left in a checkout, and the cancel no catch may swallow.
+# Import it by its absolute path, `use <checkout>/runners/guard.nu [...]`.
 #
 # A run's processes carry the variable MARK, `<call>:<mutant>`, which each
 # inherits whatever process group it moves to, so a process a nested
@@ -51,7 +51,9 @@ export def live [proc: string, pid: int]: nothing -> bool {
 }
 
 # Every live process whose mark starts with `prefix`: its pid, its group,
-# whether it leads that group, its command line, and its mark.
+# whether it leads that group, its command line, and its mark. One scan,
+# which lists `proc` first and reads each process after, so a process
+# started after the listing is in the next scan, never this one.
 export def marked [proc: string, prefix: string]: nothing -> list<record<pid: int, pgid: int, leads: bool, cmd: string, mark: string>> {
     let nul = (char --unicode "0")
     let cut = (($MARK | str length) + 1)
@@ -71,25 +73,68 @@ export def marked [proc: string, prefix: string]: nothing -> list<record<pid: in
     $found
 }
 
-# Every live process whose mark starts with `prefix` ended: TERM to each
-# and to each group one of them leads, up to `wait` for them to go, then
-# KILL to any left and `wait` again. Never the host's pid or its group,
-# never pid 1, nothing unmarked. The record: each process found with the
-# signals sent to it and when, and when it was observed gone, seconds
-# from `origin`, null for one never seen gone; `left`, the pids still
-# live. Which signal ended a process is no part of it: a disappearance
-# after a signal shows the signal was sent, not that it ended the process.
+# The live processes whose mark starts with `prefix` ended, by scans of
+# `proc` 50 ms apart while one finds a process, an empty scan confirmed by
+# the next at once. Until `wait` has passed, each scan sends TERM to each
+# such process it finds not yet sent TERM, and to the group each leads;
+# after it, KILL likewise to each not yet sent KILL. The sweep ends
+# `clean` at the second consecutive scan finding none; else, once twice
+# `wait` has passed, the next fresh scan's processes are `left`, and no
+# signal goes out past that window. Never the host's pid or its group,
+# never pid 1, nothing unmarked.
+#
+# Its claim is the marked processes its scans observed: a process that
+# clears the mark, or a tree replacing itself within a scan's interval, is
+# outside it. The record: each process found, with `found_at`, when a scan
+# first saw it, the signals sent to it and when, and `gone_at`, when a
+# scan first found it gone, null for one never seen gone, all in seconds
+# from `origin`; `left`, the pids the last scan found live; `scans`; and
+# `ended`, `clean` or `window`. Which signal ended a process is no part of
+# it: a disappearance after a signal shows the signal was sent, not that it
+# ended the process.
 export def sweep [proc: string, prefix: string, host_pid: int, host_pgid: int, origin: datetime, wait: duration] {
-    let found = (marked $proc $prefix)
-    if ($found | is-empty) { return { records: [], left: [] } }
+    let start = (date now)
+    let kill_from = ($start + $wait)
+    let window_end = ($start + $wait + $wait)
+    let since = {|| ((date now) - $origin) / 1sec | into float | math round --precision 3 }
+    mut seen = []
     mut sent = []
     mut gone = []
-    for sig in ["TERM" "KILL"] {
-        let done = ($gone | each {|g| $g.pid })
-        let targets = ($found | where {|f| $f.pid not-in $done })
-        if ($targets | is-empty) { break }
-        let at = (((date now) - $origin) / 1sec | into float | math round --precision 3)
-        for f in $targets {
+    mut scans = 0
+    mut confirming = false
+    mut left = []
+    mut ended = ""
+    loop {
+        let now = (date now)
+        let at = (do $since)
+        let found = (marked $proc $prefix)
+        $scans += 1
+        let found_pids = ($found | each {|f| $f.pid })
+        let gone_pids = ($gone | each {|g| $g.pid })
+        for s in ($seen | where {|s| $s.pid not-in $found_pids and $s.pid not-in $gone_pids }) {
+            $gone = ($gone | append { pid: $s.pid, at: $at })
+        }
+        let seen_pids = ($seen | each {|s| $s.pid })
+        for f in ($found | where {|f| $f.pid not-in $seen_pids }) {
+            $seen = ($seen | append ($f | merge { found_at: $at }))
+        }
+        if ($found | is-empty) {
+            if $confirming {
+                $ended = "clean"
+                break
+            }
+            $confirming = true
+            continue
+        }
+        $confirming = false
+        if $now >= $window_end {
+            $left = $found_pids
+            $ended = "window"
+            break
+        }
+        let sig = (if $now < $kill_from { "TERM" } else { "KILL" })
+        let sent_pids = ($sent | where signal == $sig | each {|x| $x.pid })
+        for f in ($found | where {|f| $f.pid not-in $sent_pids }) {
             if $f.leads and $f.pgid != $host_pgid and $f.pgid > 1 {
                 ^kill -s $sig -- $"-($f.pgid)" | complete | ignore
             }
@@ -98,29 +143,15 @@ export def sweep [proc: string, prefix: string, host_pid: int, host_pgid: int, o
             }
             $sent = ($sent | append { pid: $f.pid, signal: $sig, at: $at })
         }
-        let until = ((date now) + $wait)
-        mut waiting = true
-        while $waiting {
-            let seen = ($gone | each {|g| $g.pid })
-            for f in ($targets | where {|t| $t.pid not-in $seen }) {
-                if not (live $proc $f.pid) {
-                    $gone = ($gone | append { pid: $f.pid, at: (((date now) - $origin) / 1sec | into float | math round --precision 3) })
-                }
-            }
-            let seen_now = ($gone | each {|g| $g.pid })
-            if ($targets | all {|t| $t.pid in $seen_now }) or ((date now) > $until) {
-                $waiting = false
-            } else {
-                sleep 50ms
-            }
-        }
+        sleep 50ms
     }
     let sent_all = $sent
     let gone_all = $gone
-    let gone_pids = ($gone_all | each {|g| $g.pid })
     {
-        records: ($found | each {|f| $f | merge { signals: ($sent_all | where pid == $f.pid | select signal at), gone_at: ($gone_all | where pid == $f.pid | get -o 0.at) } }),
-        left: ($found | where {|f| $f.pid not-in $gone_pids } | each {|f| $f.pid }),
+        records: ($seen | each {|f| $f | merge { signals: ($sent_all | where pid == $f.pid | select signal at), gone_at: ($gone_all | where pid == $f.pid | get -o 0.at) } }),
+        left: $left,
+        scans: $scans,
+        ended: $ended,
     }
 }
 

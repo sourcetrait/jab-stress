@@ -5,7 +5,7 @@
 # status, 1 when the log holds nushell's error and 0 otherwise; `check`
 # holds a run to those logs and statuses. `checkout` lays out the scratch
 # checkout the checkout runner (runners/checkout_mutants.nuon) reads them
-# from.
+# from, and `standin` the survivor case's stand-in beside it.
 
 set shell := ["nu", "-c"]
 
@@ -29,6 +29,12 @@ check logs results:
 # the cases as its set.nuon, and each forced case's set_<case>.nuon.
 checkout dir:
     nu '{{cases}}/checkout.nu' '{{dir}}'
+
+# The survivor case's stand-in beside the scratch checkout `checkout`,
+# `<checkout>.proc`, linking the host's own process under `proc`: `host_pid`
+# is the Grammar MCP host's, `$nu.pid` in a run body.
+standin checkout host_pid proc:
+    nu '{{cases}}/standin.nu' '{{checkout}}' '{{host_pid}}' '{{proc}}'
 
 # A composed case's log: shapes.nu's failure for the case, its paths made
 # relative to this repository.

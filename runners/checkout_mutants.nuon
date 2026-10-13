@@ -1,7 +1,7 @@
 {
- nonce: "g0MevBoURaX",
+ nonce: "kg4fq8DXxBF",
  args_type: "record<jab: string, set: string, only: list<string>, control: record<program: string, ok: string>, logs: string, deadline: int, hold: record<at: string, seconds: int>, proc: string>",
- result_type: "record<control_ok: bool, every: bool, restored: bool, caught: int, unrun: list<string>, head: string, logs: string, finished: float, deadline: int, swept: int, results: table<name: string, applied: bool, exit: oneof<int, nothing>, class: string, expected: string, title: string, seconds: float, swept: int>, misses: table<name: string, applied: bool, exit: oneof<int, nothing>, class: string, expected: string, title: string, seconds: float, swept: int>>",
+ result_type: "record<control_ok: bool, every: bool, restored: bool, cleaned: bool, caught: int, unrun: list<string>, head: string, logs: string, deadline: int, swept: int, results: table<name: string, applied: bool, exit: oneof<int, nothing>, class: string, expected: string, title: string, seconds: float, swept: int>, misses: table<name: string, applied: bool, exit: oneof<int, nothing>, class: string, expected: string, title: string, seconds: float, swept: int>, finished: float, in_time: bool, ok: bool>",
  body: "use /home/box/proj/sourcetrait/jab-stress/runners/provenance.nu [failure-of assertion-kind]
 use /home/box/proj/sourcetrait/jab-stress/runners/guard.nu [MARK STAGE raise-cancel proc-stat marked sweep strays stage land]
 
@@ -18,7 +18,7 @@ let call = $env.NONCE
 if $a.deadline < ($MARGIN + 1) { error make {msg: $\"a deadline of ($a.deadline) s leaves no allowance past the ($MARGIN) s margin\"} }
 if ($a.logs | path type) != null { error make {msg: $\"($a.logs) exists; a set's logs are written once\"} }
 if ($a.only | is-empty) { error make {msg: \"`only` names no mutant\"} }
-if $a.hold.at not-in [\"\" \"staged\" \"renamed\"] { error make {msg: $\"hold at ($a.hold.at): staged, renamed, or none\"} }
+if $a.hold.at not-in [\"\" \"staged\" \"renamed\" \"finish\" \"receipt\"] { error make {msg: $\"hold at ($a.hold.at): staged, renamed, finish, receipt, or none\"} }
 let set = (open $a.set)
 let names = ($set | get name)
 let twice = ($names | uniq --repeated)
@@ -97,6 +97,7 @@ mut unrun = []
 mut sweeps = []
 mut longest = 0.0
 mut restored = true
+mut cleaned = true
 mut halted = false
 for mu in $runs {
     let allowance = ($a.deadline - (do $since) - $MARGIN)
@@ -154,20 +155,27 @@ for mu in $runs {
         $x | merge { ran: true, took: (((date now) - $t0) / 1sec | into float), secs: $secs }
     })
     let sw = (sweep $a.proc $\"($call):\" $nu.pid $host.pgid $started $SWEEP_WAIT)
-    $sweeps = ($sweeps | append { name: $mu.name, records: $sw.records, left: $sw.left })
-    mut held = true
-    for w in $mu.writes {
-        let p = ($paths_now | where file == $w.file | first)
-        let now_hash = (open --raw $w.path | into binary | hash sha256)
-        if $now_hash != $p.hash {
-            let back = (try { let s = (stage $w.path $p.committed $p.hash $call); land $s $w.path $p.hash; true } catch {|e| raise-cancel $e; false })
-            if not $back { $held = false }
+    $sweeps = ($sweeps | append { name: $mu.name, records: $sw.records, left: $sw.left, scans: $sw.scans, ended: $sw.ended })
+    # A process the sweep could not end holds the run's files back for the
+    # recovery, which itself touches nothing while one remains.
+    let unswept = not ($sw.left | is-empty)
+    if $unswept {
+        $cleaned = false
+        $halted = true
+    } else {
+        mut held = true
+        for w in $mu.writes {
+            let p = ($paths_now | where file == $w.file | first)
+            let now_hash = (open --raw $w.path | into binary | hash sha256)
+            if $now_hash != $p.hash {
+                let back = (try { let s = (stage $w.path $p.committed $p.hash $call); land $s $w.path $p.hash; true } catch {|e| raise-cancel $e; false })
+                if not $back { $held = false }
+            }
         }
+        let all_held = ($paths_now | all {|p| (open --raw $p.path | into binary | hash sha256) == $p.hash })
+        if not ($held and $all_held) { $restored = false; $halted = true }
     }
-    let all_held = ($paths_now | all {|p| (open --raw $p.path | into binary | hash sha256) == $p.hash })
-    if not ($held and $all_held) { $restored = false; $halted = true }
-    if not ($sw.left | is-empty) { $halted = true }
-    if not $r.ran and not $r.faulted {
+    if not $r.ran and not $r.faulted and not $unswept {
         $unrun = ($unrun | append $mu.name)
         $halted = true
         continue
@@ -181,7 +189,9 @@ for mu in $runs {
     let kind = (assertion-kind $ls $failure)
     let carries = ($mu.expect != \"\" and ($failure.title | str contains $mu.expect))
     let over = ((not $r.faulted) and ($r.signal or ($r.exit_code == 124 and $r.took >= ($r.secs - 1))))
-    let class = (if $r.faulted {
+    let class = (if $unswept {
+        \"unswept\"
+    } else if $r.faulted {
         \"faulted\"
     } else if $over {
         \"overrun\"
@@ -208,24 +218,34 @@ let hashes = ($paths_now | all {|p| (open --raw $p.path | into binary | hash sha
 let done = $rows
 let unrun_now = $unrun
 let sweeps_now = $sweeps
+let cleaned_now = $cleaned
 let control = ($done | where name == \"control\" | get -o 0)
 let mutants = ($done | where name != \"control\")
-let holds = {|x| $x.class == $x.expected and $x.class not-in [\"unapplied\" \"faulted\" \"overrun\"] }
-let finished = ((do $since) | math round --precision 2)
-let result = {
+let holds = {|x| $x.class == $x.expected and $x.class not-in [\"unapplied\" \"faulted\" \"overrun\" \"unswept\"] }
+let results = {
     control_ok: ($control != null and $control.class == \"passed\"),
     every: (($unrun_now | is-empty) and ($mutants | all $holds)),
     restored: ($restored and $hashes and ($status_after == $status_before) and ($left_staged | is-empty)),
+    cleaned: $cleaned_now,
     caught: ($mutants | where class == \"caught\" | length),
     unrun: $unrun_now,
     head: $commit,
     logs: $a.logs,
-    finished: $finished,
     deadline: $a.deadline,
     swept: (if ($sweeps_now | is-empty) { 0 } else { $sweeps_now | each {|s| $s.records | length } | math sum }),
     results: $done,
     misses: ($mutants | where {|x| not (do $holds $x) }),
 }
-$result | merge { call: $call, started: $stamp, sweeps: $sweeps_now, status: $status_before, status_after: $status_after, staged_after: $left_staged } | to nuon --indent 1 | save --raw ($a.logs | path join \"results.nuon\")
-$result"
+# The results written once and never rewritten; the deadline ends at that
+# write, and the verdict follows in a receipt bound to its bytes.
+if $a.hold.at == \"finish\" { sleep ($a.hold.seconds * 1sec) }
+let bytes = ($results | merge { call: $call, started: $stamp, sweeps: $sweeps_now, status: $status_before, status_after: $status_after, staged_after: $left_staged } | to nuon --indent 1 | into binary)
+$bytes | save --raw ($a.logs | path join \"results.nuon\")
+let elapsed = (do $since)
+let in_time = ($elapsed <= $a.deadline)
+let ok = ($results.control_ok and $results.every and $results.restored and $results.cleaned and $in_time)
+let finished = ($elapsed | math round --precision 3)
+if $a.hold.at == \"receipt\" { sleep ($a.hold.seconds * 1sec) }
+{ call: $call, results: \"results.nuon\", results_sha256: ($bytes | hash sha256), finished: $finished, deadline: $a.deadline, in_time: $in_time, ok: $ok } | to nuon --indent 1 | save --raw ($a.logs | path join \"receipt.nuon\")
+$results | merge { finished: $finished, in_time: $in_time, ok: $ok }"
 }
