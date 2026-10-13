@@ -5,6 +5,9 @@
 # <label>...`, or `use` it and call `analyse`.
 
 const PERIOD = (1000000 / 60)
+# the ceiling in microseconds, judged on the critical path's median; the
+# frames at or over it are the tail
+const CEILING = 15000
 
 # Least, median, 95th, 99th, and greatest by nearest rank, null-free.
 def spread [values: list<any>]: nothing -> record {
@@ -82,7 +85,7 @@ def summary [rows: list<any>]: nothing -> record {
         refusals: ($rows | get refusals | math sum),
         flips_early: ($rows | where flip_status == 1 | length),
         flips_failed: ($rows | where {|r| $r.flip_status > 1 } | length),
-        over: ($rows | where {|r| $r.critical_us >= 15000 } | length),
+        tail: ($rows | where {|r| $r.critical_us >= $CEILING } | length),
         fast: ($rows | where {|r| $r.critical_us < $PERIOD } | length),
         fast_waited: ($rows | where {|r| $r.critical_us < $PERIOD and $r.wait_us > 0 } | length),
         catch_up: ($rows | where {|r| $r.after_late and $r.call_interval_us != null and $r.call_interval_us < ($PERIOD / 2) } | length),

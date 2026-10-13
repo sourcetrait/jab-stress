@@ -190,4 +190,7 @@
  ["leg_word_cells", "    let built = (if ($schema | default 1) >= 5 { \"tiles\" } else { \"cells\" })", "    let built = \"cells\"", "a leg's line names whole tiles built at schema 5"],
  ["config_arrival_unchecked", "        let arriving = ($s.configs | where {|c| $c.arrival_states != $c.from or $c.arrival_frames != $c.from })", "        let arriving = []", "a configuration three frames late is refused for that alone"],
  ["config_arrival_states_unchecked", "$c.arrival_states != $c.from or $c.arrival_frames != $c.from", "$c.arrival_frames != $c.from", "a configuration after its frame's state is refused for that alone"],
+ ["median_at_ceiling_under", "    $median < $CEILING_US", "    $median <= $CEILING_US", "a median at 15 ms leaves the window valid and not under"],
+ ["verdict_from_greatest", "under: (if $valid { under-ceiling $whole.critical.median } else { null })", "under: (if $valid { under-ceiling $whole.critical.max } else { null })", "a frame at 15 ms leaves the window valid and under on its median"],
+ ["tail_past_ceiling_alone", "over: ($f.critical_us >= $CEILING_US),", "over: ($f.critical_us > $CEILING_US),", "a frame at 15 ms is the window's tail"],
 ]
