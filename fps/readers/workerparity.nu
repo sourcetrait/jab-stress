@@ -6,8 +6,11 @@ use ../../../jab/game/fps/test/pose.nu
 # the game's directory, jab checked out beside this repository
 const GAME = (path self | path dirname | path join .. .. .. jab game fps)
 
-const FRAME = "fps: frame in {us} us: {sectors} sectors, {walls} walls, {pieces} pieces, {planes} planes, {openings} openings, {sprites} sprites, {uncovered} uncovered; clear, planes, walls, portals, sprites, raster us {clear}, {plane_us}, {wall_us}, {portal_us}, {sprite_us}, {raster_us}; spans {spans}, pixels {pixels}, lit spans {lit_spans}, lit pixels {lit_pixels}, light us {light_us}, rejected {rejected}, samples {samples}, tiles built {tiles_built}, tiled {tiled}, resets {resets}, slots {slots}, commands {commands}, flushes {flushes}, workers {workers}, grain {grain}, rounds {rounds}, bands {bands0} {bands1}, dispatch us {dispatch}, barrier us {barrier}, slowest us {slowest}, busy us {busy}, cancelled {cancelled}"
+# the frame line, its bands a count a hart, harts 1 to GFX_SLOTS
+const FRAME = "fps: frame in {us} us: {sectors} sectors, {walls} walls, {pieces} pieces, {planes} planes, {openings} openings, {sprites} sprites, {uncovered} uncovered; clear, planes, walls, portals, sprites, raster us {clear}, {plane_us}, {wall_us}, {portal_us}, {sprite_us}, {raster_us}; spans {spans}, pixels {pixels}, lit spans {lit_spans}, lit pixels {lit_pixels}, light us {light_us}, rejected {rejected}, samples {samples}, tiles built {tiles_built}, tiled {tiled}, resets {resets}, slots {slots}, commands {commands}, flushes {flushes}, workers {workers}, grain {grain}, rounds {rounds}, bands {bands1} {bands2} {bands3} {bands4} {bands5} {bands6} {bands7}, dispatch us {dispatch}, barrier us {barrier}, slowest us {slowest}, busy us {busy}, cancelled {cancelled}"
 const COUNTS = [spans pixels lit_spans lit_pixels rejected samples tiled slots commands flushes uncovered]
+# render.inc's GFX_SLOTS, the W frame's greatest count
+const GFX_SLOTS = 7
 
 export def workers-frame [workers: int, grain: int]: nothing -> binary {
     [("W" | into binary), 0x[00 00 00], ($workers | into binary | bytes at 0..<1), 0x[00 00 00], ($grain | into binary | bytes at 0..<4), (0..<52 | each {|i| 0x[00] } | bytes collect)] | bytes collect
@@ -34,6 +37,8 @@ def main [kernel: path, image: path, out: path, --set: string = "debug", --poses
     ]
     let wanted = ($poses | split row ",")
     let modes = ($modes | split row "," | each {|m| let p = ($m | split row ":"); { workers: ($p.0 | into int), grain: ($p.1 | into int) } })
+    let outside = ($modes | where {|m| $m.workers < 0 or $m.workers > $GFX_SLOTS })
+    if not ($outside | is-empty) { error make { msg: $"a mode's workers run 0 to ($GFX_SLOTS): ($outside | to nuon)" } }
     let game = $GAME
     let tree = (jab program-shard $game "asset" | path join $map)
     mkdir $out
@@ -77,7 +82,7 @@ def main [kernel: path, image: path, out: path, --set: string = "debug", --poses
                 if ($diffs | is-empty) { "counts equal" } else { $"counts differ: ($diffs | each {|c| $'($c) ($base.frame | get $c) vs ($r.frame | get $c)' } | str join '; ')" }
             })
             let f = $r.frame
-            let w = (if $f == null { "" } else { $"workers ($f.workers) grain ($f.grain) rounds ($f.rounds) bands ($f.bands0) ($f.bands1) dispatch ($f.dispatch) barrier ($f.barrier) slowest ($f.slowest) busy ($f.busy) raster ($f.raster_us) clear ($f.clear)" })
+            let w = (if $f == null { "" } else { $"workers ($f.workers) grain ($f.grain) rounds ($f.rounds) bands (1..$GFX_SLOTS | each {|h| $f | get $'bands($h)' } | str join ' ') dispatch ($f.dispatch) barrier ($f.barrier) slowest ($f.slowest) busy ($f.busy) raster ($f.raster_us) clear ($f.clear)" })
             print $"($p) w($r.workers) g($r.grain): capture (if $same { 'equal' } else { 'differs' }) to w0; ($counts); ($w)"
         }
         if $base != null and $base.frame != null { print $"($p) w0: raster ($base.frame.raster_us) clear ($base.frame.clear) workers ($base.frame.workers)" }

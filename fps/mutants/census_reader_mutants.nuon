@@ -30,4 +30,6 @@
   {name: reader_monotone, find: "| where {|x| $x.a > $x.b or $x.b > $x.c } |", put: "| where {|x| false } |", expect: "refuses a window falling"}
   {name: reader_covers, find: "(if $listed_planes < $s.p1 or $listed_walls < $s.q1 {", put: "(if false {", expect: "refuses the lists short of the windows"}
   {name: reader_frame_passing, find: "(if $frame.passing > $frame.blocks {", put: "(if false {", expect: "refuses passing past the blocks"}
+  {name: reader_contexts_from_lines, find: "frame-of ($lines | slice $s.item..<$end) $dir", put: "frame-of ($lines | slice $s.item..<$end) (if $dir == null { null } else { $dir | update contexts ($lines | slice $s.item..<$end | parse $HEAD | each {|h| $h.context } | uniq | length) })", expect: "refuses a directory naming eight over frames of three"}
+  {name: reader_first_format_unread, find: "let parsed = (if not ($current | is-empty) { $current } else { $line | parse $DIRECTORY_FIRST | each {|d| $d | insert contexts $\"($FIRST_CONTEXTS)\" } })", put: "let parsed = $current", expect: "every census frame whole and accounting", expect_eight: "refuses a first-format directory over frames of eight for it"}
 ]

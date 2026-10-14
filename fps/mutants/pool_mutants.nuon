@@ -54,7 +54,7 @@
     file: "tile.S",
     edits: [{ find: "    beq t6, t4, 1b                  # built this pass
 ", put: "" }],
-    expect: "the pool's stale complete and valid at schema 5"
+    expect: "the pool's stale complete and valid at schema 6"
   },
   {
     name: straddling_requests,

@@ -1,6 +1,7 @@
 # JoinBeforeBoundary's probe: the still disk's spawn view drawn by W 2 in
-# fixed bands, one band a worker, with the J frame holding worker 2,
-# mailbox index 1, until the round's join releases it (byte 14), or with
+# fixed bands, one band a worker, with the J frame holding hart 2's
+# worker, the round's position 1, until the round's join releases it
+# (byte 14), or with
 # `--no-hold` the same run unheld. Read back: the guest's status, the
 # UART's fps lines, and the frames' rounds after the J, each round's
 # slowest worker against every worker's busy time: a held round's
@@ -13,9 +14,9 @@ use ../../../../jab/game/fps/test/gauge.nu
 const SET_AT = 1300ms
 const END_AT = 3500ms
 
-# The console's J frame: the delayed worker's index plus one in byte 4,
-# its delay in microseconds from byte 8, the cancel in byte 12, the
-# faulting worker in byte 13, and the hold in byte 14.
+# The console's J frame: the delayed worker's hart in byte 4, its delay in
+# microseconds from byte 8, the cancel in byte 12, the faulting worker's
+# hart in byte 13, and the hold in byte 14.
 def jobs-frame [delayed: int, delay_us: int, cancel: bool, fault: int, --hold]: nothing -> binary {
     [("J" | into binary), 0x[00 00 00], ($delayed | into binary | bytes at 0..<1), 0x[00 00 00], ($delay_us | into binary | bytes at 0..<4), (if $cancel { 0x[01] } else { 0x[00] }), ($fault | into binary | bytes at 0..<1), (if $hold { 0x[01] } else { 0x[00] }), (0..<49 | each {|i| 0x[00] } | bytes collect)] | bytes collect
 }

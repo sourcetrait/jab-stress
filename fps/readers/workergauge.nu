@@ -32,7 +32,9 @@
 # and grain; each run's binding, the fields its report's identity left
 # unrecorded, and every directory passed over named. A build is a label
 # less its trailing _<n> under one selection, so an automatic build is
-# never merged with a forced one of the same counts. Run under the real nu
+# never merged with a forced one of the same counts. Each batch and build
+# names the grants and the active masks its runs' frames held, schema 6's
+# harts records, gauge.nu's validity their judge. Run under the real nu
 # from a scratch justfile: `nu workergauge.nu <settled|play> <base>
 # <out.nuon> <label>...`; its own fixtures `nu workergauge.nu holds
 # <scratch>`.
@@ -164,7 +166,10 @@ export def analyse [mode: string, base: string, labels: list<string>]: nothing -
                 },
                 request: { selection: $request.selection, cadence: $request.cadence, workers: $request.workers, grain: $request.grain },
                 alike: (held-alike $request.identity),
-                standing: { complete: $m.complete, valid: $m.valid, seeded: $m.seeded, schema: $m.schema, cadences: $m.cadences, workers: ($m | get -o workers), grains: ($m | get -o grains) },
+                standing: {
+                    complete: $m.complete, valid: $m.valid, seeded: $m.seeded, schema: $m.schema, cadences: $m.cadences, workers: ($m | get -o workers), grains: ($m | get -o grains),
+                    grants: ($m | get -o grants | default []), actives: ($m | get -o actives | default []),
+                },
                 l_answers: (if $mode == "settled" { l-answers ($r.out | path join "api.out") } else { null }),
                 harts: (harts-of ($r | get -o ran | default {})),
                 span: ($r | get -o ran.threads_span),
@@ -180,7 +185,8 @@ export def analyse [mode: string, base: string, labels: list<string>]: nothing -
         {
             label: $label, build: $build, selections: $selections,
             selection: (if ($selections | length) == 1 { $selections | first } else { null }),
-            workers: ($runs | get standing.workers | flatten | uniq | sort), grain: ($runs | get standing.grains | flatten | uniq | sort), runs: $runs,
+            workers: ($runs | get standing.workers | flatten | uniq | sort), grain: ($runs | get standing.grains | flatten | uniq | sort),
+            grants: ($runs | get standing.grants | flatten | uniq | sort), actives: ($runs | get standing.actives | flatten | uniq | sort), runs: $runs,
         }
     })
     let problems = ($batches | each {|b|
@@ -210,7 +216,7 @@ export def analyse [mode: string, base: string, labels: list<string>]: nothing -
     let legs = ($batches | get runs | flatten | get legs | flatten | get leg | uniq)
     let per_batch = ($batches | each {|b|
         {
-            label: $b.label, build: $b.build, selection: $b.selection, workers: $b.workers, grain: $b.grain,
+            label: $b.label, build: $b.build, selection: $b.selection, workers: $b.workers, grain: $b.grain, grants: $b.grants, actives: $b.actives,
             harts: ($b.runs | each {|r| { run: $r.run, span: $r.span, harts: $r.harts } }),
             legs: ($legs | each {|leg|
                 let frames = ($b.runs | each {|r| $r.legs | where leg == $leg | get -o 0.frames | default [] } | flatten)
@@ -228,6 +234,7 @@ export def analyse [mode: string, base: string, labels: list<string>]: nothing -
         {
             build: $k.build, selection: ($these | first | get selection), batches: ($these | get label),
             workers: ($these | get workers | flatten | uniq | sort), grain: ($these | get grain | flatten | uniq | sort),
+            grants: ($these | get grants | flatten | uniq | sort), actives: ($these | get actives | flatten | uniq | sort),
             harts: ($these | get harts | flatten | get harts | flatten | group-by {|h| $h.hart | into string } | transpose hart entries | each {|g| { hart: ($g.hart | into int), rates: ($g.entries | get rate) } } | sort-by hart),
             cpu: (cpu-summary $runs),
             legs: ($legs | each {|leg|
@@ -278,7 +285,8 @@ def main [mode: string, base: string, out: string, ...labels: string] {
 # `scratch` (batches.nu), each case's reading run under its name so a
 # raise fails it by name: an automatic batch and a forced one of one
 # build drawn alike, both accepted and kept as two builds with separate
-# results; a summary asking none over forced runs and one asking workers
+# results; a schema 6 batch's grants and active masks read for the batch
+# and its build; a summary asking none over forced runs and one asking workers
 # over automatic runs, the runs' selections standing; a batch whose runs
 # mix the two selections refused; and a forced run drawn by other workers
 # than it asked and an automatic run drawn at two counts, each refused by
@@ -304,6 +312,16 @@ def "main holds" [scratch: string] {
     if not ($paired.problems | is-empty) { do $fail "an automatic batch and a forced one drawn alike are accepted" ($paired.problems | str join "; ") }
     let kept = ($paired.builds | each {|b| [$b.build $b.selection $b.batches] })
     if $kept != [[pair forced [pair_1]] [pair automatic [pair_2]]] { do $fail "the pair kept as two builds with separate results" ($kept | to nuon) }
+
+    # a schema 6 batch, two runs on eight harts drawn on harts 1 2 and 1 3
+    let harted = ($scratch | path join "harted")
+    let on_two = { online: 254, floor: 2, grant: 6, claimed: 0, started: 6, active: 6, reported: 6 }
+    let on_three = { online: 254, floor: 2, grant: 14, claimed: 0, started: 14, active: 10, reported: 10 }
+    write-batch $harted "masks_1" $forced [({ identity: $forced, cadence: 0, drawn: $two, harts: $on_two }) ({ identity: $forced, cadence: 0, drawn: $two, harts: $on_three })] | ignore
+    let masked = (do $named "a schema 6 batch read" { analyse "play" $harted [masks_1] })
+    if not ($masked.problems | is-empty) { do $fail "a schema 6 batch accepted" ($masked.problems | str join "; ") }
+    let masks = [($masked.batches | get 0.grants) ($masked.batches | get 0.actives) ($masked.builds | get 0.grants) ($masked.builds | get 0.actives)]
+    if $masks != [[6 14] [6 10] [6 14] [6 10]] { do $fail "a schema 6 batch's grants and active masks read for the batch and its build" ($masks | to nuon) }
 
     # the summary disagreeing with its runs both ways
     let disagree = ($scratch | path join "disagree")

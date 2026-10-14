@@ -41,8 +41,11 @@ const POOLS_MIB = [16 32]
 const TEXEL_BYTES = 4
 const SHORT = 30
 const WINDOW = 120
-const CONTEXTS = 3
 const SIDE_FIELDS = [eligible straddling outside demand planes walls openings sampled uniform surfaces]
+# the holds' batches under their base: the archive's, three contexts, and
+# one on eight harts whose directories count eight
+const ARCHIVE = "census_settled_w0"
+const EIGHT = "census_settled_h8"
 # the side whose mapped pixels are held to the rows' lit pixels
 const BOUND_SIDE = 32
 
@@ -170,8 +173,9 @@ def run-of [g: record, r: record, resolved: record]: nothing -> record {
     $base | merge ($c | reject over) | merge { dir: $resolved.dir, refused: $refused }
 }
 
-# A side's records, one a measured frame, summarised.
-def side-summary [recs: list<record>]: nothing -> record {
+# A side's records, one a measured frame, summarised, each of the
+# `context_count` contexts its directories count on its own.
+def side-summary [recs: list<record>, context_count: int]: nothing -> record {
     let valid = ($recs | where valid)
     let short = ($recs | where short)
     let long = ($recs | where long)
@@ -192,7 +196,7 @@ def side-summary [recs: list<record>]: nothing -> record {
         context_distinct: (spread ($contexts | get distinct)),
         context_surfaces: (spread ($contexts | get listed)),
         repeats: (spread ($contexts | where distinct > 0 | each {|c| $c.requests / $c.distinct })),
-        per_context: (0..<$CONTEXTS | each {|i|
+        per_context: (0..<$context_count | each {|i|
             let these = ($contexts | where context == $i)
             { context: $i, requests: (spread ($these | get requests)), distinct: (spread ($these | get distinct)), surfaces: (spread ($these | get listed)) }
         }),
@@ -227,19 +231,23 @@ export def analyse [base: string, labels: list<string>]: nothing -> record {
             } | flatten
         } | flatten)
         let legs = ($recs | get -o leg | uniq)
+        # the contexts the accepted runs' directories count, never the
+        # context lines that arrived
+        let contexts = ($runs | where {|r| $r.refused | is-empty } | each {|r| $r.directory } | compact | each {|d| $d.contexts } | append 0 | math max)
         {
             label: $label,
             route: ($g.identity | get -o route.file | default "" | path basename),
             image: ($g.identity | get -o build.image_sha256),
             workers: ($g.rows | get -o workers | uniq),
             grains: ($g.rows | get -o grain | uniq),
+            contexts: $contexts,
             runs: ($runs | reject frames),
             sides: ($SIDES | each {|side|
                 let mine = ($recs | where side == $side)
                 {
                     side: $side,
-                    all: (side-summary $mine),
-                    legs: ($legs | each {|leg| { leg: $leg } | merge (side-summary ($mine | where leg == $leg)) }),
+                    all: (side-summary $mine $contexts),
+                    legs: ($legs | each {|leg| { leg: $leg } | merge (side-summary ($mine | where leg == $leg) $contexts) }),
                 }
             }),
         }
@@ -287,11 +295,16 @@ def main [base: string, out: string, ...labels: string] {
 # on and every 120-frame window to 119 on read invalid, each valid again at
 # 30 and 120 frames on, both named as problems; and the other problems
 # named: the edge's verdicts, a second lighting revision, a mismatch, an
-# unparsed frame line, the gaps, rows not every frame from 0, no directory.
+# unparsed frame line, the gaps, rows not every frame from 0, no directory;
+# the archive read over the three contexts its directories count, and
+# beside it a copy of run 1 of a batch on eight harts read over its
+# directory's eight, accepted and its census whole, and a copy of it under
+# a first-format directory read over that directory's three, every frame
+# invalid.
 def "main holds" [base: string, scratch: string] {
     if ($scratch | path exists) { error make { msg: $"the scratch exists: ($scratch)" } }
     mkdir $scratch
-    let label = "census_settled_w0"
+    let label = $ARCHIVE
     let report = ($base | path join $label "gauge.nuon")
     let g = (open $report)
     let r1 = ($g.runs | where run == 1 | first)
@@ -405,6 +418,8 @@ def "main holds" [base: string, scratch: string] {
     let accepted = ($batch.runs | where {|x| $x.refused | is-empty })
     let counted = ($batch.sides | where side == $BOUND_SIDE | first | get all.frames)
     if ($accepted | length) != 2 or $counted != ($accepted | get measured | math sum) { do $fail "a refused run summarized nowhere" $"($accepted | length) runs accepted, ($counted) frames summarized" }
+    let per3 = ($batch.sides | each {|s| $s.all.per_context | length })
+    if $batch.contexts != 3 or ($per3 | any {|n| $n != 3 }) { do $fail "the archive read over its directories' three contexts" $"contexts ($batch.contexts), per side ($per3)" }
 
     # the windows
     let gw = (open $window)
@@ -435,5 +450,29 @@ def "main holds" [base: string, scratch: string] {
     do $names "rows not every frame from 0 named" (run-of (open $unordered) $r1 (do $answer $unordered 1)) "not every frame from 0"
     let gu = (open $undirected)
     do $names "no directory named" (run-of $gu ($gu.runs | where run == 1 | first) (do $answer $undirected 1)) "the log holds no census directory"
+
+    # the eight-context batch's run 1 beside the archive, copied whole, then
+    # copied under a first-format directory, its contexts the directory's
+    # three; a run each, the reading's cost an eight-context log's
+    let g8 = (open ($base | path join $EIGHT "gauge.nuon"))
+    let one8 = ($g8 | update runs ($g8.runs | where run == 1) | update rows ($g8.rows | where run == 1))
+    let copy_one = {|case: string, line: closure|
+        let from = ($base | path join $EIGHT "run_1")
+        let d = ($scratch | path join $case $EIGHT "run_1")
+        mkdir $d
+        cp ($from | path join "identity.nuon") ($d | path join "identity.nuon")
+        open --raw ($from | path join "serial.log") | decode | lines | each {|l| do $line $l } | str join (char nl) | save ($d | path join "serial.log")
+        $one8 | update runs ($one8.runs | each {|r| $r | update out $d }) | to nuon | save ($scratch | path join $case $EIGHT "gauge.nuon")
+        ($scratch | path join $case)
+    }
+    let eight = (analyse (do $copy_one "eight" {|l| $l }) [$EIGHT])
+    let b8 = ($eight.batches | first)
+    if not ($eight.problems | is-empty) { do $fail "the eight-context batch accepted, its census whole" ($eight.problems | str join "; ") }
+    let per8 = ($b8.sides | each {|s| $s.all.per_context | length })
+    if ($b8.runs | length) != 1 or $b8.contexts != 8 or ($per8 | any {|n| $n != 8 }) { do $fail "the eight-context batch read over its directories' eight contexts" $"runs ($b8.runs | length), contexts ($b8.contexts), per side ($per8)" }
+    let bf = (analyse (do $copy_one "first_format" {|l| if ($l starts-with "fps: census directory: ") { $l | str replace --regex ', contexts \d+;' ';' } else { $l } }) [$EIGHT] | get batches | first)
+    if $bf.contexts != 3 { do $fail "a first-format directory over eight contexts read as three" $"contexts ($bf.contexts)" }
+    let read_f = ($bf.runs | where {|x| $x.refused | is-empty })
+    if ($read_f | length) != 1 or ($read_f | any {|x| $x.measured == 0 or $x.invalid != $x.measured }) { do $fail "a first-format directory over eight contexts leaves every frame invalid" ($bf.runs | select run measured invalid | to nuon) }
     print "tilecensus holds: ok"
 }

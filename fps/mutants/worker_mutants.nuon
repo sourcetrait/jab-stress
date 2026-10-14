@@ -32,10 +32,13 @@
     name: join_skipped,
     file: "workers.S",
     edits: [{ find: "5:
-    bgeu s3, s1, 6f
+    li t0, JAB_HARTS_MAX
+    bgeu s4, t0, 6f
 ", put: "5:
     addi t0, s1, -1
     bgeu s3, t0, 6f
+    li t0, JAB_HARTS_MAX
+    bgeu s4, t0, 6f
 " }],
     expect: "a screen was taken on the plain run"
   },
@@ -98,5 +101,52 @@
     sw t2, PACKET_BUSY(t1)", put: "    ld t2, STAT_BUSY(t3)
     sw t2, PACKET_BUSY(t1)" }],
     expect: "frames whose workers' busy time is past W times their slowest's"
+  },
+  {
+    name: band_by_slot,
+    file: "workers.S",
+    edits: [{ find: "    ld t5, JOB_POSITION(s0)
+    li t3, SCREEN_H
+", put: "    mv t5, s2
+    li t3, SCREEN_H
+" }],
+    expect: "the spawn view on 4 harts, jab.late=2, 7 workers asked in bands of 0 rows"
+  },
+  {
+    name: reservation_skipped,
+    file: "workers.S",
+    edits: [{ find: "    jab.sys.harts.reserve JAB_RESERVED_GFX_HARTS
+    bnez a0, 80f
+    mv s2, a1                       # the grant
+", put: "    mv s2, t0                       # the grant
+" }],
+    expect: "the walk's measurement valid"
+  },
+  {
+    name: owner_none,
+    file: "workers.S",
+    edits: [{ find: "    li t2, JAB_OWNER_RESERVED
+    jab.sys.worker.start s1, raster_worker, s3, s4, s5, t2
+", put: "    li t2, JAB_OWNER_NONE
+    jab.sys.worker.start s1, raster_worker, s3, s4, s5, t2
+" }],
+    expect: "the plain run names its workers"
+  },
+  {
+    name: job_hart_unwritten,
+    file: "workers.S",
+    edits: [{ find: "    sd s1, JOB_HART(s0)             # its hart, ordered by the completion's fence
+", put: "" }],
+    expect: "the walk's measurement valid"
+  },
+  {
+    name: bands_two_cleared,
+    file: "world.S",
+    edits: [{ find: "    addi t4, t1, STAT_SIZE
+13:
+", put: "    addi t4, t1, (STAT_BANDS + 16)
+13:
+" }],
+    expect: "every band of every round rendered once on the spawn view on 4 harts 7 workers asked in bands of 0 rows"
   }
 ]

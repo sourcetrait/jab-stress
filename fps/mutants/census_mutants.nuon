@@ -93,4 +93,21 @@
         expect: "every census frame whole and accounting",
         reason: "an item that is no surface:count pair",
     },
+    {
+        name: "census_directory_three",
+        file: "census.S",
+        edits: [
+            { find: "    li a1, CENSUS_CONTEXTS\n    call append_dec                 # the count every frame's context lines are read against\n", put: "    li a1, 3\n    call append_dec                 # the count every frame's context lines are read against\n" },
+        ],
+        expect: "every census frame whole and accounting",
+        reason: "unexpected: side",
+    },
+    {
+        name: "census_class_shift_three",
+        file: "census.S",
+        edits: [
+            { find: ".set CENSUS_CLASS_SHIFT, (CENSUS_CONTEXT_SHIFT + CENSUS_CONTEXTS)\n", put: ".set CENSUS_CLASS_SHIFT, (CENSUS_CONTEXT_SHIFT + 3)\n" },
+        ],
+        expect: "every census frame whole and accounting",
+    },
 ]

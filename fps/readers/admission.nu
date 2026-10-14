@@ -1,19 +1,22 @@
 # AdmissionMeasure's reading (FrameCeiling's PoolCore): each batch under
-# `base` named in `labels`, its report's frames at schema 5, every run's.
-# Refused before any verdict, every run named (PoolReaderStanding), unless
-# every run is complete, valid, and seeded at schema 5. Per batch: the runs
-# and frames; the requests admitted, dropped at a full open ring, and
-# filtered by the repeat filter; the frames dropping any and the most a
-# frame dropped and admitted; the duplicates among the processed requests,
-# each boundary's source batch's admitted less its unprocessed less its
-# merged, read from the boundary's own tile record, the overlap across
-# contexts among them; the unprocessed, whose duplicates stay unknown; the
-# greatest open ring's fill and requesting surfaces. The verdict: TILE_RING
-# and TILE_GUARANTEE stand at the census's provisional sizes only when no
-# frame of any batch dropped a request. Written to `out` as nuon and
-# printed; its own fixtures `nu admission.nu holds <base> <scratch>`.
+# `base` named in `labels`, its report's frames at schema 5 or 6, every
+# run's. Refused before any verdict, every run named (PoolReaderStanding),
+# unless every run is complete, valid, and seeded at one of SCHEMAS. Per
+# batch: the runs and frames; the requests admitted, dropped at a full
+# open ring, and filtered by the repeat filter; the frames dropping any
+# and the most a frame dropped and admitted; the duplicates among the
+# processed requests, each boundary's source batch's admitted less its
+# unprocessed less its merged, read from the boundary's own tile record,
+# the overlap across contexts among them; the unprocessed, whose
+# duplicates stay unknown; the greatest open ring's fill and requesting
+# surfaces. The verdict: TILE_RING and TILE_GUARANTEE stand at the
+# census's provisional sizes only when no frame of any batch dropped a
+# request. Written to `out` as nuon and printed; its own fixtures `nu
+# admission.nu holds <base> <scratch>`.
 
-const SCHEMA = 5
+# the schemas whose pool records the reading takes: 5, and 6, the same
+# records beside a frame's harts record
+const SCHEMAS = [5 6]
 
 # A list's sum and greatest, its nulls dropped: 0 and null for an empty
 # one, which math's own refuse.
@@ -32,11 +35,11 @@ export def load [base: string, labels: list<string>]: nothing -> list<record> {
     $labels | each {|label| { label: $label, g: (open ($base | path join $label "gauge.nuon")) } }
 }
 
-# The runs not complete, valid, and seeded at schema 5, each named.
+# The runs not complete, valid, and seeded at one of SCHEMAS, each named.
 export def standing-of [batches: list<record>]: nothing -> list<string> {
     $batches | each {|b| $b.g.runs | each {|r|
         let m = $r.measured
-        if $m.complete and $m.valid and $m.seeded and $m.schema == $SCHEMA { null } else {
+        if $m.complete and $m.valid and $m.seeded and $m.schema in $SCHEMAS { null } else {
             $"($b.label) run ($r.run): complete ($m.complete), valid ($m.valid), seeded ($m.seeded), schema ($m.schema)"
         }
     } | compact } | flatten
@@ -85,7 +88,8 @@ def main [base: path, out: path, ...labels: string] {
 # `base`, each refusal named and taken before the verdict, a case's failure
 # raised with its name: the batches read whole as the positive control,
 # the reading the saved `admission.nuon`'s; a run invalid, one incomplete,
-# one unseeded, and one at schema 4, each refused.
+# one unseeded, and one at schema 4, each refused; and one at schema 6
+# read, the batch's schemas 5 and 6.
 def "main holds" [base: string, scratch: string] {
     if ($scratch | path exists) { error make { msg: $"the scratch exists: ($scratch)" } }
     mkdir $scratch
@@ -106,5 +110,9 @@ def "main holds" [base: string, scratch: string] {
     do $refuses "an incomplete run" (read-or-refuse (do $measured "complete" false)) "admission_settled_w0 run 2: complete false"
     do $refuses "an unseeded run" (read-or-refuse (do $measured "seeded" false)) "seeded false"
     do $refuses "a run at schema 4" (read-or-refuse (do $measured "schema" 4)) "schema 4"
+    let six = (read-or-refuse (do $measured "schema" 6))
+    if not ($six.refused | is-empty) { do $fail "a run at schema 6" $"refused for ($six.refused | str join '; ')" }
+    let schemas = ($six.reading.batches | where label == "admission_settled_w0" | first | get schemas | sort)
+    if $schemas != [5 6] { do $fail "a run at schema 6" $"read at schemas ($schemas)" }
     print "admission holds: ok"
 }

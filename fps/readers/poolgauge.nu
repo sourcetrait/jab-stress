@@ -15,7 +15,7 @@
 # `settled` reads each view leg apart (SettledWindow). Its L is the
 # console's answer to it, an answer between state records F - 1 and F
 # governing frame F (main.S's frame loop: frame_records, console_read,
-# world_draw, state_report). A frame is settled at schema 5 with no block
+# world_draw, state_report). A frame is settled from schema 5 with no block
 # drawn without its tile, no BUILDING tile, and nothing admitted, dropped,
 # filtered, or built (pool-holds' predicate), and below 5 with no cell
 # built, the only settling field its records carry. The cold is the
@@ -26,9 +26,9 @@
 #
 # Per batch and leg the least, median, 95th, and greatest of the drawing,
 # the critical path, the planes, the walls, the raster, and the tile time
-# (the pool's boundary at schema 5, the atlas build's construction inside
+# (the pool's boundary from schema 5, the atlas build's construction inside
 # its planes and walls below it, so never set beside the other), with the
-# frames read, the tiles built, the frames building, and at schema 5 the
+# frames read, the tiles built, the frames building, and from schema 5 the
 # construction's spread and the frames past the allowance; settled, the
 # cold's whole, each run's drawing and critical path summed from the L to
 # settling and its frames, spread over the batch's runs, and each leg's L
@@ -163,7 +163,7 @@ export def facts-of [batches: list<record>]: nothing -> record<facts: list<recor
     { facts: ($read | where {|x| $x.refused | is-empty }), refused: $refused }
 }
 
-# Whether a row is settled: at schema 5 pool-holds' predicate, below it no
+# Whether a row is settled: from schema 5 pool-holds' predicate, below it no
 # cell built.
 def settled-row [r: record, schema: int]: nothing -> bool {
     if $schema >= 5 {

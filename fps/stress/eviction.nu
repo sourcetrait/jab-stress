@@ -31,7 +31,7 @@ use std/assert
 use ../../../jab/sdk/nu/jab.nu
 use ../../../jab/game/fps/test/pose.nu
 use ../../../jab/game/fps/test/gauge.nu
-use ../../../jab/game/fps/test/test.nu [stamp-of ppm-head record-altered raise-frame rows-differ STAMP_BITS STAMP_CELL STAMP_ONE STAMP_ZERO STORAGE_KIND STORAGE_BUILDING]
+use ../../../jab/game/fps/test/test.nu [stamp-of ppm-head record-altered raise-frame rows-differ STAMP_BITS STAMP_CELL STAMP_ONE STAMP_ZERO STORAGE_KIND STORAGE_BUILDING CLOCK_SCHEMA]
 
 const TILES = (path self | path dirname | path join .. .. .. jab game fps test tiles.nu)
 
@@ -176,10 +176,10 @@ def level-frame [bright: bool, held: bool]: nothing -> binary {
 }
 
 # The console's J frame, a debug build's (test.nu's jobs-frame): the
-# delayed worker's index plus one in byte 4, its delay in microseconds
-# from byte 8, the cancel in byte 12, the faulting worker in byte 13, and
-# in byte 14 (`--hold`) the delayed worker held in fixed bands until the
-# round's join reaches its index.
+# delayed worker's hart in byte 4, its delay in microseconds from byte 8,
+# the cancel in byte 12, the faulting worker's hart in byte 13, and in
+# byte 14 (`--hold`) the delayed worker held in fixed bands until the
+# round's join reaches its position.
 def jobs-frame [delayed: int, delay_us: int, cancel: bool, fault: int, --hold]: nothing -> binary {
     [("J" | into binary), 0x[00 00 00], ($delayed | into binary | bytes at 0..<1), 0x[00 00 00], ($delay_us | into binary | bytes at 0..<4), (if $cancel { 0x[01] } else { 0x[00] }), ($fault | into binary | bytes at 0..<1), (if $hold { 0x[01] } else { 0x[00] }), (0..<49 | each {|i| 0x[00] } | bytes collect)] | bytes collect
 }
@@ -418,7 +418,7 @@ def cycle-launch [kernel: path, image: path, disk: path, out: path, label: strin
     assert equal (open --raw $run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)"
     assert ($run.screen != "") $"($label)'s screen was taken at its last spawn"
     let m = (gauge measure $run.api $LEGS)
-    assert ($m.complete and $m.valid and $m.schema == 5) $"($label) complete and valid at schema 5: ($m.problems | str join '; ') ($m.invalid | str join '; ')"
+    assert ($m.complete and $m.valid and $m.schema == $CLOCK_SCHEMA) $"($label) complete and valid at schema ($CLOCK_SCHEMA): ($m.problems | str join '; ') ($m.invalid | str join '; ')"
     let read = (dump-keys ($dir | path join "api.out") ($dir | path join "keys.nuon"))
     assert ($read.problems | is-empty) $"($label)'s dumps read whole: ($read.problems | first 3)"
     assert equal ($read.dumps | length) ($CYCLE_LEGS | length) $"($label) dumped at every leg's settle: ($read.dumps | length) of ($CYCLE_LEGS | length)"
@@ -717,7 +717,7 @@ export def held-partial [kernel: path, image: path, disk: path, out: path]: noth
     let run = (jab launch --kernel $kernel --image $image --out $dir --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen ($HELD_SCREEN_AT * 1ms) --seconds $HELD_SECONDS)
     assert equal (open --raw $run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)"
     let m = (gauge measure $run.api $LEGS)
-    assert ($m.complete and $m.valid and $m.schema == 5) $"($label) complete and valid at schema 5: ($m.problems | str join '; ') ($m.invalid | str join '; ')"
+    assert ($m.complete and $m.valid and $m.schema == $CLOCK_SCHEMA) $"($label) complete and valid at schema ($CLOCK_SCHEMA): ($m.problems | str join '; ') ($m.invalid | str join '; ')"
     let from = ($m.rows | where {|r| $r.quota == $quota and $r.config_flags == ($modes + $QUOTA_KEPT) } | get -o 0.frame)
     assert ($from != null) $"($label): the O's lift, ONCE, and kept quota of ($quota) texels in force"
     let after = ($m.rows | where {|r| $r.frame >= $from })
@@ -826,7 +826,7 @@ export def slot-reuse [kernel: path, image: path, disk: path, out: path]: nothin
         { name: "return", places: [$SPAWN], pad: [] }
     ]
     let m = (gauge measure $run.api $legs)
-    assert ($m.complete and $m.valid and $m.schema == 5) $"($label) complete and valid at schema 5: ($m.problems | str join '; ') ($m.invalid | str join '; ')"
+    assert ($m.complete and $m.valid and $m.schema == $CLOCK_SCHEMA) $"($label) complete and valid at schema ($CLOCK_SCHEMA): ($m.problems | str join '; ') ($m.invalid | str join '; ')"
     let placed = ($m.rows | where leg == "return" | get -o 0.frame)
     assert ($placed != null) $"($label): the final spawn placement recorded"
     let configured = ($m.rows | where {|r| $r.quota == $quota and $r.config_flags == ($once + $QUOTA_KEPT) } | get -o 0.frame)
@@ -837,7 +837,7 @@ export def slot-reuse [kernel: path, image: path, disk: path, out: path]: nothin
     assert (($refused | where kind != "unsettled") | is-empty) $"($label)'s picture bound after its final spawn placement, refused for nothing but unsettled: ($refused | each {|r| $'($r.kind): ($r.detail)' } | str join '; ')"
     let ref_legs = [{ name: "start", places: [], pad: [] }, { name: "spawn", places: [$SPAWN], pad: [] }]
     let ref_m = (gauge measure $ref_run.api $ref_legs)
-    assert ($ref_m.complete and $ref_m.valid and $ref_m.schema == 5) $"($label)'s reference complete and valid at schema 5: ($ref_m.problems | str join '; ') ($ref_m.invalid | str join '; ')"
+    assert ($ref_m.complete and $ref_m.valid and $ref_m.schema == $CLOCK_SCHEMA) $"($label)'s reference complete and valid at schema ($CLOCK_SCHEMA): ($ref_m.problems | str join '; ') ($ref_m.invalid | str join '; ')"
     let ref_placed = ($ref_m.rows | where leg == "spawn" | get -o 0)
     assert ($ref_placed != null and (($ref_placed.config_flags bit-and $FROZEN) != 0)) $"($label)'s reference's spawn placement recorded under the frozen configuration: ($ref_placed | select -o frame config_flags)"
     let ref_index = ($ref_sends | enumerate | where {|x| $x.item.at == $ref_ended.at and $x.item.bytes == $ref_ended.bytes } | get 0.index)
