@@ -5,7 +5,10 @@
 # `<cands>/export_<commit>`, the
 # manifest's `sdk`, `includes`, and `link` redirected into the export,
 # since the builder reads `link` itself, and its `workspace` the
-# checkout's, whose kernel and target the runs use; `source.nuon` naming
+# checkout's, whose kernel and target the runs use; its declaration,
+# `specs`, `[reserved]`, and `[feature]`, kept, so the image reserves
+# what the program declares, and `prepare`, `do`, and `target_assets`,
+# which name the program's own tree, dropped; `source.nuon` naming
 # the commit; built release there by the checkout's `sdk/nu/jab.nu`
 # through a scratch justfile's `cand-build-release`; then beside the image,
 # which the build writes with its `home`, `flags`, and `fps.elf`,
@@ -36,17 +39,12 @@ def main [repo: string, commit: string, cands: string, jf: string, expected: str
     let program = ($dir | path join ...$place)
     let sdk = ($dir | path join "sdk")
     let original = (open ($program | path join "program.jab.toml"))
-    let manifest = [
-        $"name = '($original.name)'"
-        $"sdk = '($sdk)'"
-        $"workspace = '($repo)'"
-        $"includes = ['($sdk | path join 'src')']"
-        $"link = '($sdk | path join 'src' 'program.ld')'"
-    ] | str join "\n"
-    ($manifest + "\n") | save --raw -f ($program | path join "program.jab.toml")
+    let paths = { name: $original.name, sdk: $sdk, workspace: $repo, includes: [($sdk | path join 'src')], link: ($sdk | path join 'src' 'program.ld') }
+    let declaration = ([specs reserved feature] | reduce --fold {} {|k, acc| let v = ($original | get -o $k); if $v == null { $acc } else { $acc | insert $k $v } })
+    $paths | merge $declaration | to toml | save --raw -f ($program | path join "program.jab.toml")
     {
         commit: $full,
-        exported_from: $"git archive of sdk/src and the program's src/ and manifest at ($full), the manifest's sdk, includes, and link redirected into the export and its workspace the checkout's for the kernel and the target",
+        exported_from: $"git archive of sdk/src and the program's src/ and manifest at ($full), the manifest's sdk, includes, and link redirected into the export and its workspace the checkout's for the kernel and the target, its declaration kept, (if ($declaration | is-empty) { 'none' } else { $declaration | columns | str join ', ' }), and its fields naming the program's own tree dropped",
     } | to nuon --indent 2 | save --raw ($program | path join "source.nuon")
     let built = (^just -f $jf cand-build-release $program | complete)
     if $built.exit_code != 0 { error make { msg: $"the release build of ($program): ($built.stdout + $built.stderr | lines | last 6 | str join ' | ')" } }
