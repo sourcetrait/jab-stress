@@ -8,4 +8,6 @@
  ["workergauge.nu", "wg_reads_summary", "            let request = (run-request $file $r ($g | get -o identity))", "            let request = (run-request $file {} ($g | get -o identity))", "workergauge holds: a summary asking none over forced runs leaves them forced"],
  ["packetgauge.nu", "pg_reads_summary", "            let request = (run-request $file $r ($g | get -o identity))", "            let request = (run-request $file {} ($g | get -o identity))", "packetgauge holds: a summary disagreeing with its runs leaves their cadence standing"],
  ["lane.nu", "lane_reads_summary", "            let request = (run-request $file $r ($g | get -o identity))", "            let request = (run-request $file {} ($g | get -o identity))", "lane holds: runs pooled under their own cadence"],
+ ["gaincurves.nu", "curves_problems_ignored", "    if not ($doc.problems | is-empty) {", "    if false {", "gaincurves holds: a battery with an invalid run is refused by curves"],
+ ["gaincurves.nu", "table_problems_ignored", "    if not ($problems | is-empty) { error make", "    if false { error make", "gaincurves holds: a reading carrying problems is refused by table"],
 ]

@@ -1,5 +1,5 @@
 {
- nonce: "7jlg3A00NtS",
+ nonce: "1gncsAJS7Ld",
  args_type: "record<readers: string, jab: string, mutants: string, scratch: string, jf: string, logs: string>",
  result_type: "record<control: record<exit: int, ok: bool>, results: table<name: string, exit: int, raised: bool, at_own: oneof<bool, nothing>>, every: bool, secs: int>",
  body: "let t0 = (date now)
@@ -9,7 +9,8 @@ if ($a.logs | path exists) { error make { msg: $\"the logs exist: ($a.logs)\" } 
 mkdir $a.scratch
 mkdir $a.logs
 ^ln -s $a.jab ($a.scratch | path join \"jab\")
-let files = [\"workergauge.nu\" \"packetgauge.nu\" \"lane.nu\" \"batches.nu\"]
+let files = [\"workergauge.nu\" \"packetgauge.nu\" \"lane.nu\" \"gaincurves.nu\" \"batches.nu\"]
+let scripts = [\"workergauge\" \"packetgauge\" \"lane\" \"gaincurves\"]
 let src = ($files | reduce --fold {} {|f, acc| $acc | insert $f (open --raw ($a.readers | path join $f) | decode) })
 let mutants = (open $a.mutants)
 let bad = ($mutants | each {|m| { name: $m.name, n: ((($src | get $m.file) | split row $m.find | length) - 1) } } | where n != 1)
@@ -22,7 +23,7 @@ let results = ($jobs | par-each --threads 4 {|m|
         let text = (if $m.file == $f { $src | get $f | str replace $m.find $m.put } else { $src | get $f })
         $text | save --raw ($tree | path join $f)
     }
-    let outs = ([\"workergauge\" \"packetgauge\" \"lane\"] | each {|s| ^just -f $a.jf reader-holds ($tree | path join $\"($s).nu\") ($a.scratch | path join $m.name $\"($s)_holds\") | complete })
+    let outs = ($scripts | each {|s| ^just -f $a.jf reader-holds ($tree | path join $\"($s).nu\") ($a.scratch | path join $m.name $\"($s)_holds\") | complete })
     let out = ($outs | each {|o| $o.stdout + $o.stderr } | str join \"\")
     $out | save --raw ($a.logs | path join $\"($m.name).log\")
     let flat = ($out | str replace --all --regex '[\\s│|]+' ' ')
@@ -33,7 +34,7 @@ let results = ($jobs | par-each --threads 4 {|m|
         exit: ($outs | get exit_code | where {|e| $e != 0 } | get -o 0 | default 0),
         raised: $raised,
         at_own: (if $m.expect == null { null } else { ($flat | str contains $m.expect) and (not $raised) }),
-        ok: ([\"workergauge holds: ok\" \"packetgauge holds: ok\" \"lane holds: ok\"] | all {|k| $k in $lines }),
+        ok: ($scripts | all {|s| $\"($s) holds: ok\" in $lines }),
     }
 })
 let control = ($results | where name == \"control\" | first)

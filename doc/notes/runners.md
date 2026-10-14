@@ -38,7 +38,7 @@ justfiles in `fps/just/` provide them.
 | `poolreader_mutants.nuon` | 2rM2CVU5KzA | the pool readers' mutants, each on mirrors laid out as `fps/readers/` beside a link to jab (revised from b45PFb5sQqo) |
 | `tilecensus_reader_mutants.nuon` | 7SQJSudlVhg | the tile census reader's mutants, each on a mirror laid out as `fps/readers/` beside a link to jab (revised from 8k8FFBThsgC) |
 | `census_reader_mutants.nuon` | 6pn8EVDeSdL | the census reader's mutants over a census serial log |
-| `reader_holds_mutants.nuon` | 7jlg3A00NtS | the readers' own holds' mutants (`fps/mutants/workergauge_mutants.nuon`), each a `file`, `find`, `put`, and `expect`: a control and each mutant on a mirror of workergauge.nu, packetgauge.nu, lane.nu, and batches.nu laid out as `fps/readers/` beside a link to jab, four at a time, all three holds through `handoff.just`'s `reader-holds` and their output kept under `logs`, each mutant held to its expect in its failure and no raise; synchronous, a few seconds in all |
+| `reader_holds_mutants.nuon` | 1gncsAJS7Ld | the readers' own holds' mutants (`fps/mutants/workergauge_mutants.nuon`), each a `file`, `find`, `put`, and `expect`: a control and each mutant on a mirror of workergauge.nu, packetgauge.nu, lane.nu, gaincurves.nu, and batches.nu laid out as `fps/readers/` beside a link to jab, four at a time, all four holds through `handoff.just`'s `reader-holds` and their output kept under `logs`, each mutant held to its expect in its failure and no raise; synchronous, about ten seconds for the ten (revised from 7jlg3A00NtS) |
 | `image_mutants.nuon` | 2G5ATFw8HaK | prebuilt mutant images through `image-test` |
 
 ## The mutant runners' own cases

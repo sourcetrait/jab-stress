@@ -85,8 +85,8 @@ packetgauge mode base out *labels:
 workergauge mode base out *labels:
     nu {{readers}}/workergauge.nu {{mode}} {{base}} {{out}} {{labels}}
 
-# a reader's own fixtures, workergauge.nu's, packetgauge.nu's, or
-# lane.nu's, from the checkout's readers or a mirror's
+# a reader's own fixtures, workergauge.nu's, packetgauge.nu's, lane.nu's,
+# or gaincurves.nu's, from the checkout's readers or a mirror's
 reader-holds script scratch:
     nu {{script}} holds {{scratch}}
 
