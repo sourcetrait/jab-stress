@@ -1,5 +1,6 @@
-# The raster workers' rules, TwoWorkers', GfxStorage's, and GfxSelection's,
-# each broken by exact-once finds and puts on a
+# The raster workers' rules, TwoWorkers', GfxStorage's, GfxSelection's, and
+# GfxScaling's (the guideline, the cancel's witness), each broken by
+# exact-once finds and puts on a
 # candidate copy of src/ (operation.md: the program's mutants against the
 # suite); `expect` is the head of the assertion in test.nu that must fail
 # first. A change to a rule's source moves its finds here in the same pass.
@@ -185,5 +186,32 @@
     edits: [{ find: "    blt t2, t1, 71f                 # under the floor: refused before any stop
 ", put: "" }],
     expect: "the take on three harts refused under the floor, nothing stopped or claimed"
+  },
+  {
+    name: guideline_ignored,
+    file: "render.inc",
+    edits: [{ find: ".set GFX_GUIDELINE, 3
+", put: ".set GFX_GUIDELINE, GFX_SLOTS
+" }],
+    expect: "the default on 8 harts draws with GFX_GUIDELINE's 3 of its 7 started workers"
+  },
+  {
+    name: witness_unwritten,
+    file: "main.S",
+    edits: [{ find: "    li t1, REPORT_SIZE
+    jab.sys.api.write t0, t1
+8:
+", put: "8:
+" }],
+    expect: "the spawn view with every round cancelled, hart 2's worker held, at a band a worker: exactly one witness for every measured frame"
+  },
+  {
+    name: witness_cancelled_zero,
+    file: "main.S",
+    edits: [{ find: "    ld t1, STAT_CANCELLED(t2)
+    sw t1, ROUNDS_CANCELLED(t0)
+", put: "    sw zero, ROUNDS_CANCELLED(t0)
+" }],
+    expect: "the spawn view with every round cancelled, hart 2's worker held, at a band a worker: exactly one witness for every measured frame"
   }
 ]
