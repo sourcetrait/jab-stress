@@ -21,3 +21,10 @@ fault kernel image out *flags:
 
 judge out *flags:
     nu {{readers}}/workerparity.nu judge {{out}} {{flags}}
+
+# a battery's gain curves, and a reading's builds as a markdown table
+gaincurves mode base out *labels:
+    nu {{readers}}/gaincurves.nu {{mode}} {{base}} {{out}} {{labels}}
+
+gaincurves-table reading *builds:
+    nu {{readers}}/gaincurves.nu table {{reading}} {{builds}}
