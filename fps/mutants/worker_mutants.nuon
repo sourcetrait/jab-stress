@@ -1,4 +1,5 @@
-# TwoWorkers' rules, each broken by exact-once finds and puts on a
+# The raster workers' rules, TwoWorkers', GfxStorage's, and GfxSelection's,
+# each broken by exact-once finds and puts on a
 # candidate copy of src/ (operation.md: the program's mutants against the
 # suite); `expect` is the head of the assertion in test.nu that must fail
 # first. A change to a rule's source moves its finds here in the same pass.
@@ -117,10 +118,10 @@
     file: "workers.S",
     edits: [{ find: "    jab.sys.harts.reserve JAB_RESERVED_GFX_HARTS
     bnez a0, 80f
-    mv s2, a1                       # the grant
-", put: "    mv s2, t0                       # the grant
+    mv s1, a1                       # the grant
+", put: "    mv s1, t0                       # the grant
 " }],
-    expect: "the walk's measurement valid"
+    expect: "a screen was taken on the plain run"
   },
   {
     name: owner_none,
@@ -148,5 +149,41 @@
 13:
 " }],
     expect: "every band of every round rendered once on the spawn view on 4 harts 7 workers asked in bands of 0 rows"
+  },
+  {
+    name: take_stop_skipped,
+    file: "workers.S",
+    edits: [{ find: "    jab.sys.worker.stop s1          # their workers, idle in their mailboxes, exit
+    bnez a1, 75f                    # one forced: its job never completed
+", put: "" }],
+    expect: "the take on four harts stops hart 3's worker, then claims the hart"
+  },
+  {
+    name: started_kept,
+    file: "workers.S",
+    edits: [{ find: "    la t0, workers_mask
+    ld t1, 0(t0)
+    not t2, s1
+    and t1, t1, t2
+    sd t1, 0(t0)                    # the started without them
+", put: "    la t0, workers_mask
+    ld t1, 0(t0)
+" }],
+    expect: "the take's taken dispatches to started harts inside the grant alone"
+  },
+  {
+    name: restart_skipped,
+    file: "workers.S",
+    edits: [{ find: "    mv a0, s1
+    call workers_restart            # a raster worker on each again, under the reservation
+", put: "" }],
+    expect: "the take and give-back on four harts by the default: hart 3's worker stopped and the hart claimed, then the claim released and the hart's worker started"
+  },
+  {
+    name: floor_check_skipped,
+    file: "workers.S",
+    edits: [{ find: "    blt t2, t1, 71f                 # under the floor: refused before any stop
+", put: "" }],
+    expect: "the take on three harts refused under the floor, nothing stopped or claimed"
   }
 ]
