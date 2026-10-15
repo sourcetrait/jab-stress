@@ -50,3 +50,29 @@ first one and the reset's redraw.
 
 Land a run's record as the data checkout's layout note says, under
 `runs/sdk/sdl/<stamp>/`.
+
+## Rereading a run's record
+
+`just -f sdk/just/probe.just reread <record>` reads a controls run's
+record again through the probe's current reader. Nothing is run and
+nothing is written. Each control's checks are worked out again from the
+logs and the trace saved in the record, and the probe's own record is
+worked out again from the saved shim log by `jab sdl-report`. Every check
+and every count is then compared with the record's `controls.nuon`. The
+command prints one NUON record and exits non-zero when anything differs
+or when the reader refuses a log it once read.
+
+The printed record names the Jab and workbench revisions that made the
+capture, as `controls.nuon` gives them, apart from the revisions of the
+checkouts doing the reread. Each control lists its discrepancies, empty
+when it reads as recorded.
+
+- The stripped control is reread only while the stripped QEMU that its
+  log names still stands. When that copy is gone, the control is marked
+  as not reread, and the rest of the record still counts.
+- The modular control reads the system QEMU and its modules again, so it
+  needs them unchanged since the capture.
+
+Reread the set's current record whenever the reader changes in a way
+that reaches what a capture holds. To show that the reread can fail,
+alter a scratch copy of a record, never the record itself.

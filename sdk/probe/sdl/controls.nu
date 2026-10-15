@@ -32,6 +32,11 @@
 # three switches, the registration's, the reset's, and the set_scanout's,
 # and two of the console's own, the registration's first update and the
 # reset's redraw.
+#
+# `reread <record>` holds a run's record to the current reader: each
+# control's checks over its saved logs and trace, the probe's record
+# recomputed by sdl-report from its saved log, nothing run and nothing
+# written, and every check and count held to the record's controls.nuon.
 use ../../../../jab/sdk/nu/jab.nu
 
 const HERE = (path self | path dirname)
@@ -120,12 +125,11 @@ def counts-of [made: table]: nothing -> record<uploads: int, switches: int, cons
     }
 }
 
-def monolithic [out: path]: nothing -> record {
-    let trace = ($out | path join "walk.trace.log")
-    let run = (probe-run "walk" "example/walk" $out $"($TRACE) -D \"($trace)\"")
-    if $run.exit != 0 or $run.record == null or $run.log == "" { return { ran: true, ok: false, why: $"the probe failed: (tail-of $run.stderr)" } }
-    if not ($trace | path exists) { return { ran: true, ok: false, why: "QEMU wrote no trace; its build may carry no log trace backend" } }
-    let read = (jab sdl-classify $run.log)
+# The monolithic control's checks over a walk's shim log, QEMU's trace of
+# the device's flush and set_scanout commands in it, and the probe's
+# record of the run.
+def monolithic-of [log: path, trace: path, report: record]: nothing -> record {
+    let read = (jab sdl-classify $log)
     let made = (made-of $read.events)
     let commands = (open --raw $trace | lines
         | parse --regex '^(?P<at>\S+) (?P<command>virtio_gpu_cmd_(?:res_flush|set_scanout))\b'
@@ -148,30 +152,36 @@ def monolithic [out: path]: nothing -> record {
         none_elsewhere: ($placed == ($uploads | length)),
         one_switch_per_set_scanout: (($scanouts | length) > 0 and ($scanouts | all {|w| $w.switches == 1 })),
         reset_through_reset_bh: (($reset | where kind == "switch" | length) == 1 and ($reset | where kind == "console" | length) == 1),
-        virtio_gpu_in_executable: ($read.virtio_gpu_in == "executable" and $run.record.virtio_gpu_in == "executable"),
-        flips_are_groups: ($run.record.flips == (flip-count ($uploads | get ts))),
-        switches_as_measured: ($counts.switches == $SWITCHES and $run.record.switches == $SWITCHES),
-        console_as_measured: ($counts.console == $CONSOLE and $run.record.other_uploads == $CONSOLE),
+        virtio_gpu_in_executable: ($read.virtio_gpu_in == "executable" and $report.virtio_gpu_in == "executable"),
+        flips_are_groups: ($report.flips == (flip-count ($uploads | get ts))),
+        switches_as_measured: ($counts.switches == $SWITCHES and $report.switches == $SWITCHES),
+        console_as_measured: ($counts.console == $CONSOLE and $report.other_uploads == $CONSOLE),
     }
     {
-        ran: true,
         ok: ($checks | values | all {|v| $v }),
-        qemu: $run.record.run.qemu,
         traced: { flushes: ($flushes | length), set_scanouts: ($scanouts | length) },
         read: $counts,
         flush_windows: ($flushes | get uploads | uniq --count | each {|c| { uploads: $c.value, windows: $c.count } }),
-        flips: $run.record.flips,
+        flips: $report.flips,
         checks: $checks,
     }
 }
 
-def modular [out: path]: nothing -> record {
-    let module = ($MODULE_DIRS | each {|d| $d | path join "hw-display-virtio-gpu.so" } | where {|f| $f | path exists } | get -o 0)
-    if not ($SYSTEM_QEMU | path exists) or $module == null { return { ran: false, ok: false, why: "no QEMU at /usr whose virtio-gpu is a module" } }
-    let run = (with-link $SYSTEM_PREFIX { probe-run "bounce" "example/bounce" $out "" })
-    if $run.exit != 0 or $run.record == null or $run.log == "" { return { ran: true, ok: false, why: $"the probe failed or refused: (tail-of $run.stderr)" } }
-    let read = (made-of (jab sdl-classify $run.log).events)
-    let named = (jab sdl-resolve $run.log --every)
+def monolithic [out: path]: nothing -> record {
+    let trace = ($out | path join "walk.trace.log")
+    let run = (probe-run "walk" "example/walk" $out $"($TRACE) -D \"($trace)\"")
+    if $run.exit != 0 or $run.record == null or $run.log == "" { return { ran: true, ok: false, why: $"the probe failed: (tail-of $run.stderr)" } }
+    if not ($trace | path exists) { return { ran: true, ok: false, why: "QEMU wrote no trace; its build may carry no log trace backend" } }
+    let m = (monolithic-of $run.log $trace $run.record)
+    { ran: true, ok: $m.ok, qemu: $run.record.run.qemu } | merge ($m | reject ok)
+}
+
+# The modular control's checks over a bounce's shim log on a QEMU whose
+# virtio-gpu is a module, and the probe's record of the run: the reading,
+# then the same log read a second time by symbols alone.
+def modular-of [log: path, report: record]: nothing -> record {
+    let read = (made-of (jab sdl-classify $log).events)
+    let named = (jab sdl-resolve $log --every)
     let modules = ($named.objects | where {|o| $o.file | str starts-with "hw-display-virtio-gpu" } | get index)
     let gates = (made-of $named.events | each {|m|
         let caller = ($m.frames | get -o 0)
@@ -186,24 +196,41 @@ def modular [out: path]: nothing -> record {
     let flips = (do $places $read "upload" "kind")
     let counts = (counts-of $read)
     let checks = {
-        virtio_gpu_in_module: ($run.record.virtio_gpu_in == "module" and $named.virtio_gpu_in == "module"),
+        virtio_gpu_in_module: ($report.virtio_gpu_in == "module" and $named.virtio_gpu_in == "module"),
         uploads_agree: ($flips == (do $places $gates "upload" "gate")),
         uploads_corroborated: (($flips | length) > 0 and ($gates | where gate == "upload" | all {|g| $g.corroborated })),
         switches_agree: ((do $places $read "switch" "kind") == (do $places $gates "switch" "gate")),
         console_agree: ((do $places $read "console" "kind") == (do $places $gates "console" "gate")),
         nothing_else: ($gates | where gate == "other" | is-empty),
-        switches_as_measured: ($counts.switches == $SWITCHES and $run.record.switches == $SWITCHES),
-        console_as_measured: ($counts.console == $CONSOLE and $run.record.other_uploads == $CONSOLE),
+        switches_as_measured: ($counts.switches == $SWITCHES and $report.switches == $SWITCHES),
+        console_as_measured: ($counts.console == $CONSOLE and $report.other_uploads == $CONSOLE),
     }
     {
-        ran: true,
         ok: ($checks | values | all {|v| $v }),
-        qemu: $run.record.run.qemu,
-        module: $module,
         read: $counts,
         corroborated: ($gates | where gate == "upload" | where corroborated | length),
-        flips: $run.record.flips,
+        flips: $report.flips,
         checks: $checks,
+    }
+}
+
+def modular [out: path]: nothing -> record {
+    let module = ($MODULE_DIRS | each {|d| $d | path join "hw-display-virtio-gpu.so" } | where {|f| $f | path exists } | get -o 0)
+    if not ($SYSTEM_QEMU | path exists) or $module == null { return { ran: false, ok: false, why: "no QEMU at /usr whose virtio-gpu is a module" } }
+    let run = (with-link $SYSTEM_PREFIX { probe-run "bounce" "example/bounce" $out "" })
+    if $run.exit != 0 or $run.record == null or $run.log == "" { return { ran: true, ok: false, why: $"the probe failed or refused: (tail-of $run.stderr)" } }
+    let m = (modular-of $run.log $run.record)
+    { ran: true, ok: $m.ok, qemu: $run.record.run.qemu, module: $module } | merge ($m | reject ok)
+}
+
+# The stripped control's checks: the probe failed, printed no record, and
+# refused at the anchor, naming the missing table.
+def stripped-checks [failed: bool, printed: bool, refusal: string]: nothing -> record {
+    {
+        exits_nonzero: $failed,
+        prints_no_record: (not $printed),
+        anchor_refused: ($refusal | str contains "immediate caller is not in the SDL front end"),
+        table_named: ($refusal | str contains "keeps no symbol table"),
     }
 }
 
@@ -218,12 +245,8 @@ def stripped [out: path, work: path]: nothing -> record {
     ^ln -s ($install | path join "share") ($tree | path join "share")
     let run = (with-link $tree { probe-run "stripped" "example/bounce" $out "" })
     let refusal = (message-of $run.stderr)
-    let checks = {
-        exits_nonzero: ($run.exit != 0),
-        prints_no_record: ((open --raw ($out | path join "stripped.stdout") | str trim) == ""),
-        anchor_refused: ($refusal | str contains "immediate caller is not in the SDL front end"),
-        table_named: ($refusal | str contains "keeps no symbol table"),
-    }
+    let printed = ((open --raw ($out | path join "stripped.stdout") | str trim) != "")
+    let checks = (stripped-checks ($run.exit != 0) $printed $refusal)
     {
         ran: true,
         ok: ($checks | values | all {|v| $v }),
@@ -256,4 +279,77 @@ def main [out: path, work: path] {
     $record | to nuon --indent 2 | save -f ($out | path join "controls.nuon")
     print ($record | to nuon --indent 2)
     if not $record.ok { exit 1 }
+}
+
+# The fields a reread holds to its record that differ, each with both
+# values.
+def discrepancies [reread: record, recorded: record, fields: list<string>]: nothing -> list<string> {
+    $fields | where {|f| ($reread | get $f) != ($recorded | get -o $f) } | each {|f|
+        $"($f): recorded ($recorded | get -o $f | to nuon), reread ($reread | get $f | to nuon)"
+    }
+}
+
+# One control reread: `task` the current reader over its saved files, its
+# `fields` held to the control's record, and a raise a discrepancy itself.
+def reread-one [recorded: record, fields: list<string>, task: closure]: nothing -> record {
+    let got = (try { { value: (do $task), error: null } } catch {|e| { value: null, error: $e.msg } })
+    if $got.error != null { return { reread: true, ok: false, discrepancies: [$"the reader raised: ($got.error)"] } }
+    { reread: true } | merge $got.value | merge { discrepancies: (discrepancies $got.value $recorded $fields) }
+}
+
+# The executable a run's shim log names, its object 0 line's path.
+def stripped-copy [log: path]: nothing -> string {
+    open --raw $log | into binary | decode | lines
+        | parse --regex '^\S+ object 0 \S+ \S+ \S+ (?P<path>.*)$'
+        | get -o 0.path
+        | default ""
+}
+
+# Rereads a controls run's record, `record` its directory, through the
+# current reader: each control's checks over its saved logs and trace, the
+# probe's record recomputed by sdl-report from its saved log, nothing run
+# and nothing written. Every check and count is held to the record's own
+# controls.nuon, one NUON record is printed naming the capture's revisions
+# apart from the checkouts doing the reread, and any discrepancy exits
+# non-zero. The stripped control rereads while the stripped copy its log
+# names still stands, and is marked not reread otherwise.
+def "main reread" [record: path] {
+    let dir = ($record | path expand)
+    let saved = (open --raw ($dir | path join "controls.nuon") | into binary | decode | from nuon)
+    let unran = { reread: false, why: "the control did not run" }
+    let mono = (if not $saved.monolithic.ran { $unran } else {
+        reread-one $saved.monolithic [ok traced read flush_windows flips checks] {||
+            let log = ($dir | path join "walk.sdl.log")
+            monolithic-of $log ($dir | path join "walk.trace.log") (jab sdl-report $log)
+        }
+    })
+    let modu = (if not $saved.modular.ran { $unran } else {
+        reread-one $saved.modular [ok read corroborated flips checks] {||
+            let log = ($dir | path join "bounce.sdl.log")
+            modular-of $log (jab sdl-report $log)
+        }
+    })
+    let stripped_log = ($dir | path join "stripped.sdl.log")
+    let copy = (if ($stripped_log | path exists) { stripped-copy $stripped_log } else { "" })
+    let strip = (if not $saved.stripped.ran { $unran } else if $copy == "" or ($copy | path type) == null {
+        { reread: false, why: $"the stripped copy its log names is gone: ($copy)" }
+    } else {
+        reread-one $saved.stripped [ok checks] {||
+            let reading = (try { { report: (jab sdl-report $stripped_log), refusal: "" } } catch {|e| { report: null, refusal: $e.msg } })
+            let checks = (stripped-checks ($reading.report == null) ($reading.report != null) $reading.refusal)
+            { ok: ($checks | values | all {|v| $v }), refusal: $reading.refusal, checks: $checks }
+        }
+    })
+    let reread = ([$mono $modu $strip] | where {|c| $c.reread })
+    let result = {
+        record: $dir,
+        captured: { jab: $saved.jab, workbench: $saved.workbench },
+        reread_by: { jab: (^git -C $JAB rev-parse HEAD | str trim), workbench: (^git -C $HERE rev-parse HEAD | str trim) },
+        monolithic: $mono,
+        modular: $modu,
+        stripped: $strip,
+        ok: (($reread | is-not-empty) and ($reread | all {|c| $c.discrepancies | is-empty })),
+    }
+    print ($result | to nuon --indent 2)
+    if not $result.ok { exit 1 }
 }
