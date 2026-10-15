@@ -37,6 +37,11 @@
 # control's checks over its saved logs and trace, the probe's record
 # recomputed by sdl-report from its saved log, nothing run and nothing
 # written, and every check and count held to the record's controls.nuon.
+# The stripped control goes unread in one case alone: its log, held to the
+# reader's own grammar and structure, names an executable whose file has
+# gone since the capture. A log missing from the record, refused by the
+# reader, naming no executable, or naming one deleted at the capture is a
+# discrepancy.
 use ../../../../jab/sdk/nu/jab.nu
 
 const HERE = (path self | path dirname)
@@ -297,12 +302,33 @@ def reread-one [recorded: record, fields: list<string>, task: closure]: nothing 
     { reread: true } | merge $got.value | merge { discrepancies: (discrepancies $got.value $recorded $fields) }
 }
 
-# The executable a run's shim log names, its object 0 line's path.
-def stripped-copy [log: path]: nothing -> string {
-    open --raw $log | into binary | decode | lines
-        | parse --regex '^\S+ object 0 \S+ \S+ \S+ (?P<path>.*)$'
-        | get -o 0.path
-        | default ""
+# The executable the stripped control's shim log names, read only through
+# the probe's own reader (jab sdl-log), which holds every line to the
+# shim's grammar and the object table to its structure first. `problem` is
+# the discrepancy where the log names none: the log missing from the
+# record or refused by the reader; object 0 absent, written `- - -`, or
+# naming no path or one that is not absolute, where the shim writes
+# /proc/self/exe's target, which always is; or object 0 naming an
+# executable deleted at the capture, its path ending ` (deleted)`.
+# Otherwise `path` is object 0's path and `gone` whether nothing is there
+# now.
+def stripped-target [log: path]: nothing -> record<problem: string, path: string, gone: bool> {
+    if ($log | path type) == null { return { problem: "the record holds no stripped.sdl.log", path: "", gone: false } }
+    let read = (try { { objects: (jab sdl-log $log).objects, error: null } } catch {|e| { objects: [], error: $e.msg } })
+    if $read.error != null { return { problem: $"the reader refuses the stripped log: ($read.error)", path: "", gone: false } }
+    let entry = ($read.objects | where index == 0 | get -o 0)
+    let which = (if $entry == null {
+        "its table has no object 0"
+    } else if $entry.inode == null or $entry.size == null or $entry.mtime == null {
+        "object 0 is written - - -"
+    } else if $entry.path == "" {
+        "object 0 names no path"
+    } else if not ($entry.path | str starts-with "/") {
+        $"object 0's path is not absolute: ($entry.path)"
+    } else { "" })
+    if $which != "" { return { problem: $"the stripped log names no executable: ($which)", path: "", gone: false } }
+    if ($entry.path | str ends-with " (deleted)") { return { problem: $"the stripped log names an executable deleted at its capture: ($entry.path)", path: $entry.path, gone: false } }
+    { problem: "", path: $entry.path, gone: (($entry.path | path type) == null) }
 }
 
 # Rereads a controls run's record, `record` its directory, through the
@@ -311,8 +337,9 @@ def stripped-copy [log: path]: nothing -> string {
 # and nothing written. Every check and count is held to the record's own
 # controls.nuon, one NUON record is printed naming the capture's revisions
 # apart from the checkouts doing the reread, and any discrepancy exits
-# non-zero. The stripped control rereads while the stripped copy its log
-# names still stands, and is marked not reread otherwise.
+# non-zero. The stripped control is marked not reread in one case alone, a
+# log the reader accepts naming an executable that is gone
+# (stripped-target); every other failure to read its log is a discrepancy.
 def "main reread" [record: path] {
     let dir = ($record | path expand)
     let saved = (open --raw ($dir | path join "controls.nuon") | into binary | decode | from nuon)
@@ -330,14 +357,18 @@ def "main reread" [record: path] {
         }
     })
     let stripped_log = ($dir | path join "stripped.sdl.log")
-    let copy = (if ($stripped_log | path exists) { stripped-copy $stripped_log } else { "" })
-    let strip = (if not $saved.stripped.ran { $unran } else if $copy == "" or ($copy | path type) == null {
-        { reread: false, why: $"the stripped copy its log names is gone: ($copy)" }
-    } else {
-        reread-one $saved.stripped [ok checks] {||
-            let reading = (try { { report: (jab sdl-report $stripped_log), refusal: "" } } catch {|e| { report: null, refusal: $e.msg } })
-            let checks = (stripped-checks ($reading.report == null) ($reading.report != null) $reading.refusal)
-            { ok: ($checks | values | all {|v| $v }), refusal: $reading.refusal, checks: $checks }
+    let strip = (if not $saved.stripped.ran { $unran } else {
+        let target = (stripped-target $stripped_log)
+        if $target.problem != "" {
+            { reread: true, ok: false, discrepancies: [$target.problem] }
+        } else if $target.gone {
+            { reread: false, why: $"the stripped copy its log names is gone: ($target.path)" }
+        } else {
+            reread-one $saved.stripped [ok checks] {||
+                let reading = (try { { report: (jab sdl-report $stripped_log), refusal: "" } } catch {|e| { report: null, refusal: $e.msg } })
+                let checks = (stripped-checks ($reading.report == null) ($reading.report != null) $reading.refusal)
+                { ok: ($checks | values | all {|v| $v }), refusal: $reading.refusal, checks: $checks }
+            }
         }
     })
     let reread = ([$mono $modu $strip] | where {|c| $c.reread })

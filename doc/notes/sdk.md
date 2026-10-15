@@ -67,9 +67,16 @@ capture, as `controls.nuon` gives them, apart from the revisions of the
 checkouts doing the reread. Each control lists its discrepancies, empty
 when it reads as recorded.
 
-- The stripped control is reread only while the stripped QEMU that its
-  log names still stands. When that copy is gone, the control is marked
-  as not reread, and the rest of the record still counts.
+- The stripped control is left unread in one case only: its shim log
+  passes the probe's own reader, `jab sdl-log`, and the stripped QEMU
+  that the log names has gone since the capture. The control is then
+  marked as not reread, and the rest of the record still counts. Every
+  other problem with that log fails the reread: the record holds no
+  `stripped.sdl.log`; the reader refuses the log; the log names no
+  executable, because its table has no object 0, object 0 is written
+  `- - -`, or its path is empty or not absolute; or the log names an
+  executable that was already deleted while the capture ran, its path
+  ending ` (deleted)`.
 - The modular control reads the system QEMU and its modules again, so it
   needs them unchanged since the capture.
 
