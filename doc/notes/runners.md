@@ -4,7 +4,10 @@
 runs, saved from the Grammar MCP's run cache so they outlive it. Each
 runs on the Grammar MCP's long engine
 (`rig/sourcetrait/emptwo/prototype/long`), which reports progress on the
-MCP's channel.
+MCP's channel. A run's record, its logs and results, is kept in the data
+checkout beside this repository, `../jab-stress-data`, under
+`runs/<subject>/<set>/<stamp>/` with its manifest, as that repository's
+`doc/notes/layout.md` lays out.
 
 Each file holds the nonce the body last ran under, its argument and
 result types, and the body. While the server's cache still holds the
@@ -51,20 +54,27 @@ carries what each of them must make of it: the program runner's and the
 checkout runner's `class`, the census runner's `credited`, and the titles
 reader's `at_assert` and `matches`.
 
+The canned logs are asset data, kept in the data checkout beside this
+repository, `../jab-stress-data`, under `assets/workbench/cases/logs/`:
+one for each case in `cases.nuon`, and `control.log`.
+
 Run a runner with `cases.just` as its `jf`, `cases.nuon` as its `mutants`,
-and `game` as its `game`. Its `ok` is `eviction reuse: ok`, and its
-`cands` and `logs` go under the session's scratch directory. The program
+and `game` as its `game`. Its `ok` is `eviction reuse: ok`. Its `cands` go
+under the session's scratch directory, and its `logs` are the run's
+record, `runs/workbench/cases/<stamp>/` in the data checkout. The program
 runner's `manifest` may be empty and its `assets` and `kernel` any word;
 the census runner takes `raster.S` as its `control_file` and any existing
 file, such as `game/src/raster.S`, as its `manifest_file`, `assets`, and
-`kernel`. The titles reader reads `logs/` with `cases.nuon`. Nothing is
-built or run: `cand-build` writes an empty image, and `image-test` prints
-the case's log from `logs/` and exits 1 when the log holds nushell's
-error, 0 otherwise. `just -f cases.just check <logs> <results>` then holds
-the run to those logs and exits, `results` the run's results saved as
-NUON, and only then do its expectations count. Every result must read
-`control_ok` and `every`, or `all`, true. A runner takes about a minute on
-the long engine.
+`kernel`. The titles reader reads the canned logs' directory with
+`cases.nuon`. Nothing is built or run: `cand-build` writes an empty image,
+and `image-test` prints the case's canned log and exits 1 when the log
+holds nushell's error, 0 otherwise. `just -f cases.just check <logs>
+<results>` then holds the run to those logs and exits, `results` the run's
+results saved as NUON, and only then do its expectations count. Before it
+reads any result, `check` refuses when the data checkout is missing, when
+a log the case list names is missing, and when the directory holds a log
+the list does not name. Every result must read `control_ok` and `every`,
+or `all`, true. A runner takes about a minute on the long engine.
 
 The checkout runner reads the cases through a scratch checkout instead,
 laid out by `just -f cases.just checkout <dir>` (`checkout.nu`). The
@@ -75,8 +85,9 @@ the cases as a set of the one program `cases`, each one edit making `case`
 its own name, so every run exercises the runner's finds and its restore,
 and a `set_<case>.nuon` for each forced case below. Run it with `jab` the
 checkout, `set` its `set.nuon`, `only` every case, `control` `{program:
-cases, ok: "eviction reuse: ok"}`, `deadline` 120, `hold` `{at: "",
-seconds: 0}`, and `proc` `/proc`. Then `check` holds its `logs` to the
+cases, ok: "eviction reuse: ok"}`, `logs` the run's record in the data
+checkout as above, `deadline` 120, `hold` `{at: "", seconds: 0}`, and
+`proc` `/proc`. Then `check` holds its `logs` to the
 canned logs, given the rows of its `results.nuon` that have a canned log,
 saved as NUON. Its receipt must read `ok` true and hold `results.nuon`'s
 hash. It takes a few seconds.

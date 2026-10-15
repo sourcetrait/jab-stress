@@ -1,9 +1,10 @@
 # The mutant runners' own cases, a mutant set every consumer of the
-# provenance rule reads: each case's canned log is logs/<name>.log, its
-# `expect` and `reason` the mutant's, and beside them what each consumer
-# must make of it: `class` for the program runner and the checkout runner,
-# `credited` for the census runner, `at_assert` and `matches` for the gauge
-# titles reader.
+# provenance rule reads: each case's canned log is `<name>.log` in the data
+# checkout's assets/workbench/cases/logs/ (../jab-stress-data beside this
+# repository), its `expect` and `reason` the mutant's, and beside them what
+# each consumer must make of it: `class` for the program runner and the
+# checkout runner, `credited` for the census runner, `at_assert` and
+# `matches` for the gauge titles reader.
 # Cut from the saved eviction set's logs: watchdog (release_dropped's),
 # catch_assert (built_pass_evicted's), catch_assert_equal
 # (full_pool_forgets'), and the control's passing lines. Composed:

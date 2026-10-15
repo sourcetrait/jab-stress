@@ -1,15 +1,18 @@
 # The mutant runners' own cases (the `jf` of runners/program_mutants.nuon
 # and runners/program_mutants_reasons.nuon over
 # runners/program_mutants_cases/cases.nuon): nothing builds and nothing
-# runs. A case's test prints its canned log from logs/ and exits with its
-# status, 1 when the log holds nushell's error and 0 otherwise; `check`
-# holds a run to those logs and statuses. `checkout` lays out the scratch
-# checkout the checkout runner (runners/checkout_mutants.nuon) reads them
-# from, and `standin` the survivor case's stand-in beside it.
+# runs. A case's test prints its canned log and exits with its status, 1
+# when the log holds nushell's error and 0 otherwise; `check` holds a run
+# to those logs and statuses. The canned logs are asset data in the data
+# checkout beside this repository, ../jab-stress-data, under
+# assets/workbench/cases/logs/. `checkout` lays out the scratch checkout
+# the checkout runner (runners/checkout_mutants.nuon) reads them from, and
+# `standin` the survivor case's stand-in beside it.
 
 set shell := ["nu", "-c"]
 
 cases := justfile_directory()
+canned := justfile_directory() / "../../../jab-stress-data/assets/workbench/cases/logs"
 
 # An empty image where the runner looks for one.
 cand-build dir:
@@ -17,7 +20,7 @@ cand-build dir:
 
 # The canned log of the case the output directory names, and its status.
 image-test image out assets kernel *fixtures:
-    let log = (open --raw ('{{cases}}' | path join logs $"('{{out}}' | path basename).log") | decode); print -n $log; exit (if ($log | str contains "Error: ") { 1 } else { 0 })
+    let log = (open --raw ('{{canned}}' | path join $"('{{out}}' | path basename).log") | decode); print -n $log; exit (if ($log | str contains "Error: ") { 1 } else { 0 })
 
 # A consumer's run of the cases held to the canned logs and statuses:
 # `logs` the run's logs directory, `results` its results as NUON.

@@ -1,9 +1,11 @@
 # The fps workbench
 
 `fps/` holds recipes, probes, and mutant runners for testing Jab's fps
-game beyond its own suite. Nothing in it is generated. Builds, captures,
-logs, candidate trees, and mirrors are written outside the repository,
-under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
+game beyond its own suite. Nothing in it is generated. A run's record, its
+logs and results, is kept in the data checkout beside this repository,
+`../jab-stress-data`, under `runs/`. Builds, captures, candidate trees,
+and mirrors are written outside both repositories, under the session's
+scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
 
 ## Layout
 
@@ -125,13 +127,19 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   and the interval mutant set. `eviction_mutants.nuon` adds to a mutant
   the fixtures it runs alone against and its expected class, the
   join's watchdog case unexercised.
-- `fps/poses/` holds pose lists for the capture recipes.
+- The pose lists for the capture recipes are asset data in the data
+  checkout, `assets/fps/poses/`: `census_render_1.nuon` and
+  `render_1_settled.nuon` on Render One, `census_still.nuon` on Render
+  Zero's still copy, and `spawn.nuon`, Render Zero's spawn.
 
 ## What the recipes expect
 
 - Jab is checked out beside this repository, at `../jab`. The probes
   and the readers import its modules by paths relative to their own
   files, and the justfiles reach it the same way.
+- The data checkout is beside it too, at `../jab-stress-data`: the pose
+  lists a recipe reads are its `assets/fps/poses/`, and a run's record
+  goes to its `runs/`.
 - A mutant runner that copies readers to mutate them lays the copies at
   `<scratch>/<mutant>/fps/readers/` beside one link, `<scratch>/jab`, to
   the checkout, so a copy's relative imports resolve as the original's
