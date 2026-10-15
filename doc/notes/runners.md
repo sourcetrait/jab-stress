@@ -274,17 +274,3 @@ completes once it is removed.
 | `view_captures.nuon` | 9D0O2NWYvbt | a set of views captured |
 | `layout_probe.nuon` | 32lvIfah9Aq | a code-layout probe, a directive aligned at a label |
 | `layout_rerun.nuon` | l4cGiCZ3DTh | the layout probe's rerun |
-
-## Kept for their record
-
-These ran under conventions the tree or the justfiles no longer hold.
-
-| File | Nonce | Why it no longer runs as it stands |
-|---|---|---|
-| `program_mutants_first.nuon` | k9CApSEhRAs | tests through a `cadence image out` recipe that no justfile here holds |
-| `suite_mutants_gauge.nuon` | 9d6SqpW9Y17 | calls a three-argument `image-test` and a `gauge-read-out` recipe that no justfile here holds |
-| `gauge_mutants_three.nuon` | fdIibazli7f | mirrors three test files where test.nu now imports five; `gauge_mutants.nuon` replaces it |
-| `battery_adv_lsux.nuon` | lsuxWBRIVJP | calls `just adv`, which the tree no longer takes |
-| `battery_adv_bv37.nuon` | bV373nxq4vo | calls `just adv` |
-| `battery_adv_kiya.nuon` | kIyaQv2YFDQ | calls `just adv` and `--threads` |
-| `gauge_battery_1k.nuon` | pgQsBGjuBO | the 1k cut's gauge battery |
