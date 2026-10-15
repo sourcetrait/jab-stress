@@ -255,4 +255,6 @@
  ["sf_no_rounds_unchecked", "        } else if $w.rounds == 0 {", "        } else if false {", "screen-frame refuses a worker mode's witness of no rounds"],
  ["sf_serial_unchecked", "            if $w.rounds != 0 or $w.cancelled != 0 {", "            if false {", "screen-frame refuses a serial witness reading rounds"],
  ["stream_witness_unread", "            $rounds = ($rounds | append { frame: (u32-at $r 4), rounds: (u32-at $r 8), cancelled: (u32-at $r 12) })", "", "a worker mode's frame under the cancel binds with its one witness"],
+ ["sf_window_unbounded", "    if $length >= $bound {", "    if false {", "screen-frame refuses a window of 65,536 frames by the contract's message alone"],
+ ["sf_window_tight", "    if $length >= $bound {", "    if $length >= ($bound - 1) {", "screen-frame binds over a window of 65,535 frames"],
 ]
