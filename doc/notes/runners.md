@@ -21,7 +21,7 @@ justfiles in `fps/just/` provide them.
 | File | Nonce | What it runs |
 |---|---|---|
 | `fps_suite.nuon` | idu2XbuZFUr | fps's `just test <program>`, its log saved and its gauge line returned |
-| `jab_suite.nuon` | lxdJlTCbEzM | Jab's whole `just test`, its table and failures returned |
+| `jab_suite.nuon` | lxdJlTCbEzM | Jab's whole `just test`, its table and failures returned; the body saves the log once the suite ends and makes no directory, so the `log` path's directory must exist before then |
 | `jab_programs.nuon` | 3qrVWWbY24S | `just test` over several programs in turn |
 | `worktree_suite.nuon` | ezpNNwv1r0j | a commit's suite in a worktree, with runs of edits |
 | `smoke.nuon` | goxxz3sFsiB | the development smoke, through `smoke.just` |
