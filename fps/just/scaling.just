@@ -1,5 +1,6 @@
 # GfxScaling's recipes (FrameCeiling): the debug images a parity reads,
-# the parity at every count and its faults through workerparity.nu.
+# the parity at every count and its faults through workerparity.nu, and
+# the batteries' readers.
 
 set shell := ["nu", "-c"]
 
@@ -28,3 +29,7 @@ gaincurves mode base out *labels:
 
 gaincurves-table reading *builds:
     nu {{readers}}/gaincurves.nu table {{reading}} {{builds}}
+
+# a battery's two band heights as matched pairs (ThreeWorkerGrain)
+grainpairs mode base out a b count:
+    nu {{readers}}/grainpairs.nu {{mode}} {{base}} {{out}} {{a}} {{b}} {{count}}

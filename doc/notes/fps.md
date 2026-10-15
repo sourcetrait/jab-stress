@@ -25,8 +25,9 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     reader's holds.
   - `poses.just` captures a map's poses on an image.
   - `scaling.just` builds the debug and owner candidates a parity reads,
-    runs `workerparity.nu`'s parity, its faults, and its judge, and runs
-    `gaincurves.nu`'s curves and table over a battery.
+    runs `workerparity.nu`'s parity, its faults, and its judge, runs
+    `gaincurves.nu`'s curves and table over a battery, and reads a
+    battery's two band heights as matched pairs with `grainpairs.nu`.
   - `layout.just` lays out the tile layout candidates from a commit,
     builds one with any set, and reads a build's hot routines.
   - `smoke.just` runs the development smoke. Its recipe is reconstructed,
@@ -100,6 +101,7 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
 - `fps/readers/` holds the readers of the gauge's batteries and
   captures: `admission.nu`, `poolgauge.nu`, `packetgauge.nu`,
   `workergauge.nu`, `gaincurves.nu` with its batch helper `batches.nu`,
+  `grainpairs.nu`,
   `lane.nu`, `tilecensus.nu` with its resolver `tilecensus_resolve.nu`,
   `identity_corrections.nu`, `workerparity.nu`, and `export.nu`, which
   exports a commit's image with its provenance. Each runs as
