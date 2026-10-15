@@ -24,6 +24,11 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   - `census.just` also holds the tile census's reading and the census
     reader's holds.
   - `poses.just` captures a map's poses on an image.
+  - `scaling.just` builds the debug and owner candidates a parity reads,
+    runs `workerparity.nu`'s parity, its faults, and its judge, and runs
+    `gaincurves.nu`'s curves and table over a battery.
+  - `layout.just` lays out the tile layout candidates from a commit,
+    builds one with any set, and reads a build's hot routines.
   - `smoke.just` runs the development smoke. Its recipe is reconstructed,
     the original file gone; its argument order, seeds then seconds,
     matches the smoke command's source, a static check, never yet run.
@@ -94,11 +99,24 @@ under the session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   behaviour.
 - `fps/readers/` holds the readers of the gauge's batteries and
   captures: `admission.nu`, `poolgauge.nu`, `packetgauge.nu`,
-  `workergauge.nu`, `lane.nu`, `tilecensus.nu` with its resolver
-  `tilecensus_resolve.nu`, `identity_corrections.nu`, `workerparity.nu`,
-  and `export.nu`, which exports a commit's image with its provenance.
-  Each runs as `nu <reader> ...` through a justfile's recipe; the readers
-  with fixtures of their own run them as `nu <reader> holds ...`.
+  `workergauge.nu`, `gaincurves.nu` with its batch helper `batches.nu`,
+  `lane.nu`, `tilecensus.nu` with its resolver `tilecensus_resolve.nu`,
+  `identity_corrections.nu`, `workerparity.nu`, and `export.nu`, which
+  exports a commit's image with its provenance. Each runs as
+  `nu <reader> ...` through a justfile's recipe; the readers with
+  fixtures of their own run them as `nu <reader> holds ...`.
+- `workerparity.nu` draws a map's still copy by the serial backend and
+  by workers, a launch a pose and mode. The copy is built from the
+  checkout's map with its androids dropped, by jab's test.nu
+  `variant-tree`, so nothing in the scene moves with time. Every launch
+  is stamped and takes its screen while the run goes on, E after it, the
+  bound ending the run (status 124). Each picture is bound to the frame
+  it shows by jab's gauge (`screen-frame`): that frame settled, at the
+  pose sent, drawn by the mode's workers and grain, and under `--cancel`
+  its witness by the mode's rule. Each picture is compared with the
+  serial backend's of its pose, the stamp's cells skipped. One more
+  launch takes its screen between the two placements and must be refused
+  for its stamp alone.
 - `fps/mutants/` holds the standing mutant sets, one `<set>_mutants.nuon`
   a set, each mutant a file, its exact-once finds and puts, and the
   assertion it must fail at; beside them the dump reader's mutant runner
