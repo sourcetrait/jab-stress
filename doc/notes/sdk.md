@@ -83,3 +83,27 @@ when it reads as recorded.
 Reread the set's current record whenever the reader changes in a way
 that reaches what a capture holds. To show that the reread can fail,
 alter a scratch copy of a record, never the record itself.
+
+## The SDK's mutant sets
+
+The SDK's mutant sets are data, kept in the data checkout beside this
+repository under `assets/sdk/mutants/`. Each file is a list of mutants.
+A mutant names its program, the text its failure must carry, and its
+edits, each a file, the text to find in it, and the text to put in its
+place.
+
+- `demand_mutants.nuon` holds 79 edits of `sdk/nu/jab.nu`, checked by
+  test/demand.
+- `launch_mutants.nuon` holds the launcher's two edits of its bound,
+  checked by test/harts.
+- `probe_mutants.nuon` holds 25 mutants of the sdl probe, checked by
+  test/probe.
+
+A set runs through `runners/checkout_mutants.nuon` in the Jab checkout,
+with the set's file as its `set`, every mutant's name in `only`, and the
+set's program as its `control`. Land the call's `logs` as the data
+checkout's layout note says, under `runs/sdk/<set>/<stamp>/`.
+
+Every find must match exactly once in the file it names, or its mutant
+is left unapplied. A change to a file that a set's finds name is checked
+against each such set before it lands.
