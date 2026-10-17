@@ -15,12 +15,14 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     alone, and runs the handoff probes, the dump reader's mutants, and
     the fps readers. Its `keys` recipe reads a capture's tile dumps as
     each tile's header and the SHA-256 of its texels.
-  - `handoff_mutants.just`, `pool.just`, `census.just`, and
-    `eviction_mutants.just` are the program mutant runner's `jf` for each
-    mutant set. Their `cand-build` and `image-test` recipes build and
-    test a candidate with that set's build symbols; the eviction set's
-    `image-test` runs the eviction fixtures a mutant names on the still
-    disk the runner passes as `assets`.
+  - `handoff_mutants.just`, `pool.just`, `census.just`,
+    `eviction_mutants.just`, and `cadence_mutants.just` are the program
+    mutant runner's `jf` for each mutant set. Their `cand-build` and
+    `image-test` recipes build and test a candidate with that set's build
+    symbols; the eviction set's `image-test` runs the eviction fixtures a
+    mutant names on the still disk the runner passes as `assets`, and the
+    cadence set's runs the cadence fixtures alone through
+    `fps/stress/cadence.nu`, its control passing on `cadence: ok`.
   - `pool.just` also holds the tile pool's readers, the export of a
     commit's image, and the gauge's rules over a mirror of the test files.
   - `census.just` also holds the tile census's reading and the census
