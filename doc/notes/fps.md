@@ -140,7 +140,9 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   `lane.nu`, `tilecensus.nu` with its resolver `tilecensus_resolve.nu`,
   `identity_corrections.nu`, `workerparity.nu`, `footprint.nu`,
   `qualification.nu` with the shim control's rule `observer.nu`, and
-  `export.nu`, which exports a commit's image with its provenance. Each runs as
+  `export.nu`, which exports a commit's image with its provenance, the
+  game's by default and walk's with `--program example/walk` (the
+  kernel's `walk-export`, [Kernel candidates](candidates.md)). Each runs as
   `nu <reader> ...` through a justfile's recipe; the readers with
   fixtures of their own run them as `nu <reader> holds ...`.
 - `qualification.nu` reads a target's bench run through jab's gauge, its

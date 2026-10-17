@@ -31,6 +31,7 @@ in `kernel/just/export.just` and runs under the real nu:
 | Recipe | What it does |
 |---|---|
 | `just -f kernel/just/export.just kernel-export <jab checkout> <commit> <cands> [symbols] [expected]` | Exports the commit's kernel and builds it release with the symbols, comma separated |
+| `just -f kernel/just/export.just walk-export <jab checkout> <commit> <cands> [symbols] [expected]` | Exports the commit's walk and builds it release with the symbols, comma separated, its romfs beside the image |
 
 The export takes the commit's `kernel/src`, its kernel manifest, and
 `sdk/src` out of git into `<cands>/kexport_<commit>`, with each symbol
@@ -50,3 +51,18 @@ objcopy, and the SHA-256 of the ELF and of the loaded bytes. When
 export is made once: a second export to the same directory is refused,
 and so is a symbol set holding `debug`, since a measured kernel is a
 release build.
+
+walk's images, the CADENCE builds that JointTiming's walk arms run, are
+exported the same way by the fps readers' `export.nu` with `--program
+example/walk`. The export takes the commit's `sdk/src`, walk's `src/` and
+manifest, and the `asset/img` directory its manifest names into
+`<cands>/export_<commit>-<symbols>`, such as
+`export_e21c5ae-cadence-timing`, with `<cands>` in the checkout's target,
+such as `<target>/candidates/example/walk`. Beside `walk.jab` sit its
+`flags`, `walk.elf`, `walk.romfs`, which genromfs builds from the
+export's own copy of the assets as the tool's own run builds it, and
+`provenance.nuon`, which carries the romfs's SHA-256 beside the image's
+and the ELF's. When `expected` names a SHA-256, the export fails unless
+its image has it. walk's wrapper, `example/walk/test/cadence.nu` in the
+Jab checkout, runs an export by its image's path and a kernel export's
+ELF.
