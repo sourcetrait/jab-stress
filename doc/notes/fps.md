@@ -25,6 +25,25 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     `fps/stress/cadence.nu`, its control passing on `cadence: ok`.
   - `pool.just` also holds the tile pool's readers, the export of a
     commit's image, and the gauge's rules over a mirror of the test files.
+    Its `export` takes build symbols as its last argument, comma
+    separated, the export then named after them
+    (`export_<commit>-footprint`); `cand-build-release` builds release with
+    any symbols beside `release`.
+  - `footprint.just` runs FootprintEstimate's level comparison through
+    `fps/readers/footprint.nu`. `images <export>` builds five debug images
+    of one export, each in a copy of the export's program named
+    `<export>_<label>`: `picture` and `picture_candidate` (debug, and debug
+    with FOOTPRINT) for the pictures, `owner`, and `levels` and
+    `levels_candidate` (debug with LEVELS, and with LEVELS and FOOTPRINT).
+    Each image keeps the kernel built with it as `kernel.elf` and its
+    provenance; their record is `footprint_images.nuon` in the export.
+    `capture <export> <out> [only]` launches every image at each pose
+    `only` names, comma separated, all of them by default, and runs the
+    footprint crate's `reference` and `differ` over the bound captures; a
+    pose already captured into `out` is refused. `read <out>` judges the
+    views, and
+    `crops <out> <pose>` cuts each region where the two pictures differ out
+    of both, side by side.
   - `census.just` also holds the tile census's reading and the census
     reader's holds.
   - `poses.just` captures a map's poses on an image.
@@ -107,10 +126,18 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   `workergauge.nu`, `gaincurves.nu` with its batch helper `batches.nu`,
   `grainpairs.nu`,
   `lane.nu`, `tilecensus.nu` with its resolver `tilecensus_resolve.nu`,
-  `identity_corrections.nu`, `workerparity.nu`, and `export.nu`, which
-  exports a commit's image with its provenance. Each runs as
+  `identity_corrections.nu`, `workerparity.nu`, `footprint.nu`, and
+  `export.nu`, which exports a commit's image with its provenance. Each runs as
   `nu <reader> ...` through a justfile's recipe; the readers with
   fixtures of their own run them as `nu <reader> holds ...`.
+- `footprint.nu` takes its still copies, its stamps, and its bindings
+  from `workerparity.nu`'s `disk-of` and `answered-frames` and jab's
+  gauge, and each image's provenance from `export.nu`'s `provenance-of`.
+  Its pose set is the data checkout's `assets/fps/poses/footprint.nuon`,
+  each row a map, the eye, and the three angles, roll among them, which it
+  sends in a P frame of its own. A LEVELS capture's frame must be drawn
+  from one packet, since a flush restarts the span indices its pixels
+  carry. A pose's five launches take about 27 seconds each alone.
 - `workerparity.nu` draws a map's still copy by the serial backend and
   by workers, a launch a pose and mode. The copy is built from the
   checkout's map with its androids dropped, by jab's test.nu
@@ -133,7 +160,9 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
 - The pose lists for the capture recipes are asset data in the data
   checkout, `assets/fps/poses/`: `census_render_1.nuon` and
   `render_1_settled.nuon` on Render One, `census_still.nuon` on Render
-  Zero's still copy, and `spawn.nuon`, Render Zero's spawn.
+  Zero's still copy, `spawn.nuon`, Render Zero's spawn, and
+  `footprint.nuon`, the level comparison's seventeen views on both maps'
+  still copies.
 
 ## What the recipes expect
 

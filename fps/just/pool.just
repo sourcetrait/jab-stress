@@ -13,14 +13,15 @@ probe := justfile_directory() / "../probe"
 cand-build dir:
     nu {{jab}}/sdk/nu/jab.nu build {{dir}} --set debug
 
-cand-build-release dir:
-    nu {{jab}}/sdk/nu/jab.nu build {{dir}} --set release
+# release with any symbols beside it, comma separated
+cand-build-release dir set="":
+    nu {{jab}}/sdk/nu/jab.nu build {{dir}} --set release{{ if set == "" { "" } else { "," + set } }}
 
 image-test image out assets kernel:
     nu {{jab}}/game/fps/test/test.nu --kernel {{kernel}} --image {{image}} --out {{out}} --set DEBUG --assets {{assets}}
 
-export repo commit cands jf expected="":
-    nu {{readers}}/export.nu {{repo}} {{commit}} {{cands}} {{jf}} '{{expected}}'
+export repo commit cands jf expected="" set="":
+    nu {{readers}}/export.nu {{repo}} {{commit}} {{cands}} {{jf}} '{{expected}}' --set '{{set}}'
 
 admission base out *labels:
     nu {{readers}}/admission.nu {{base}} {{out}} {{labels}}

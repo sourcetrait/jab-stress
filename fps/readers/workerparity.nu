@@ -55,7 +55,7 @@ export def jobs-frame [cancel: bool, fault: int]: nothing -> binary {
 
 # The frames that read a console command, each the count of state records
 # before its answer, so the frame's own state is the next one.
-def answered-frames [api: binary, command: int]: nothing -> list<int> {
+export def answered-frames [api: binary, command: int]: nothing -> list<int> {
     mut states = 0
     mut frames = []
     for r in ($api | chunks $RECORD | where {|c| ($c | bytes length) == $RECORD }) {
@@ -98,8 +98,9 @@ def modes-of [modes: string]: nothing -> list<any> {
 # A map's still copy, its androids dropped so nothing in the scene moves
 # with elapsed time (test.nu's variant-tree, as the suite's copy of Render
 # Zero is), compiled from the checkout's source into `out`, and its romfs
-# disk beside it: the copy's name, the disk, and the disk's digest.
-def disk-of [map: string, out: path]: nothing -> record<name: string, disk: string, sha256: string> {
+# disk beside it: the copy's name, its tree, the disk, and the disk's
+# digest.
+export def disk-of [map: string, out: path]: nothing -> record<name: string, tree: string, disk: string, sha256: string> {
     let src = ($GAME | path join "content" "map" $"($map).nuon")
     if not ($src | path exists) { error make { msg: $"no map source ($src): --map names a map of the game's content, render_0 or render_1" } }
     let name = $"($map)_still"
@@ -107,7 +108,7 @@ def disk-of [map: string, out: path]: nothing -> record<name: string, disk: stri
     let disk = ($out | path join $"($name).romfs")
     let made = (^genromfs -d $tree -f $disk -V "fps" | complete)
     if $made.exit_code != 0 { error make { msg: $"genromfs: ($made.stderr)" } }
-    { name: $name, disk: $disk, sha256: (open --raw $disk | hash sha256) }
+    { name: $name, tree: $tree, disk: $disk, sha256: (open --raw $disk | hash sha256) }
 }
 
 # A launch's sends under the picture contract: the stamp and the W at

@@ -20,7 +20,7 @@ justfiles in `fps/just/` provide them.
 
 | File | Nonce | What it runs |
 |---|---|---|
-| `fps_suite.nuon` | idu2XbuZFUr | fps's `just test <program>`, its log saved and its gauge line returned |
+| `fps_suite.nuon` | dAwiMIRWJx9 | fps's `just test <program>`, with `--set <set>` when `set` names any symbols, its log saved and its gauge line returned (revised from idu2XbuZFUr, which took no symbols) |
 | `jab_suite.nuon` | lxdJlTCbEzM | Jab's whole `just test`, its table and failures returned; the body saves the log once the suite ends and makes no directory, so the `log` path's directory must exist before then |
 | `jab_programs.nuon` | 3qrVWWbY24S | `just test` over several programs in turn |
 | `worktree_suite.nuon` | ezpNNwv1r0j | a commit's suite in a worktree, with runs of edits |
