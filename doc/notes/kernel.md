@@ -17,6 +17,7 @@ in its place.
 | `minimums_mutants.nuon` | test/spec | 11 |
 | `order_mutants.nuon` | test/purity | 1 |
 | `owners_mutants.nuon` | test/owners | 6 |
+| `quotas_mutants.nuon` | test/sound | 3 |
 | `reservation_mutants.nuon` | test/reservations | 28 |
 | `selector_mutants.nuon` | the selector's holds | 24 |
 | `spectable_mutants.nuon` | test/spectable | 8 |
