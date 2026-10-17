@@ -95,10 +95,19 @@ hash. It takes a few seconds.
 A failure is an assertion's own when the header after the error's title
 names a line of its excerpt whose code, up to the header's column, is
 `assert ` or `assert equal ` at the line's start or after a `{` or a `;`,
-and the label under that line is the assertion's own: `It is not true.`,
-or `left:` and `right:` under a title ending `These are not equal.`, each
-hanging from `` `-- `` or, where its value runs across lines, from
-`` `-| ``. The cases cover:
+and the labels bound to that line are the assertion's own: `It is not
+true.`, or `left:` and `right:` under a title ending `These are not
+equal.`. The excerpt runs from the header to its closing `` `---- ``,
+which must come within 200 lines. A one-line assertion's labels are the
+label lines right under its line, each hanging from `` `-- `` or, where
+its value runs across lines, from `` `-| ``. An assertion whose argument
+spans lines puts a four-column gutter on every source line of the
+excerpt: `,-> ` on the span's first line, `|   ` inside it, `|-> ` on its
+last, and four spaces outside it. The rule strips those four columns,
+requires the header's line to open the span, and takes every label line
+from there through the first source line past the span's close, each
+hanging from `` `-- ``, `` `-| ``, or, under the span's last line,
+`` `---- ``. The cases cover:
 
 - a catch at `assert`, at `assert equal`, and at an `assert` inline after
   a block's brace, and the watchdog unexercised at its assertion;
@@ -118,13 +127,35 @@ hanging from `` `-- `` or, where its value runs across lines, from
   labels under a title not ending with its words, and its title over
   other labels;
 - an `assert equal` whose left value, and one whose right value, runs
-  across lines, its label hanging from `` `-| ``, each caught.
+  across lines, its label hanging from `` `-| ``, each caught;
+- an `assert equal` whose argument spans lines, caught, and four spanned
+  excerpts that are no assertion's own, each missed: a `let` across
+  lines, an error raised inside a spanned assertion's argument, another
+  span's labels below the assertion's, and a later assertion in the same
+  excerpt.
 
 Three logs are cut from the eviction set's saved failures, their paths
 made relative to this repository, and the control's from its passing
 lines. The composed logs are `shapes.nu`'s own failures, written by
 `just -f cases.just compose <case>`. The four single-part logs are cut
-or composed logs with one label or title line changed.
+or composed logs with one label or title line changed. The spanned logs
+are cut from the stuck set's saved failure of `probe_guard_removed`, its
+header's path made relative: the positive whole, and each negative with
+one line changed or added.
+
+The rule's own mutants test the parser itself. `just -f cases.just
+provenance-mutants <set> <scratch>` (`provenance_mutants.nu`) takes the
+set `assets/workbench/mutants/provenance_mutants.nuon` in the data
+checkout. Each mutant is a `name`, a `find` that must match the rule
+exactly once, its `put`, and the case it must misread as its `expect`.
+The recipe lays out a control mirror of `provenance.nu` and one mirror
+for each mutant under `scratch`, which must not exist, and reads every
+case through each mirror with `provenance_read.nu`. It prints a NUON
+summary and exits 1 unless the control misreads no case and each mutant
+misreads its `expect`. It takes a few seconds. Land the summary as
+`results.nuon` under `runs/workbench/provenance/<stamp>/` in the data
+checkout. A change to `provenance.nu` refits any find it breaks before it
+lands.
 
 ## The checkout runner's deadline
 
