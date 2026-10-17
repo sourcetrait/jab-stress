@@ -14,6 +14,36 @@ The recipes are in `kernel/just/walk.just` and run under the real nu:
 | `just -f kernel/just/walk.just guest <run dir> <out.nuon>` | Reads a run that was not probed, from its own `api.out` and `identity.nuon` |
 | `just -f kernel/just/walk.just replay-of <run dir> <stream>` | Writes a replay stream from a run's records, for a replay build to repeat its workload |
 | `just -f kernel/just/walk.just cadence-holds <script> <scratch>` | Runs the reader's own fixtures, the script named so that a mutant's copy can run in its place |
+| `just -f kernel/just/walk.just cadence-launches <jab checkout> <scratch>` | Builds walk's test variants, runs each through walk's wrapper, and holds what each run must show |
+| `just -f kernel/just/walk.just cadence-mutants <jab checkout> <set> <scratch>` | Runs walk's mutant set, each mutant expected to fail at its own case |
+
+## walk's own launches
+
+`kernel/walk/launches.nu` is walk's fixture for its measurement build.
+It builds walk six ways with `cadence_test`, which shortens the window
+to ten seconds and adds a quiet stretch, a stall, and one long frame. It
+copies each build out before the next, since a build replaces the last
+one's image. Four runs cover walk's two loop orders with the phase
+stamps on and off. One run closes its window by the event room, and one
+replays the await order's stamped run. Four more runs end by the
+bounded waits: no nonce, a nonce cut short, no replay stream, and a
+replay header cut short. Each run but the last four goes through walk's
+wrapper, `example/walk/test/cadence.nu` in the Jab checkout, and the
+reader reads it. It takes about two minutes and must run alone on the
+machine. Each run boots the kernel its own build made: the symbols land
+in the kernel's symbol table, so the kernel files differ, while the
+bytes they load must match, which the script checks.
+
+## walk's mutants
+
+`kernel/walk/mutants.nu` runs walk's mutant set, `walk_mutants.nuon`
+under `assets/kernel/mutants/` in the data repository. A reader mutant
+changes a copy of `cadence.nu` and runs that copy's fixtures. A program
+mutant changes walk's source in the Jab checkout, runs the launches its
+cases name, and puts the source back as the checkout's last commit has
+it; the file must match that commit before the mutant is written. A
+control runs first for each kind. A mutant is caught when its run fails
+with its expected case named in the failure.
 
 ## What a reading checks
 

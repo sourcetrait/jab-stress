@@ -9,9 +9,10 @@
 # or repeat, every frame waited, the stamps in the order their build's
 # arm gives, no final status of 2, 3, or 4, no event omitted, the events
 # and the frames' enters and leaves alike, the window's end the build's
-# own, a nonce, and a measurement's window of 60 s at least. Then the
-# receipt stage, both readings' before anything is computed from a
-# receipt: each frame's flip and status agreeing with its receipt, the
+# own (a measurement's by its duration or its event room, a replay's by
+# its last frame), a nonce, and a measurement's window of 60 s at least.
+# Then the receipt stage, both readings' before anything is computed from
+# a receipt: each frame's flip and status agreeing with its receipt, the
 # present sequence one past the last from the display's open at 1 (jab
 # ordinal-violations), and each presented flip's acceptance at or past
 # its tick and inside its call, or inside its frame where the build keeps
@@ -45,6 +46,7 @@ const TIMING = 1
 const REPLAY = 2
 const PREPARE = 4
 const TEST = 8
+const EVENT_ROOM = 16
 const REPLAY_MAGIC = 0x4c505257
 const REPLAY_HEAD = 64
 const ENDS = ["none" "the duration" "the frame buffer" "the event room" "the replay's last frame" "an offset's range"]
@@ -113,10 +115,11 @@ def event-of [b: binary]: nothing -> record {
 }
 
 # The flags a header carries, by name.
-export def flags-of [flags: int]: nothing -> record<timing: bool, replay: bool, prepare: bool, test: bool> {
+export def flags-of [flags: int]: nothing -> record<timing: bool, replay: bool, prepare: bool, test: bool, event_room: bool> {
     {
         timing: (($flags bit-and $TIMING) != 0), replay: (($flags bit-and $REPLAY) != 0),
         prepare: (($flags bit-and $PREPARE) != 0), test: (($flags bit-and $TEST) != 0),
+        event_room: (($flags bit-and $EVENT_ROOM) != 0),
     }
 }
 
@@ -170,7 +173,7 @@ export def stream-of [bytes: binary, --test]: nothing -> record {
     let leaves = ($frames | get -o leaves | default [] | math sum)
     let entered = ($events | where kind == 1 | length)
     let left = ($events | where kind == 2 | length)
-    let end_wanted = (if $fl.replay { 4 } else { 1 })
+    let ends = (if $fl.replay { [4] } else { [1 3] })
     let faults = ([
         (faults-of "the record" ($frames | where {|f| $f.kind != 1 or $f.schema != $SCHEMA or $f.pad != 0 or $f.issued not-in [0 1] or $f.status not-in [0 1 2 3 4 $NO_STATUS] }) $at)
         (faults-of "the numbering" ($indexed | where {|r| $r.item.frame != $r.index }) {|r| $"record ($r.index) numbered ($r.item.frame)" })
@@ -180,7 +183,7 @@ export def stream-of [bytes: binary, --test]: nothing -> record {
         (faults-of "the events" ($events | where {|v| $v.kind not-in [1 2] or $v.lane >= 8 }) {|v| $"kind ($v.kind) lane ($v.lane)" })
         (if $e.omitted > 0 { [(fault "an event omitted" $e.omitted [$"($e.omitted) past the buffer"])] } else { [] })
         (if $e.omitted == 0 and ($enters != $entered or $leaves != $left) { [(fault "the events' counts" 1 [$"the frames count ($enters) enters and ($leaves) leaves, the events ($entered) and ($left)"])] } else { [] })
-        (if $h.ended != $end_wanted { [(fault "the window's end" 1 [$"ended by ((if $h.ended < ($ENDS | length) { $ENDS | get $h.ended } else { $'end ($h.ended)' })), where a ((if $fl.replay { 'replay' } else { 'measurement' })) ends by ($ENDS | get $end_wanted)"])] } else { [] })
+        (if $h.ended not-in $ends { [(fault "the window's end" 1 [$"ended by ((if $h.ended < ($ENDS | length) { $ENDS | get $h.ended } else { $'end ($h.ended)' })), where a ((if $fl.replay { 'replay' } else { 'measurement' })) ends by ($ends | each {|x| $ENDS | get $x } | str join ' or ')"])] } else { [] })
         (if $h.nonce == 0 { [(fault "the nonce" 1 ["the header's capture nonce is 0"])] } else { [] })
         (if $fl.test and not $test { [(fault "a test build" 1 ["a CADENCE_TEST build, read by its own test alone"])] } else { [] })
         (if (not $fl.replay) and (not $fl.test) and $window < $SHORTEST { [(fault "a short window" 1 [$"($window / $HZ) s of window, 60 s the least"])] } else { [] })
@@ -506,15 +509,16 @@ def "main holds" [scratch: path] {
     }
     let w = (window-of 61)
 
-    # admitted, each arm and order, values exact
+    # admitted, each arm and order, values exact; PREPARE's first, where a
+    # drawing taken from the wait's end reads negative
+    let prep = (do $admit "TIMING on, PREPARE's order" (do $read { frames: (window-of 61 --prepare), header: { flags: ($TIMING bit-or $PREPARE) } } false))
+    if $prep.reading.phases.work.median_ms != 5.0 or $prep.reading.phases.wait.median_ms != 11.6646 { do $fail "PREPARE's drawing" $"work ($prep.reading.phases.work.median_ms), wait ($prep.reading.phases.wait.median_ms)" }
     let on = (do $admit "TIMING on, walk's order" (do $read { frames: $w } false))
     if $on.reading.phases.work.median_ms != 5.0 { do $fail "TIMING on, walk's order" $"work ($on.reading.phases.work.median_ms) ms" }
     if $on.reading.phases.call.median_ms != 1.5 { do $fail "TIMING on, walk's order" $"call ($on.reading.phases.call.median_ms) ms" }
     if ($w | first | get wait_start) != 0 { do $fail "the first stamp at the origin" "frame 0's wait does not start at the origin" }
     let off = (do $admit "TIMING off" (do $read { frames: (window-of 61 --untimed), header: { flags: 0 } } false))
     if $off.reading.phases != { work: null, wait: null, call: null } { do $fail "TIMING off" $"its phases read ($off.reading.phases | to nuon), never zero" }
-    let prep = (do $admit "TIMING on, PREPARE's order" (do $read { frames: (window-of 61 --prepare), header: { flags: ($TIMING bit-or $PREPARE) } } false))
-    if $prep.reading.phases.work.median_ms != 5.0 or $prep.reading.phases.wait.median_ms != 11.6646 { do $fail "PREPARE's drawing" $"work ($prep.reading.phases.work.median_ms), wait ($prep.reading.phases.wait.median_ms)" }
     do $admit "TIMING off, PREPARE's order" (do $read { frames: (window-of 61 --prepare --untimed), header: { flags: $PREPARE } } false) | ignore
     if $on.reading.k.violations != 0 { do $fail "K at a second apart" $"($on.reading.k.violations) violations" }
 
@@ -546,6 +550,7 @@ def "main holds" [scratch: path] {
     do $refuse "a missing frame number" (do $read { frames: ($w | enumerate | each {|r| if $r.index >= 30 { $r.item | update frame ($r.index + 1) } else { $r.item } }) } false) ["the numbering"]
     do $refuse "a repeated frame number" (do $read { frames: ($w | enumerate | each {|r| if $r.index == 31 { $r.item | update frame 30 } else { $r.item } }) } false) ["the numbering"]
     do $refuse "an omitted event" (do $read { frames: $w, end: { omitted: 1 } } false) ["an event omitted"]
+    do $admit "a measurement ended by its event room" (do $read { frames: $w, header: { ended: 3 } } false) | ignore
     do $refuse "a frame buffer ending the window" (do $read { frames: $w, header: { ended: 2 } } false) ["the window's end"]
     do $refuse "ended_by 5" (do $read { frames: $w, header: { ended: 5 } } false) ["the window's end"]
     do $refuse "a short window" (do $read { frames: (window-of 60) } false) ["a short window"]
