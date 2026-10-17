@@ -27,6 +27,12 @@ justfiles in `fps/just/` provide them.
 | `smoke.nuon` | goxxz3sFsiB | the development smoke, through `smoke.just` |
 | `file_swap.nuon` | jelF9elHCR3 | a file replaced whole through a checked copy, then the suite |
 
+## Benches
+
+| File | Nonce | What it runs |
+|---|---|---|
+| `jab_just.nuon` | (its first run's) | `just <verb> <words>` in the jab checkout under the environment `env` names, a table of `name` and `value`, empty for none, its whole output saved to `log`, its exit and last lines returned and a non-zero exit an error, `max_quiet_min` its quiet limit in minutes: a bench's watch and the bench itself one launch each, the watch first (`watch bench <program>/<bench>`, then `bench <program>/<bench>`) |
+
 ## Mutant sets
 
 | File | Nonce | What it runs |

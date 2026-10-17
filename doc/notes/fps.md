@@ -46,6 +46,16 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     of both, side by side.
   - `census.just` also holds the tile census's reading and the census
     reader's holds.
+  - `qualification.just` runs the qualification's reader,
+    `fps/readers/qualification.nu`: `candidate out [tag]` builds jab's
+    release tree and writes the candidate's record, both checkouts clean
+    and the tag, when given, on both HEADs; `record bench candidate
+    target out` writes a target's `qualification.nuon` from a bench run
+    of `game/fps/bench/qual_<target>.nuon`; `check record` prints every
+    problem the check names and fails on any; `report +paths` writes the
+    report from records, the last path its file, `--compared <file>`
+    rendering a `gauge.nu compare` output as the comparison with the
+    first baseline; `holds scratch` runs the reader's holds.
   - `poses.just` captures a map's poses on an image.
   - `scaling.just` builds the debug and owner candidates a parity reads,
     runs `workerparity.nu`'s parity, its faults, and its judge, runs
@@ -128,10 +138,27 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   `workergauge.nu`, `gaincurves.nu` with its batch helper `batches.nu`,
   `grainpairs.nu`,
   `lane.nu`, `tilecensus.nu` with its resolver `tilecensus_resolve.nu`,
-  `identity_corrections.nu`, `workerparity.nu`, `footprint.nu`, and
+  `identity_corrections.nu`, `workerparity.nu`, `footprint.nu`,
+  `qualification.nu` with the shim control's rule `observer.nu`, and
   `export.nu`, which exports a commit's image with its provenance. Each runs as
   `nu <reader> ...` through a justfile's recipe; the readers with
   fixtures of their own run them as `nu <reader> holds ...`.
+- `qualification.nu` reads a target's bench run through jab's gauge, its
+  `bench-doc` for each run's standing and its `run-request` for each run's
+  identity, and holds every identity to the candidate's record and the
+  target's spec row. Its cases are a table, each a kind, a reading, and
+  each target's steps by label; the diagnostics another, each the route
+  legs and the summary fields it reads. The bench is held to the
+  candidate's bench file read from jab's git at the candidate's commit,
+  so a record can be made from a bench run copied off another host. Its
+  holds build synthetic bench runs from jab's test.nu capture records,
+  `fx-items` and `fx-bytes`, each route leg filled by a placement's
+  answer the holds splice in, and need jab's bench files committed at
+  HEAD, since the candidate they write names HEAD.
+- `observer.nu` is ProbeRuns' observer control as a function: two arms of
+  runs, each a name and its whole-run summary, every measure's arm
+  statistics, effect, noise, and whether it is within it. ProbeRuns'
+  reader takes it too.
 - `footprint.nu` takes its still copies, its stamps, and its bindings
   from `workerparity.nu`'s `disk-of` and `answered-frames` and jab's
   gauge, and each image's provenance from `export.nu`'s `provenance-of`.

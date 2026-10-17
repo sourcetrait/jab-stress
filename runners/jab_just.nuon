@@ -1,0 +1,27 @@
+{
+ nonce: "",
+ args_type: "record<jab: string, verb: string, words: list<string>, env: table<name: string, value: string>, log: string, label: string, mcp_nom: string, max_quiet_min: int>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let jab = $args.jab
+let verb = $args.verb
+let words = $args.words
+let given = ($args.env | reduce --fold {} {|e, acc| $acc | insert $e.name $e.value })
+let log = $args.log
+mkdir ($log | path dirname)
+let handle = (long launch {
+    label: $args.label,
+    mcp_nom: $args.mcp_nom,
+    interval: 120sec,
+    max_quiet: ($args.max_quiet_min * 1min),
+    check: {|state| { log: ($log | path exists) } },
+    teardown: null,
+    work: {
+        let r = (with-env $given { do { cd $jab; ^just $verb ...$words } | complete })
+        ($r.stdout + $r.stderr) | save --raw -f $log
+        if $r.exit_code != 0 { error make { msg: $\"just ($verb) exited ($r.exit_code): ($r.stdout + $r.stderr | lines | last 4 | str join ' | ' | str substring 0..900)\" } }
+        { exit: $r.exit_code, last: ($r.stdout | lines | last 3 | str join ' | ' | str substring 0..400) }
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}
