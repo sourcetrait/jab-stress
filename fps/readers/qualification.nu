@@ -605,6 +605,8 @@ def target-section [r: record]: nothing -> list<string> {
     } else {
         $"The qualification on ($name) does not pass. ($passed) of its ($acceptance | length) acceptance runs pass, ($missing) expected runs are missing, and the check names ($problems | length) problems below."
     })
+    let done = ($r.bench.steps | where state == "done" | length)
+    let bench_line = $"The bench ($r.bench.bench | default 'with no name') ran at ($r.bench.stamp | default 'an unrecorded time'). ($done) of its ($r.bench.steps | length) steps ran to their end."
     let runs_table = (md-table ["Run" "Seed" "Median frame" "Frames at or over 15 ms" "Verdict"] ($acceptance | each {|x|
         [(run-name $x) $"($x.seed)" $"(ms $x.verdict.median_us) ms" $"($x.verdict.over | default '-') of ($x.verdict.frames | default '-')" (if $x.verdict.pass { "pass" } else { "fail" })]
     }))
@@ -621,9 +623,13 @@ def target-section [r: record]: nothing -> list<string> {
     }))
     let shim = ($r.cases | where case == "presentation's shim control" | get 0.reading)
     let presentation = ($r.cases | where case == "presentation" | get 0.reading)
-    let shim_table = (md-table ["Measure" "Probed" "Plain" "Effect" "Noise" "Within"] ($shim.measures | each {|m|
-        [$m.measure (ms $m.probed) (ms $m.plain) (ms $m.effect) (ms $m.noise) (if $m.within { "yes" } else { "no" })]
+    let us = {|v: any| if $v == null { "-" } else { $"($v | math round)" } }
+    let shim_table = (md-table ["Measure" "Probed (us)" "Plain (us)" "Effect (us)" "Noise (us)" "Within"] ($shim.measures | each {|m|
+        [$m.measure (do $us $m.probed) (do $us $m.plain) (do $us $m.effect) (do $us $m.noise) (if $m.within { "yes" } else { "no" })]
     }))
+    let outcomes = ($normal | each {|x| $x.measured | get -o outcomes } | compact)
+    let event_count = {|event: string| $outcomes | each {|o| $o | get -o androids | default [] | where event == $event | get -o 0.count | default 0 } | append 0 | math sum }
+    let fight_line = $"Over the normal play runs the androids were roused (do $event_count roused) times and destroyed (do $event_count destroyed) times, the player was struck ($outcomes | each {|o| $o | get -o struck | default 0 } | append 0 | math sum) times, and ($outcomes | each {|o| $o | get -o pickups | default 0 } | append 0 | math sum) magazines were picked up."
     let cpu_names = ($normal | each {|x| $x.cpu | get -o whole.threads | default [] | get name } | flatten | uniq | where {|n| $n =~ 'TCG' })
     let cpu_table = (md-table ["Thread" "Utilization over the whole run"] ($cpu_names | each {|n|
         let u = ($normal | each {|x| $x.cpu | get -o whole.threads | default [] | where name == $n | get -o 0.utilization } | compact)
@@ -643,6 +649,7 @@ def target-section [r: record]: nothing -> list<string> {
         $"## ($name)"
         ""
         $verdict
+        $bench_line
         ""
         "### The acceptance runs"
         ""
@@ -655,6 +662,8 @@ def target-section [r: record]: nothing -> list<string> {
         "Each cell is the median over the normal play runs of each run's median frame, in milliseconds, with the least and the greatest run in brackets."
         ""
     ] ++ $route_table ++ [
+        ""
+        $fight_line
         ""
         "### The tails"
         ""
@@ -974,6 +983,10 @@ export def holds [scratch: path]: nothing -> nothing {
     assert ($text | any {|l| $l | str contains "| auto_2 run 2 | 2 | 15.0 ms | 36 of 36 | fail |" }) $"the faulty report's run table names the run at the ceiling: ($text | where {|l| $l starts-with '| auto_2' })"
     assert ("- QEMU's resident memory, read by the watch over 2 runs, was 1000 MiB at the median and 2048 MiB at the greatest peak." in $text) "the watched bench's report states its host memory"
     assert ("- Host memory was not recorded: the bench ran without a watch." in $text) "the unwatched bench's report says it holds no host memory"
+    assert ("The bench game/fps/qual_1ka1 ran at 20261017-000000. 11 of its 11 steps ran to their end." in $text) "the whole bench's report names its run and its steps"
+    assert ("The bench game/fps/qual_1ka1 ran at 20261017-000000. 10 of its 10 steps ran to their end." in $text) "the faulty bench's report names the steps it ran"
+    assert ("Over the normal play runs the androids were roused 0 times and destroyed 0 times, the player was struck 0 times, and 0 magazines were picked up." in $text) "the report states the fight's outcomes"
+    assert ("| critical path median | 1800 | 1800 | 0 | 0 | yes |" in $text) $"the shim control's table reads in microseconds: ($text | where {|l| $l starts-with '| critical path median' })"
     report-text $passing null | save --raw -f ($scratch | path join "whole.md")
     print $"qualification: holds, ($scratch)"
 }
