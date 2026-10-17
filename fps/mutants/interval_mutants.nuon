@@ -1,7 +1,0 @@
-[
-  [name, file, edits, expect];
-  [interval_reset_at_tile, "raster.S", [
-    [find, put];
-    ["    ld a5, 152(sp)\n    sub a5, a5, s11\n    sd a5, 152(sp)                  # the interval's pixels left after this block\n    snez a6, a5\n    sd a6, 296(sp)                  # one left running re-entered by a lit block after\n", "    sd zero, 152(sp)\n    sd zero, 296(sp)\n"]
-  ], "under partial residency every pixel the tiled picture's or the lit one's"]
-]

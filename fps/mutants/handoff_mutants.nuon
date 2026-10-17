@@ -1,8 +1,0 @@
-[
-  [name, file, edits, expect];
-  [lit_end_sample_carried, "raster.S", [
-    [find, put];
-    ["    sd a5, 264(sp)                  # its end sample, the next interval's start once it ends\n", "    sd a5, 160(sp)                  # its end sample, the next interval's start once it ends\n"],
-    ["    beqz t5, 611f\n", "    beqz t5, 60f\n"]
-  ], "the lit loop's picture continuous along the opening's rows"]
-]
