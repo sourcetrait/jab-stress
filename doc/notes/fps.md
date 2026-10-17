@@ -121,12 +121,13 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   serial backend's of its pose, the stamp's cells skipped. One more
   launch takes its screen between the two placements and must be refused
   for its stamp alone.
-- `fps/mutants/` holds the standing mutant sets, one `<set>_mutants.nuon`
-  a set, each mutant a file, its exact-once finds and puts, and the
-  assertion it must fail at; beside them the dump reader's mutant runner
-  and the interval mutant set. `eviction_mutants.nuon` adds to a mutant
-  the fixtures it runs alone against and its expected class, the
-  join's watchdog case unexercised.
+- `fps/mutants/` holds the dump reader's mutant runner,
+  `reader_mutants.nu`. The standing mutant sets are data in the data
+  checkout, under `assets/fps/mutants/`: one `<set>_mutants.nuon` a set,
+  the interval set among them, each mutant a file, its exact-once finds
+  and puts, and the assertion it must fail at. `eviction_mutants.nuon`
+  adds to a mutant the fixtures it runs alone against and its expected
+  class, the join's watchdog case unexercised.
 - The pose lists for the capture recipes are asset data in the data
   checkout, `assets/fps/poses/`: `census_render_1.nuon` and
   `render_1_settled.nuon` on Render One, `census_still.nuon` on Render
