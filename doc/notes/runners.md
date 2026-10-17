@@ -264,8 +264,8 @@ completes once it is removed.
 |---|---|---|
 | `two_build_battery.nuon` | hJQcfIBaD1c | a gauge battery of two builds, batches alternated, compared field by field |
 | `worker_battery.nuon` | dejKUeGaBDY | the same with each batch's workers and grain |
-| `cadence_battery.nuon` | 64xTscVEoDB | gauge batches at cadences, compared |
-| `cadence_image_battery.nuon` | eRABZ7iecfz | two builds at one cadence, one of them by its image |
+| `cadence_battery.nuon` | hCpmZGbrBcp | gauge batches at cadences, compared, through `just do gauge` (revised from 64xTscVEoDB) |
+| `cadence_image_battery.nuon` | hzJgKtbyHCA | two builds at one cadence, one of them by its image, through `just do gauge` (revised from eRABZ7iecfz) |
 | `route_battery.nuon` | 4i3irlI6mfU | the routes' battery on a debug image |
 | `tilecensus_reading.nuon` | cnceorJbGgC | the tile census reading over batches |
 | `captures_base.nuon` | f5J7eWcBJ9e | maps' poses captured on a set of images, through `poses.just` |
