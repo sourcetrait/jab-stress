@@ -10,8 +10,12 @@
 # (full_pool_forgets'), and the control's passing lines. Composed:
 # shapes.nu's own failures through cases.just's `compose`, and four logs
 # above with one label or title line changed, each failing one part of the
-# rule alone. A consumer's run is held to these logs and their exits by
-# check.nu before any expectation counts.
+# rule alone. Cut from the saved stuck set's probe_guard_removed log, its
+# header's path made relative: spanned_equal, an `assert equal` whose
+# argument spans lines, and four logs from it with one line changed or
+# added, each failing one part of the spanned rule alone. A consumer's run
+# is held to these logs and their exits by check.nu before any expectation
+# counts.
 [
   # The watchdog at its assertion.
   {name: watchdog, file: "raster.S", edits: [], expect: "unexercised, the hold expired unreleased, exit 16", class: unexercised, credited: true, at_assert: true, matches: true},
@@ -63,5 +67,18 @@
   # `-| rather than `--.
   {name: equal_left_multiline, file: "raster.S", edits: [], expect: "a reused slot's record reads as no refusal", class: caught, credited: true, at_assert: true, matches: true},
   # The same of its right value.
-  {name: equal_right_multiline, file: "raster.S", edits: [], expect: "a reused slot's record reads as the refusal expected", class: caught, credited: true, at_assert: true, matches: true}
+  {name: equal_right_multiline, file: "raster.S", edits: [], expect: "a reused slot's record reads as the refusal expected", class: caught, credited: true, at_assert: true, matches: true},
+  # `assert equal` whose argument spans lines: every source line behind a
+  # four-column gutter, its right label hanging from `---- under the span's
+  # last line.
+  {name: spanned_equal, file: "raster.S", edits: [], expect: "disk: the generic disk reset with nothing in flight", class: caught, credited: true, at_assert: true, matches: true},
+  # The span's opening line a `let`, not an assertion, its labels kept.
+  {name: spanned_let, file: "raster.S", edits: [], expect: "disk: the generic disk reset with nothing in flight", class: missed, credited: false, at_assert: false, matches: true},
+  # The header on a line inside the span, not its opening line.
+  {name: spanned_inner, file: "raster.S", edits: [], expect: "disk: the generic disk reset with nothing in flight", class: missed, credited: false, at_assert: false, matches: true},
+  # The right label under another span below the assertion's.
+  {name: spanned_other_labels, file: "raster.S", edits: [], expect: "disk: the generic disk reset with nothing in flight", class: missed, credited: false, at_assert: false, matches: true},
+  # The header on a line before the span, with a label of its own, the
+  # assertion's span and labels after it.
+  {name: spanned_later_assert, file: "raster.S", edits: [], expect: "disk: the generic disk reset with nothing in flight", class: missed, credited: false, at_assert: false, matches: true}
 ]

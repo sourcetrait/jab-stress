@@ -27,6 +27,12 @@ image-test image out assets kernel *fixtures:
 check logs results:
     nu '{{cases}}/check.nu' '{{logs}}' '{{results}}'
 
+# The provenance rule's own mutants over the cases, each read on a mirror
+# of the rule under `scratch`, which must not exist: `set` the mutant set,
+# the data checkout's assets/workbench/mutants/provenance_mutants.nuon.
+provenance-mutants set scratch:
+    nu '{{cases}}/provenance_mutants.nu' '{{set}}' '{{scratch}}'
+
 # The checkout runner's scratch checkout at `dir`, which must not exist: a
 # git repository of its own committing its `case` file and its justfile,
 # the cases as its set.nuon, and each forced case's set_<case>.nuon.
