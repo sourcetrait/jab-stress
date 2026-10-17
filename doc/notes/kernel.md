@@ -10,6 +10,7 @@ in its place.
 |---|---|---|
 | `compute_mutants.nuon` | example/workers | 19 |
 | `feature_mutants.nuon` | test/feature | 10 |
+| `flipreceipt_mutants.nuon` | test/framecap | 4 |
 | `jobs_mutants.nuon` | test/jobs | 8 |
 | `measure_mutants.nuon` | test/harts | 1 |
 | `order_mutants.nuon` | test/purity | 1 |
