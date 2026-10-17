@@ -96,9 +96,9 @@ place.
   test/demand.
 - `launch_mutants.nuon` holds the launcher's two edits of its bound,
   checked by test/harts.
-- `probe_mutants.nuon` holds 33 mutants of the sdl probe, its bundle
-  and the bundle's check, and a probing launch's plumbing, checked by
-  test/probe.
+- `probe_mutants.nuon` holds 46 mutants of the sdl probe, its bundle
+  and the bundle's check, a probing launch's plumbing, and the pairing
+  core, `ordinal-violations` and `sdl-pair`, checked by test/probe.
 
 A set runs through `runners/checkout_mutants.nuon` in the Jab checkout,
 with the set's file as its `set`, every mutant's name in `only`, and the
