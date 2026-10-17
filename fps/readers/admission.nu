@@ -1,5 +1,5 @@
 # AdmissionMeasure's reading (FrameCeiling's PoolCore): each batch under
-# `base` named in `labels`, its report's frames at schema 5 or 6, every
+# `base` named in `labels`, its report's frames at schema 5, 6, or 7, every
 # run's. Refused before any verdict, every run named (PoolReaderStanding),
 # unless every run is complete, valid, and seeded at one of SCHEMAS. Per
 # batch: the runs and frames; the requests admitted, dropped at a full
@@ -14,9 +14,9 @@
 # request. Written to `out` as nuon and printed; its own fixtures `nu
 # admission.nu holds <base> <scratch>`.
 
-# the schemas whose pool records the reading takes: 5, and 6, the same
-# records beside a frame's harts record
-const SCHEMAS = [5 6]
+# the schemas whose pool records the reading takes: 5, and 6 and 7, the
+# same records beside a frame's harts record and, at 7, its receipt
+const SCHEMAS = [5 6 7]
 
 # A list's sum and greatest, its nulls dropped: 0 and null for an empty
 # one, which math's own refuse.
@@ -89,7 +89,7 @@ def main [base: path, out: path, ...labels: string] {
 # raised with its name: the batches read whole as the positive control,
 # the reading the saved `admission.nuon`'s; a run invalid, one incomplete,
 # one unseeded, and one at schema 4, each refused; and one at schema 6
-# read, the batch's schemas 5 and 6.
+# read, the batch's schemas 5 and 6, and one at schema 7 the same.
 def "main holds" [base: string, scratch: string] {
     if ($scratch | path exists) { error make { msg: $"the scratch exists: ($scratch)" } }
     mkdir $scratch
@@ -114,5 +114,9 @@ def "main holds" [base: string, scratch: string] {
     if not ($six.refused | is-empty) { do $fail "a run at schema 6" $"refused for ($six.refused | str join '; ')" }
     let schemas = ($six.reading.batches | where label == "admission_settled_w0" | first | get schemas | sort)
     if $schemas != [5 6] { do $fail "a run at schema 6" $"read at schemas ($schemas)" }
+    let seven = (read-or-refuse (do $measured "schema" 7))
+    if not ($seven.refused | is-empty) { do $fail "a run at schema 7" $"refused for ($seven.refused | str join '; ')" }
+    let schemas7 = ($seven.reading.batches | where label == "admission_settled_w0" | first | get schemas | sort)
+    if $schemas7 != [5 7] { do $fail "a run at schema 7" $"read at schemas ($schemas7)" }
     print "admission holds: ok"
 }
