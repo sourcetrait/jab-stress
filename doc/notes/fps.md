@@ -94,7 +94,9 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   leave a partial its own key's texels. `stress.just`'s `eviction image out [fixture...]`
   runs them on an image, `eviction-debug out [fixture...]` on the
   checkout's debug build; each fixture's result and runtime land in
-  `<out>/<fixture>.nuon`.
+  `<out>/<fixture>.nuon`. Its `manifest out` and `manifest-holds
+  scratch` are the stress manifest's, `runners/manifest.nu`
+  ([Long-engine runners](runners.md)).
 - A picture is bound the way jab's handoff fixture binds one: every
   launch sends the M frame's stamp first, takes its screen with
   `--screen` while the run goes on, and writes E after the screen.

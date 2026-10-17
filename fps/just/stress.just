@@ -7,6 +7,17 @@ set shell := ["nu", "-c"]
 
 jab := justfile_directory() / "../../../jab"
 stress := justfile_directory() / "../stress"
+runners := justfile_directory() / "../../runners"
+data := justfile_directory() / "../../../jab-stress-data"
+
+# Qualification's stress manifest: every mutant set and harness by its
+# bytes and SHA-256, every find held to match once, into out
+manifest out:
+    nu {{runners}}/manifest.nu {{jab}} {{data}} {{out}}
+
+# the manifest's own fixtures on mirrors of the sets under scratch
+manifest-holds scratch:
+    nu {{runners}}/manifest.nu holds {{jab}} {{data}} {{scratch}}
 
 # the tile eviction fixtures on a debug image, all or those named
 eviction image out *fixtures:

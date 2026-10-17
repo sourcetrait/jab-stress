@@ -305,3 +305,29 @@ completes once it is removed.
 | `view_captures.nuon` | 9D0O2NWYvbt | a set of views captured |
 | `layout_probe.nuon` | 32lvIfah9Aq | a code-layout probe, a directive aligned at a label |
 | `layout_rerun.nuon` | l4cGiCZ3DTh | the layout probe's rerun |
+
+## The stress manifest
+
+`manifest.nu` writes the qualification's stress manifest, through
+`just -f fps/just/stress.just manifest <out>`. It lists every mutant set
+the data checkout holds under `assets/*/mutants/`: each set's path,
+bytes, and SHA-256 read from its raw bytes, its runner, the harness that
+runs it, the root its files are relative to, and every mutant by name.
+It applies every mutant's edits in order and requires each find to match
+exactly once in the text the runner mutates, as the mutant's earlier
+edits left it. It also lists every executable harness, `runners/` whole
+and every `*mutants.nu`, and the three checkouts' commits. A set file the
+generator names no runner for, a named set the data checkout lacks, and
+any find matching other than once each stop the manifest, every one
+named. A new set therefore joins by a row in `runners-of`. The runners'
+roots are the checkout runner's jab root, the program runner's
+`game/fps/src`, the gauge set's `game/fps/test/gauge.nu`, the census
+reader's `game/fps/test/census.nu`, the readers' `fps/readers`, the
+selector's and walk's reader mutants' workbench root, walk's program
+mutants' jab root, and the provenance rule's `runners/provenance.nu`.
+
+`just -f fps/just/stress.just manifest-holds <scratch>` runs its own
+fixtures on mirrors of the sets: the mirror as it is, every set read; a
+mutant whose second edit finds what its first wrote, read; and a find
+matching nowhere, a find matching twice, a stray set, and a missing set,
+each refused for itself alone.
