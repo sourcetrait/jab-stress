@@ -1,6 +1,6 @@
 {
- nonce: "kg4fq8DXxBF",
- args_type: "record<jab: string, set: string, only: list<string>, control: record<program: string, ok: string>, logs: string, deadline: int, hold: record<at: string, seconds: int>, proc: string>",
+ nonce: "beGP93KIagp",
+ args_type: "record<jab: string, set: string, only: list<string>, control: record<program: string, ok: string, symbols: string>, logs: string, deadline: int, hold: record<at: string, seconds: int>, proc: string>",
  result_type: "record<control_ok: bool, every: bool, restored: bool, cleaned: bool, caught: int, unrun: list<string>, head: string, logs: string, deadline: int, swept: int, results: table<name: string, applied: bool, exit: oneof<int, nothing>, class: string, expected: string, title: string, seconds: float, swept: int>, misses: table<name: string, applied: bool, exit: oneof<int, nothing>, class: string, expected: string, title: string, seconds: float, swept: int>, finished: float, in_time: bool, ok: bool>",
  body: "use /home/box/proj/sourcetrait/jab-stress/runners/provenance.nu [failure-of assertion-kind]
 use /home/box/proj/sourcetrait/jab-stress/runners/guard.nu [MARK STAGE raise-cancel proc-stat marked sweep strays stage land]
@@ -10,6 +10,7 @@ const KILL_AFTER = 5
 const SWEEP_WAIT = 2sec
 
 let a = $args
+let symbol_words = (if $a.control.symbols == \"\" { [] } else { [\"--set\" $a.control.symbols] })
 let started = (date now)
 let since = {|| ((date now) - $started) / 1sec | into float }
 let root = ($a.jab | path expand)
@@ -137,7 +138,7 @@ for mu in $runs {
         let t0 = (date now)
         let x = (with-env ({} | insert $MARK $mark) {
             try {
-                ^timeout --signal=TERM $\"--kill-after=($KILL_AFTER)s\" $\"($secs)s\" just --justfile $jf --working-directory $root test $mu.program o> $out e> $err
+                ^timeout --signal=TERM $\"--kill-after=($KILL_AFTER)s\" $\"($secs)s\" just --justfile $jf --working-directory $root test $mu.program ...$symbol_words o> $out e> $err
                 { exit_code: 0, signal: false, faulted: false, note: \"\" }
             } catch {|e|
                 let code = ($e.details?.code? | default \"\")

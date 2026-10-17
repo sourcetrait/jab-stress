@@ -19,21 +19,32 @@ in its place.
 | `selector_mutants.nuon` | the selector's holds | 24 |
 | `spectable_mutants.nuon` | test/spectable | 8 |
 | `stuck_mutants.nuon` | test/stuck, test/harts | 10 and 1 |
+| `submitwait_mutants.nuon` | test/framecap, built with `flip_batch` | 2 |
+| `walk_mutants.nuon` | walk's cadence reader and its launches | 10 |
 | `worker_mutants.nuon` | test/workers, test/workerfault | 15 and 7 |
 
 A set runs through `runners/checkout_mutants.nuon` in the Jab checkout,
 one call for each program its mutants name. The call takes the set's
 file as its `set`, that program's mutants in `only`, and the program as
 its `control`, whose passing line is the program's name followed by
-`: ok`, such as `jobs: ok`. A call that runs out of time lists the
-mutants it did not reach as `unrun`, for the next call's `only`. Land
-each call's `logs` as the data checkout's layout note says, under
-`runs/kernel/<set>/<stamp>/`, or `runs/kernel/<set>/<stamp>-<label>/`
-for a set run in parts.
+`: ok`, such as `jobs: ok`, and whose `symbols` are the build symbols the
+program's test is built with, comma separated, `""` for none. A call
+that runs out of time lists the mutants it did not reach as `unrun`, for
+the next call's `only`. Land each call's `logs` as the data checkout's
+layout note says, under `runs/kernel/<set>/<stamp>/`, or
+`runs/kernel/<set>/<stamp>-<label>/` for a set run in parts.
+
+The SubmitWait set tests a kernel candidate that a build symbol selects
+([Kernel candidates](candidates.md)), so its call names `flip_batch` in
+`symbols`, and test/framecap holds the candidate's own expectations. Its
+`clock_on_refusal` holds on the kernel without the symbol too, and is run
+again there with no symbols.
 
 The selector's set mutates this repository's `kernel/timing/select.nu`,
 not the Jab checkout, and runs through `kernel/timing/mutants.nu`
-instead ([JointTiming's selector](timing.md)).
+instead ([JointTiming's selector](timing.md)). walk's set changes a copy
+of its reader or walk's source in the Jab checkout and runs through
+`kernel/walk/mutants.nu` ([walk's cadence reader](walk.md)).
 
 The feature set's run ends with a second `just test test/feature`, its
 log `closing_control.log` beside the set's, to show the restored
