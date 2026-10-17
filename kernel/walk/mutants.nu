@@ -29,11 +29,10 @@ def main [
     if not ($unknown | is-empty) { error make { msg: $"no such mutant: ($unknown | str join ', ')" } }
     let chosen = (if ($only | is-empty) { $mutants } else { $mutants | where {|m| $m.name in $only } })
     mkdir $scratch
-    ^ln -s $jab ($scratch | path join "jab")
     let readers = ($chosen | where kind == "reader")
     let programs = ($chosen | where kind == "program")
-    let reader_rows = (if ($readers | is-empty) { [] } else { reader-runs $here $scratch $readers })
-    let program_rows = (if ($programs | is-empty) { [] } else { program-runs $here $jab $scratch $programs })
+    let reader_rows = (if ($readers | is-empty) { [] } else { reader-runs $here $jab ($scratch | path join "reader") $readers })
+    let program_rows = (if ($programs | is-empty) { [] } else { program-runs $here $jab ($scratch | path join "program") $programs })
     let rows = ($reader_rows ++ $program_rows)
     let results = {
         set: ($set | path expand),
@@ -73,7 +72,9 @@ def raised-line [text: string, head: string]: nothing -> string {
     [$first] ++ $rest | str join " " | str substring 0..400
 }
 
-def reader-runs [here: path, scratch: path, mutants: list<record>]: nothing -> list<record> {
+def reader-runs [here: path, jab: path, scratch: path, mutants: list<record>]: nothing -> list<record> {
+    mkdir $scratch
+    ^ln -s $jab ($scratch | path join "jab")
     let source = (open --raw ($here | path join "cadence.nu") | decode)
     let jobs = ([{ name: "control", kind: "reader", expect: "", edits: [] }] | append $mutants)
     $jobs | each {|m|
@@ -105,6 +106,7 @@ def program-runs [here: path, jab: path, scratch: path, mutants: list<record>]: 
     })
     let cases = ($mutants | get cases | flatten | uniq)
     let launches = ($here | path join "launches.nu")
+    mkdir $scratch
     let jobs = ([{ name: "control", kind: "program", cases: $cases, expect: "", edits: [] }] | append $mutants)
     $jobs | each {|m|
         let t0 = (date now)
