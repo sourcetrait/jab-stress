@@ -16,6 +16,7 @@ in its place.
 | `minimums_mutants.nuon` | test/spec | 11 |
 | `order_mutants.nuon` | test/purity | 1 |
 | `reservation_mutants.nuon` | test/reservations | 28 |
+| `selector_mutants.nuon` | the selector's holds | 24 |
 | `spectable_mutants.nuon` | test/spectable | 8 |
 | `stuck_mutants.nuon` | test/stuck, test/harts | 10 and 1 |
 | `worker_mutants.nuon` | test/workers, test/workerfault | 15 and 7 |
@@ -29,6 +30,10 @@ mutants it did not reach as `unrun`, for the next call's `only`. Land
 each call's `logs` as the data checkout's layout note says, under
 `runs/kernel/<set>/<stamp>/`, or `runs/kernel/<set>/<stamp>-<label>/`
 for a set run in parts.
+
+The selector's set mutates this repository's `kernel/timing/select.nu`,
+not the Jab checkout, and runs through `kernel/timing/mutants.nu`
+instead ([JointTiming's selector](timing.md)).
 
 The feature set's run ends with a second `just test test/feature`, its
 log `closing_control.log` beside the set's, to show the restored
