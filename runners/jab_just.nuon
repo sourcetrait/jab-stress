@@ -1,5 +1,5 @@
 {
- nonce: "",
+ nonce: "dR0Dw4OaNOd",
  args_type: "record<jab: string, verb: string, words: list<string>, env: table<name: string, value: string>, log: string, label: string, mcp_nom: string, max_quiet_min: int>",
  result_type: "record<label: string, nonce: string>",
  body: "use rig/sourcetrait/emptwo/prototype/long

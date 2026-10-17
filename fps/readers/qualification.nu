@@ -704,7 +704,7 @@ def target-section [r: record]: nothing -> list<string> {
         ""
         "### Problems"
         ""
-    ] ++ (if ($problems | is-empty) { ["The check names no problem."] } else { $problems | each {|p| $"- ($p)" } }) ++ [
+    ] ++ (if ($problems | is-empty) { ["The check names no problem."] } else { $problems | each {|p| $"- ($p | str capitalize)." } }) ++ [
         ""
         "### Limits"
         ""
@@ -987,6 +987,7 @@ export def holds [scratch: path]: nothing -> nothing {
     assert ("The bench game/fps/qual_1ka1 ran at 20261017-000000. 10 of its 10 steps ran to their end." in $text) "the faulty bench's report names the steps it ran"
     assert ("Over the normal play runs the androids were roused 0 times and destroyed 0 times, the player was struck 0 times, and 0 magazines were picked up." in $text) "the report states the fight's outcomes"
     assert ("| critical path median | 1800 | 1800 | 0 | 0 | yes |" in $text) $"the shim control's table reads in microseconds: ($text | where {|l| $l starts-with '| critical path median' })"
+    assert ("- Normal play: auto_1 run 2, seed 2, is missing." in $text) "the report's problems read as sentences"
     report-text $passing null | save --raw -f ($scratch | path join "whole.md")
     print $"qualification: holds, ($scratch)"
 }
