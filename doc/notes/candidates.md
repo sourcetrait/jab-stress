@@ -1,21 +1,25 @@
 # Kernel candidates
 
-A kernel candidate is a change to the Jab kernel that waits on a
-measurement before it is adopted. While it waits it sits in the kernel's
-source under a build symbol, so a kernel built without the symbol is the
-same, byte for byte, as the kernel before the change. The candidate is
-measured against the kernel without it, both built from one commit.
+A kernel candidate is a change to the Jab kernel, or to the examples
+that run on it, that waits on a measurement or a decision before it is
+adopted. While it waits it sits in the source under a build symbol, so a
+build without the symbol is the same, byte for byte, as the build before
+the change. The candidate is measured against the build without it, both
+from one commit.
 
 | Symbol | Task | What it changes |
 |---|---|---|
-| `flip_batch` | SubmitWait | The whole-screen flip sends its transfer and its flush as one batch with one wait, as a list of rectangles is sent |
+| `flip_batch` | SubmitWait | The kernel's whole-screen flip sends its transfer and its flush as one batch with one wait, as a list of rectangles is sent |
+| `prepare` | LoopReorder | bounce, walk, wasd, and pad draw first and wait for the display's tick after, then flip what they kept; it lands only if JointTiming chooses its new presentation rule |
 
 ## Testing a candidate
 
 A candidate's cases run in the Jab checkout's own tests, built with its
 symbol: `just test test/framecap --set flip_batch` holds the whole flip's
 receipts on the candidate, and the same test without the symbol holds
-them on the kernel as it is. A mutant set for a candidate runs through
+them on the kernel as it is. `just test example/bounce --set prepare`,
+and the same for walk, wasd, and pad, runs each example's own test on
+its candidate loop. A mutant set for a candidate runs through
 the checkout runner with the symbol in its control's `symbols`
 ([Kernel mutant sets](kernel.md)).
 

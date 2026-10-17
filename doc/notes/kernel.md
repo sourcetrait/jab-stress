@@ -12,6 +12,7 @@ in its place.
 | `feature_mutants.nuon` | test/feature | 10 |
 | `flipreceipt_mutants.nuon` | test/framecap | 4 |
 | `jobs_mutants.nuon` | test/jobs | 8 |
+| `loopreorder_mutants.nuon` | example/bounce, built with `prepare` | 1 |
 | `measure_mutants.nuon` | test/harts | 1 |
 | `minimums_mutants.nuon` | test/spec | 11 |
 | `order_mutants.nuon` | test/purity | 1 |
@@ -38,7 +39,8 @@ The SubmitWait set tests a kernel candidate that a build symbol selects
 ([Kernel candidates](candidates.md)), so its call names `flip_batch` in
 `symbols`, and test/framecap holds the candidate's own expectations. Its
 `clock_on_refusal` holds on the kernel without the symbol too, and is run
-again there with no symbols.
+again there with no symbols. The LoopReorder set tests the examples'
+candidate loop the same way, its call naming `prepare`.
 
 The selector's set mutates this repository's `kernel/timing/select.nu`,
 not the Jab checkout, and runs through `kernel/timing/mutants.nu`
