@@ -74,7 +74,7 @@ export def resolve [roots: record, repo: string, file: string, kind: string, src
     if ($target | str contains '$') or ($target | str contains '(') { return (refused $"($target), built at run time") }
     if ($target | str starts-with '/') or ($target | str starts-with '~') { return (refused $"($target), absolute") }
     if $kind == 'recipe' { return (recipe-target $target) }
-    let at = ($roots | get $repo | path join $file | path dirname | path join $target | path expand --no-symlink)
+    let at = ($roots | get $repo | path join $file | path dirname | path join $target | path expand)
     let found = (if ($at | path type) == 'file' {
         $at
     } else if ($at | path join 'mod.nu' | path type) == 'file' {

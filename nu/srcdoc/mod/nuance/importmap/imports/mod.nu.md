@@ -22,7 +22,9 @@ through, `use $GAUGE [...]`.
 
 A literal path is resolved against the importing file's directory, a file
 or a module directory with its `mod.nu`; a path through the sibling
-checkout is that checkout's file. Refused: `overlay use`, a path built at
+checkout is that checkout's file. The path is resolved as the system opens
+it, links followed, the way the checkouts' roots are, so a sibling reached
+through a link is still its checkout. Refused: `overlay use`, a path built at
 run time, an absolute path, a path that names nothing, a path outside both
 checkouts, and the long engine outside a runner's body. A recipe's path
 runs through a placeholder, so it is read by the monolith whose path it
