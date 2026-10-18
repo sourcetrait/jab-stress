@@ -1,34 +1,25 @@
 # The fps workbench
 
-`fps/` holds recipes, probes, and mutant runners for testing Jab's fps
-game beyond its own suite. Nothing in it is generated. A run's record, its
-logs and results, is kept in the data checkout beside this repository,
-`../jab-stress-data`, under `runs/`. Builds, captures, candidate trees,
-and mirrors are written outside both repositories, under the session's
-scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
+`fps/` holds recipes, probes, readers, and stress fixtures for testing
+Jab's fps game beyond its own suite. Nothing in it is generated. A run's
+record, its logs and results, is kept in the data checkout beside this
+repository, `../jab-stress-data`, under `runs/`. Builds, captures, and
+candidate trees are written outside both repositories, under the
+session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
 
 ## Layout
 
 - `fps/just/` holds one justfile per purpose. Run a recipe with
   `just -f fps/just/<name>.just <recipe>`.
   - `handoff.just` builds fps, runs the handoff and builder fixtures
-    alone, and runs the handoff probes, the dump reader's mutants, and
-    the fps readers. Its `keys` recipe reads a capture's tile dumps as
-    each tile's header and the SHA-256 of its texels.
-  - `handoff_mutants.just`, `pool.just`, `census.just`,
-    `eviction_mutants.just`, and `cadence_mutants.just` are the program
-    mutant runner's `jf` for each mutant set. Their `cand-build` and
-    `image-test` recipes build and test a candidate with that set's build
-    symbols; the eviction set's `image-test` runs the eviction fixtures a
-    mutant names on the still disk the runner passes as `assets`, and the
-    cadence set's runs the cadence fixtures alone through
-    `fps/stress/cadence.nu`, its control passing on `cadence: ok`.
-  - `pool.just` also holds the tile pool's readers, the export of a
-    commit's image, and the gauge's rules over a mirror of the test files.
-    Its `export` takes build symbols as its last argument, comma
-    separated, the export then named after them
-    (`export_<commit>-footprint`); `cand-build-release` builds release with
-    any symbols beside `release`.
+    alone, and runs the handoff probes and the fps readers. Its `keys`
+    recipe reads a capture's tile dumps as each tile's header and the
+    SHA-256 of its texels.
+  - `pool.just` holds the tile pool's readers and the export of a
+    commit's image. Its `export` takes build symbols as its last
+    argument, comma separated, the export then named after them
+    (`export_<commit>-footprint`); `cand-build-release` builds release
+    with any symbols beside `release`.
   - `footprint.just` runs FootprintEstimate's level comparison through
     `fps/readers/footprint.nu`. `images <export>` builds five debug images
     of one export, each in a copy of the export's program named
@@ -44,7 +35,7 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     views, and
     `crops <out> <pose>` cuts each region where the two pictures differ out
     of both, side by side.
-  - `census.just` also holds the tile census's reading and the census
+  - `census.just` holds the tile census's reading and the census
     reader's holds.
   - `qualification.just` runs the qualification's reader,
     `fps/readers/qualification.nu`: `candidate out [tag]` builds jab's
@@ -76,13 +67,7 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     `quota` mode runs the work quota's cases under the lift: whole tiles
     to the settle, then one construction a phase under ONCE, each held
     for a dump of the tile in construction. Its `hold` and `hold-on`
-    recipes run the join's hold (`fps/probe/join/hold.nu`), and
-    `join-cands` lays the join's forced cases out as candidate trees
-    (`fps/probe/join/candidates.nu`) for `pool.just`'s `cand-build`.
-    `eviction-cands` does the same for the eviction fixtures' forced
-    cases (`fps/probe/eviction/candidates.nu`): construction_skipped,
-    construction skipped at every fifth frame's boundary, which fails
-    `rebuild` at its publication frames and `cycle` at its budget.
+    recipes run the join's hold (`fps/probe/join/hold.nu`).
 - `fps/stress/` holds the release tier's fixtures, the exhaustive tests a
   manual release build runs beside jab's own suite, each asserting and
   run on a debug image. `eviction.nu` holds the tile eviction fixtures:
@@ -104,9 +89,7 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   leave a partial its own key's texels. `stress.just`'s `eviction image out [fixture...]`
   runs them on an image, `eviction-debug out [fixture...]` on the
   checkout's debug build; each fixture's result and runtime land in
-  `<out>/<fixture>.nuon`. Its `manifest out` and `manifest-holds
-  scratch` are the stress manifest's, `runners/manifest.nu`
-  ([Long-engine runners](runners.md)).
+  `<out>/<fixture>.nuon`.
 - A picture is bound the way jab's handoff fixture binds one: every
   launch sends the M frame's stamp first, takes its screen with
   `--screen` while the run goes on, and writes E after the screen.
@@ -131,8 +114,7 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   leg. `reuse` binds its run after its final spawn placement, with a
   publication there required, and its reference from its own placement.
 - `fps/probe/` holds the probes, one directory per task: `handoff`,
-  `pool`, `eviction`, `join`, and `nu` for probes of nushell's own
-  behaviour.
+  `pool`, `eviction`, `join`, and `layout`.
 - `fps/readers/` holds the readers of the gauge's batteries and
   captures: `admission.nu`, `poolgauge.nu`, `packetgauge.nu`,
   `workergauge.nu`, `gaincurves.nu` with its batch helper `batches.nu`,
@@ -181,13 +163,6 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   serial backend's of its pose, the stamp's cells skipped. One more
   launch takes its screen between the two placements and must be refused
   for its stamp alone.
-- `fps/mutants/` holds the dump reader's mutant runner,
-  `reader_mutants.nu`. The standing mutant sets are data in the data
-  checkout, under `assets/fps/mutants/`: one `<set>_mutants.nuon` a set,
-  the interval set among them, each mutant a file, its exact-once finds
-  and puts, and the assertion it must fail at. `eviction_mutants.nuon`
-  adds to a mutant the fixtures it runs alone against and its expected
-  class, the join's watchdog case unexercised.
 - The pose lists for the capture recipes are asset data in the data
   checkout, `assets/fps/poses/`: `census_render_1.nuon` and
   `render_1_settled.nuon` on Render One, `census_still.nuon` on Render
@@ -203,9 +178,5 @@ scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
 - The data checkout is beside it too, at `../jab-stress-data`: the pose
   lists a recipe reads are its `assets/fps/poses/`, and a run's record
   goes to its `runs/`.
-- A mutant runner that copies readers to mutate them lays the copies at
-  `<scratch>/<mutant>/fps/readers/` beside one link, `<scratch>/jab`, to
-  the checkout, so a copy's relative imports resolve as the original's
-  do.
 - A recipe that runs the debug build finds Jab's target through the
   SDK's `target-root`.

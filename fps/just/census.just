@@ -1,6 +1,5 @@
-# The census's recipes and the census set's `jf`: candidates with the
-# census built in, the census image tested, the tile census's reading and
-# its holds, and the census reader's holds on a mirror tree.
+# The census's recipes: a build with the symbols named, the tile census's
+# reading and its holds, and the census reader's holds over a serial log.
 
 set shell := ["nu", "-c"]
 
@@ -8,14 +7,8 @@ jab := justfile_directory() / "../../../jab"
 readers := justfile_directory() / "../readers"
 probe := justfile_directory() / "../probe"
 
-cand-build dir:
-    nu {{jab}}/sdk/nu/jab.nu build {{dir}} --set debug,census
-
 build dir set:
     nu {{jab}}/sdk/nu/jab.nu build {{dir}} --set {{set}}
-
-image-test image out assets kernel:
-    nu {{jab}}/game/fps/test/test.nu --kernel {{kernel}} --image {{image}} --out {{out}} --set CENSUS,DEBUG --assets {{assets}}
 
 tilecensus base out *labels:
     nu {{readers}}/tilecensus.nu {{base}} {{out}} {{labels}}

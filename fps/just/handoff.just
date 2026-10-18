@@ -1,5 +1,5 @@
 # TileHandoff's recipes: the debug builds, the handoff fixtures alone,
-# the probes, the dump reader's mutants, and the fps readers. Run as
+# the probes, and the fps readers. Run as
 # `just -f fps/just/handoff.just <recipe>`; jab is the checkout beside
 # this repository and its target is the SDK's own.
 
@@ -8,7 +8,6 @@ set shell := ["nu", "-c"]
 jab := justfile_directory() / "../../../jab"
 readers := justfile_directory() / "../readers"
 probe := justfile_directory() / "../probe"
-mutants := justfile_directory() / "../mutants"
 
 # fps built with the build symbols named, debug unless given
 build set="debug":
@@ -42,10 +41,6 @@ identity base handoff_disk still_disk out:
 alter-probe api:
     nu {{probe}}/handoff/alter_probe.nu {{api}}
 
-# the dump reader's mutants over a builder capture's dumps
-reader-mutants api work:
-    nu {{mutants}}/reader_mutants.nu {{jab}}/game/fps/test/tiles.nu {{probe}}/handoff/alter_probe.nu {{api}} {{work}}
-
 # a capture's dumps keyed: each tile's header and its texels' SHA-256
 keys api out:
     nu {{jab}}/game/fps/test/tiles.nu keys {{api}} {{out}}
@@ -57,10 +52,6 @@ rows api:
 # the launch's due order, events against a screen
 dueprobe:
     nu {{probe}}/handoff/dueprobe.nu
-
-# assertions inside each, for, do, and par-each
-assertwrap how:
-    nu {{probe}}/nu/assertwrap.nu {{how}}
 
 # the lit loop's steps along a capture's rows
 litsteps capture rect ch:

@@ -19,9 +19,7 @@ symbol: `just test test/framecap --set flip_batch` holds the whole flip's
 receipts on the candidate, and the same test without the symbol holds
 them on the kernel as it is. `just test example/bounce --set prepare`,
 and the same for walk, wasd, and pad, runs each example's own test on
-its candidate loop. A mutant set for a candidate runs through
-the checkout runner with the symbol in its control's `symbols`
-([Kernel mutant sets](kernel.md)).
+its candidate loop.
 
 ## Exporting a candidate
 

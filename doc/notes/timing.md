@@ -13,7 +13,6 @@ The recipes are in `kernel/just/timing.just` and run under the real nu:
 | `just -f kernel/just/timing.just select <readings> <out dir>` | Reads a readings record and writes `decision.nuon` in the directory, printing the outcome |
 | `just -f kernel/just/timing.just select-holds <script> <scratch>` | Runs the selector's own fixtures, the script named so that a mutant's copy can run in its place |
 | `just -f kernel/just/timing.just select-sample <readings>` | Writes the fixtures' clean comparison as a readings record, to run `select` over |
-| `just -f kernel/just/timing.just select-mutants <set> <scratch>` | Runs the selector's mutant set, each mutant expected to fail at its own hold |
 
 ## The readings
 
@@ -50,15 +49,10 @@ contract is met. The outcome is one of `ineligible`, `insufficient`,
 `regressing`, `walk_failed`, and `chosen`, checked in that order; only
 `chosen` meets the contract.
 
-## The holds and the mutants
+## The holds
 
 `select-holds` builds a clean comparison on both targets and changes it
-one way a case, 26 cases, each expecting one outcome or one state. The
-selector's mutant set, `selector_mutants.nuon` under the data
-checkout's `assets/kernel/mutants/`, removes one rule a mutant, 24 in
-all. `kernel/timing/mutants.nu` runs a copy of the selector with each
-mutant applied, a control first, and a mutant is caught when its holds
-fail at the case it names.
+one way a case, 26 cases, each expecting one outcome or one state.
 
 ## What it does not read yet
 

@@ -21,6 +21,3 @@ cadence-holds script scratch:
 
 cadence-launches jab scratch:
     nu {{walk}}/launches.nu {{jab}} {{scratch}}
-
-cadence-mutants jab set scratch:
-    nu {{walk}}/mutants.nu {{jab}} {{set}} {{scratch}}

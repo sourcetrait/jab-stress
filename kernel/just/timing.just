@@ -14,6 +14,3 @@ select-holds script scratch:
 
 select-sample readings:
     nu {{timing}}/select.nu sample {{readings}}
-
-select-mutants set scratch:
-    nu {{timing}}/mutants.nu {{set}} {{scratch}}

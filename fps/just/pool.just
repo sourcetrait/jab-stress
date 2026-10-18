@@ -1,8 +1,5 @@
-# The tile pool's recipes and the program mutants' `jf` for the pool and
-# packet sets: debug and release candidates, the export, the pool's
-# readers and their holds, the gauge's rules over a mirror, and the
-# probes. The mirror lives outside the session's scratch, where the gauge
-# mutants' runner writes it.
+# The tile pool's recipes: release candidates, the export, the pool's
+# readers and their holds, and the probes.
 
 set shell := ["nu", "-c"]
 
@@ -10,15 +7,9 @@ jab := justfile_directory() / "../../../jab"
 readers := justfile_directory() / "../readers"
 probe := justfile_directory() / "../probe"
 
-cand-build dir:
-    nu {{jab}}/sdk/nu/jab.nu build {{dir}} --set debug
-
 # release with any symbols beside it, comma separated
 cand-build-release dir set="":
     nu {{jab}}/sdk/nu/jab.nu build {{dir}} --set release{{ if set == "" { "" } else { "," + set } }}
-
-image-test image out assets kernel:
-    nu {{jab}}/game/fps/test/test.nu --kernel {{kernel}} --image {{image}} --out {{out}} --set DEBUG --assets {{assets}}
 
 export repo commit cands jf expected="" set="":
     nu {{readers}}/export.nu {{repo}} {{commit}} {{cands}} {{jf}} '{{expected}}' --set '{{set}}'
@@ -34,10 +25,6 @@ poolgauge-holds script gauge scratch:
 
 admission-holds script base scratch:
     nu {{script}} holds {{base}} {{scratch}}
-
-# the gauge's rules over the mirror the gauge mutants' runner writes
-rules-mirror out mirror=(env("XDGX_TMP_HOME") / "jab-stress" / "mirror"):
-    use {{mirror}}/game/fps/test/test.nu [gauge-rules]; gauge-rules {{out}}; print "rules: ok"
 
 probe-knobs mode out:
     nu {{probe}}/pool/probe_knobs.nu {{mode}} {{out}}

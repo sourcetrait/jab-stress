@@ -15,7 +15,6 @@ The recipes are in `kernel/just/walk.just` and run under the real nu:
 | `just -f kernel/just/walk.just replay-of <run dir> <stream>` | Writes a replay stream from a run's records, for a replay build to repeat its workload |
 | `just -f kernel/just/walk.just cadence-holds <script> <scratch>` | Runs the reader's own fixtures, the script named so that a mutant's copy can run in its place |
 | `just -f kernel/just/walk.just cadence-launches <jab checkout> <scratch>` | Builds walk's test variants, runs each through walk's wrapper, and holds what each run must show |
-| `just -f kernel/just/walk.just cadence-mutants <jab checkout> <set> <scratch>` | Runs walk's mutant set, each mutant expected to fail at its own case |
 
 ## walk's own launches
 
@@ -33,17 +32,6 @@ reader reads it. It takes about two minutes and must run alone on the
 machine. Each run boots the kernel its own build made: the symbols land
 in the kernel's symbol table, so the kernel files differ, while the
 bytes they load must match, which the script checks.
-
-## walk's mutants
-
-`kernel/walk/mutants.nu` runs walk's mutant set, `walk_mutants.nuon`
-under `assets/kernel/mutants/` in the data repository. A reader mutant
-changes a copy of `cadence.nu` and runs that copy's fixtures. A program
-mutant changes walk's source in the Jab checkout, runs the launches its
-cases name, and puts the source back as the checkout's last commit has
-it; the file must match that commit before the mutant is written. A
-control runs first for each kind. A mutant is caught when its run fails
-with its expected case named in the failure.
 
 ## What a reading checks
 

@@ -4,8 +4,7 @@
 # Render One and still Render Zero disks under `out`. Prints `cadence: ok`
 # once every fixture holds.
 #
-# Run as `nu cadence.nu <kernel> <image> <out>`, through
-# `cadence_mutants.just`'s `image-test`.
+# Run as `nu cadence.nu <kernel> <image> <out>`.
 use ../../../jab/game/fps/test/test.nu [cadence-holds]
 
 def main [kernel: path, image: path, out: path] {
