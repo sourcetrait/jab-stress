@@ -12,3 +12,28 @@ note is a file under `doc/notes/`; this file is their index.
 | [walk's cadence reader](notes/walk.md) | `kernel/walk/` and `kernel/just/walk.just`: the reader of walk's measurement records, its recipes, what a reading checks, and what it needs |
 | [JointTiming's selector](notes/timing.md) | `kernel/timing/` and `kernel/just/timing.just`: the selector that decides JointTiming's comparison, its readings, and its decision |
 | [Kernel candidates](notes/candidates.md) | `kernel/export/` and `kernel/just/export.just`: kernel and example changes waiting under a build symbol, how their cases run, and how a measured kernel is exported with its provenance |
+| [Fresh builds](notes/freshbuild.md) | `nu/mod/nuance/freshbuild/`: a fresh build of every tuple Jab's source builds, each artifact's SHA-256 recorded for a later build to be held to |
+
+## Layout
+
+The workbench's nushell code takes the layout of Jab's nushell trees, at
+this repository's root:
+
+- `nu/bin/nuance.nu`, the workbench's commands, each a verb grouped by
+  concept (`nuance.nu freshbuild manifest`), one call of one module
+  function, with no logic of its own; `nu/bin/nuance/` for a script that
+  fits no group.
+- `nu/mod/nuance/<concept>/mod.nu`, the code, one concept a directory
+  module, a concept past about 500 lines split into child modules under
+  it.
+- `nu/nuon/nuance/<concept>/`, a module's own data, and
+  `nu/type/nuance/<concept>/<Model>.nutype`, each data file's shape.
+- `nu/srcdoc/`, a mirror of `bin/`, `mod/`, `type/`, and `nuon/`, each
+  file's prose and reasoning in `<file>.md` beside its path; the source
+  carries one summary line of 80 characters at most a definition.
+
+A module imports another by its path relative to the importing file, and
+reaches Jab's through the checkout beside this one, `../jab`, as the
+older code does. Run a command as `nu nu/bin/nuance.nu <concept> <verb>
+...`. The older trees, `fps/`, `kernel/`, `runners/`, and `sdk/`, with
+their justfiles, predate the layout and move into it.
