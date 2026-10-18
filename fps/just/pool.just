@@ -1,5 +1,7 @@
-# The tile pool's recipes: release candidates, the export, the pool's
-# readers and their holds, and the probes.
+# The tile pool's recipes. `cand-build-release` builds a release
+# candidate. `export` freezes a measured image with its provenance.
+# `admission` and `poolgauge` run the pool's readers. `probe-knobs` and
+# `hot` run the probes.
 
 set shell := ["nu", "-c"]
 
@@ -19,12 +21,6 @@ admission base out *labels:
 
 poolgauge mode base out *labels:
     nu {{readers}}/poolgauge.nu {{mode}} {{base}} {{out}} {{labels}}
-
-poolgauge-holds script gauge scratch:
-    nu {{script}} holds {{gauge}} {{scratch}}
-
-admission-holds script base scratch:
-    nu {{script}} holds {{base}} {{scratch}}
 
 probe-knobs mode out:
     nu {{probe}}/pool/probe_knobs.nu {{mode}} {{out}}

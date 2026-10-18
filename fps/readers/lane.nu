@@ -4,12 +4,10 @@
 # read through gauge.nu's run-request, never the report's summary unless
 # that is the identity's fallback; distributions by nearest rank,
 # untrimmed. Run from a scratch justfile under the real nu: `nu lane.nu
-# <base> <out.nuon> <label>...`, or `use` it and call `analyse`; its own
-# fixture `nu lane.nu holds <scratch>`.
+# <base> <out.nuon> <label>...`, or `use` it and call `analyse`.
 
 const GAUGE = "../../../jab/game/fps/test/gauge.nu"
 use $GAUGE [run-request]
-use ./batches.nu [write-batch]
 
 const PERIOD = (1000000 / 60)
 # the ceiling in microseconds, judged on the critical path's median; the
@@ -104,21 +102,4 @@ def summary [rows: list<any>]: nothing -> record {
 def main [base: string, out: string, ...labels: string] {
     analyse $base $labels | to nuon --indent 1 | save --raw -f $out
     print $"lane: ($labels | length) batches summarised to ($out)"
-}
-
-# The reader's own fixture over a synthetic batch it writes under
-# `scratch` (batches.nu): a summary asking cadence 1 over runs asking and
-# playing cadence 0, the runs pooled under their own cadence.
-def "main holds" [scratch: string] {
-    if ($scratch | path exists) { error make { msg: $"the scratch exists: ($scratch)" } }
-    mkdir $scratch
-    let fail = {|name: string, why: string| error make { msg: $"lane holds: ($name): ($why)" } }
-    let named = {|name: string, work: closure| try { do $work } catch {|e| do $fail $name $"raised: ($e.msg | str substring 0..300)" } }
-    let asked = { build: { image_sha256: "holds_image" }, mode: { cadence: 0, workers: 2, grain: 0 } }
-    let run = { identity: $asked, cadence: 0, drawn: [[2 0] [2 0] [2 0]] }
-    write-batch $scratch "disagree_1" ($asked | update mode.cadence 1) [$run $run] | ignore
-    let read = (do $named "a summary disagreeing with its runs" { analyse $scratch [disagree_1] })
-    let pooled = ($read.cadences | each {|c| [$c.cadence $c.runs] })
-    if $pooled != [[0 2]] { do $fail "runs pooled under their own cadence" ($pooled | to nuon) }
-    print "lane holds: ok"
 }

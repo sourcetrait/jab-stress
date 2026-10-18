@@ -1,7 +1,11 @@
-# TileHandoff's recipes: the debug builds, the handoff fixtures alone,
-# the probes, and the fps readers. Run as
-# `just -f fps/just/handoff.just <recipe>`; jab is the checkout beside
-# this repository and its target is the SDK's own.
+# TileHandoff's recipes. `build` builds fps, debug unless given.
+# `handoff-set` runs the test's sets. `handoff`, `builder`, and
+# `builder-on` run one fixture alone. `oblique`, `identity`, `rows`,
+# `dueprobe`, and `litsteps` run the probes. `keys`, `litsteps-live`, and
+# `handoff-stats` run jab's tiles.nu. `packetgauge`, `workergauge`, and
+# `reader` run the fps readers. `nucheck` checks a file as a module.
+# Run as `just -f fps/just/handoff.just <recipe>`. jab is the checkout
+# beside this repository, and its target is the SDK's own.
 
 set shell := ["nu", "-c"]
 
@@ -37,10 +41,6 @@ oblique spec disk out:
 identity base handoff_disk still_disk out:
     use {{jab}}/sdk/nu/jab.nu; let t = (jab target-root {{jab}} | path join debug); ^nu {{probe}}/handoff/identity.nu ($t | path join kernel jab.elf) {{base}} ($t | path join game fps fps.jab) {{handoff_disk}} {{still_disk}} {{out}}
 
-# a capture's tile dumps read against the dump alterations
-alter-probe api:
-    nu {{probe}}/handoff/alter_probe.nu {{api}}
-
 # a capture's dumps keyed: each tile's header and its texels' SHA-256
 keys api out:
     nu {{jab}}/game/fps/test/tiles.nu keys {{api}} {{out}}
@@ -63,23 +63,11 @@ litsteps-live capture rect ch out:
 handoff-stats spec index out:
     nu {{jab}}/game/fps/test/tiles.nu handoff {{spec}} {{index}} {{out}}
 
-# the gauge's rules alone, from the checkout or another test.nu
-gauge-rules out:
-    use {{jab}}/game/fps/test/test.nu [gauge-rules]; gauge-rules {{out}}
-
-gauge-rules-at test out:
-    use {{test}} [gauge-rules]; gauge-rules {{out}}
-
 packetgauge mode base out *labels:
     nu {{readers}}/packetgauge.nu {{mode}} {{base}} {{out}} {{labels}}
 
 workergauge mode base out *labels:
     nu {{readers}}/workergauge.nu {{mode}} {{base}} {{out}} {{labels}}
-
-# a reader's own fixtures, workergauge.nu's, packetgauge.nu's, lane.nu's,
-# or gaincurves.nu's, from the checkout's readers or a mirror's
-reader-holds script scratch:
-    nu {{script}} holds {{scratch}}
 
 reader script mode base out *labels:
     nu {{script}} {{mode}} {{base}} {{out}} {{labels}}

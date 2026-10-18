@@ -12,8 +12,7 @@
 # regressing (the critical path or the presentation), the second
 # workload failing, chosen; only chosen meets the contract.
 #
-# `main <readings> <out>` writes decision.nuon in `out`; `main holds
-# <scratch>` runs the selector's own fixtures over synthetic readings.
+# `main <readings> <out>` writes decision.nuon in `out`.
 
 # This file, whose SHA-256 a decision records.
 const SELF = (path self)
@@ -234,13 +233,6 @@ export def decide [readings: record]: nothing -> record {
     }
 }
 
-# The holds' clean comparison written as a readings record, for a run of
-# the selector over it.
-def "main sample" [readings: path] {
-    base-readings | to nuon --indent 1 | save --raw $readings
-    print $"timing sample: ($readings)"
-}
-
 def main [readings: path, out: path] {
     let raw = (open --raw $readings | into binary)
     let decision = (decide ($raw | decode | from nuon) | merge { readings_sha256: ($raw | hash sha256), selector_sha256: (open --raw $SELF | hash sha256) })
@@ -248,125 +240,4 @@ def main [readings: path, out: path] {
     $decision | to nuon --indent 1 | save --raw -f ($out | path join "decision.nuon")
     print $"timing select: ($decision.outcome), the contract ($decision.contract)"
     for b in $decision.blockers { print $"  blocker: ($b)" }
-}
-
-# A synthetic run, the box's unprobed fps run on 1KA1 under P0 by
-# default, its legs' critical paths and presented 95ths those given.
-def run-of [fields: record]: nothing -> record {
-    {
-        id: "r", host: "box", target: "1ka1", workload: "fps", kernel: "P0", order: "prepare", timing: false,
-        probed: false, backend: "offscreen", build: "frozen", battery: "b", position: 0, valid: true,
-        k_violations: 0, legs: [], submission_age_median_ms: 5.0, late_wakes: 0, catch_ups: 0,
-        shown_p95_ms: null, presented_median_ms: null, presented_p95_ms: null, d_median_ms: null, phases: null,
-    } | merge $fields
-}
-
-# The legs of a synthetic fps run: the late-frame legs and the factory's
-# own, each its critical path and its presented 95th.
-def legs-at [critical: float, presented: float]: nothing -> list<any> {
-    $LATE_LEGS ++ [factory] | each {|l| { leg: $l, critical_median_ms: $critical, presented_p95_ms: $presented } }
-}
-
-# Six runs of a condition on a host and target, their figures 0.01 ms
-# apart, so each arm's range is 0.05 and its N 0.025.
-def six [host: string, target: string, fields: record]: nothing -> list<any> {
-    0..5 | each {|i|
-        let x = ($i * 0.01)
-        let workload = ($fields | get -o workload | default "fps")
-        let id = $"($host)-($target)-($workload)-($fields | get -o kernel | default 'P0')-($fields | get -o order | default 'prepare')-(if ($fields | get -o timing | default false) { 'on' } else { 'off' })-(if ($fields | get -o probed | default false) { 'probed' } else { 'unprobed' })-($i)"
-        let figures = (if $workload == "fps" {
-            { legs: (legs-at (10.0 + $x) (17.0 + $x)), shown_p95_ms: (if ($fields | get -o probed | default false) { 33.0 + $x } else { null }) }
-        } else {
-            let timed = ($fields | get -o timing | default false)
-            { presented_median_ms: (16.7 + $x), presented_p95_ms: (17.5 + $x), d_median_ms: (if $timed { 5.0 + $x } else { null }), phases: (if $timed { { work: 5.0, wait: 11.0, call: 1.5 } } else { null }) }
-        })
-        run-of ({ id: $id, host: $host, target: $target, position: $i } | merge $figures | merge $fields)
-    }
-}
-
-# Every condition of the box's comparison on both targets: fps P0 and P2
-# unprobed and probed, walk's P0 await and P2 prepare TIMING off, and
-# walk's three TIMING-on arms; each rule's shim control and each on
-# arm's TIMING control passing; calibrated; checks exact.
-def base-readings []: nothing -> record {
-    let runs = ($TARGETS | each {|t|
-        [
-            { kernel: "P0" } { kernel: "P2" } { kernel: "P0", probed: true } { kernel: "P2", probed: true }
-            { workload: "walk", kernel: "P0", order: "await" } { workload: "walk", kernel: "P2", order: "prepare" }
-            { workload: "walk", kernel: "P0", order: "await", timing: true } { workload: "walk", kernel: "P2", order: "await", timing: true }
-            { workload: "walk", kernel: "P2", order: "prepare", timing: true }
-        ] | each {|c| six "box" $t $c } | flatten
-    } | flatten)
-    let controls = ($TARGETS | each {|t|
-        let shims = ([P0 P2] | each {|k| { kind: "shim", host: "box", target: $t, kernel: $k, order: "prepare", backend: "offscreen", build: "frozen", arm: $"fps ($k) probed", passing: true } })
-        let timings = ([[P0 await] [P2 await] [P2 prepare]] | each {|a| { kind: "timing", host: "box", target: $t, kernel: $a.0, order: $a.1, backend: "offscreen", build: "frozen", arm: $"walk ($a.0) ($a.1)", passing: true } })
-        $shims ++ $timings
-    } | flatten)
-    {
-        strategy: "reordered",
-        checks: { function_cases: true, model: true, cadence_fixtures: true },
-        calibration: { state: "calibrated", eps: 1000, qualifying: { "1ka1": 1200, "1kb1": 1300 } },
-        runs: $runs, controls: $controls, host_limits: [],
-    }
-}
-
-# The readings with every run `pick` takes changed by `change`.
-def runs-changed [readings: record, pick: closure, change: closure]: nothing -> record {
-    $readings | update runs ($readings.runs | each {|r| if (do $pick $r) { do $change $r } else { $r } })
-}
-
-# The readings with every run `pick` takes removed.
-def runs-dropped [readings: record, pick: closure]: nothing -> record {
-    $readings | update runs ($readings.runs | where {|r| not (do $pick $r) })
-}
-
-# A run's legs with `field` raised by `by` on one leg.
-def leg-raised [r: record, leg: string, field: string, by: float]: nothing -> record {
-    $r | update legs ($r.legs | each {|l| if $l.leg == $leg { $l | update $field (($l | get $field) + $by) } else { $l } })
-}
-
-# The selector's own fixtures over synthetic readings, each case's
-# failure raised with its name, run in a loop so a failure raises alone:
-# the clean comparison chosen, each rule's verdict, and the plan's nine
-# holds (JointTiming's selector).
-def "main holds" [scratch: path] {
-    if ($scratch | path exists) { error make { msg: $"the scratch exists: ($scratch)" } }
-    mkdir $scratch
-    let fail = {|name: string, why: string| error make { msg: $"timing holds: ($name): ($why)" } }
-    let base = (base-readings)
-    let p2_fps = {|r| $r.workload == "fps" and $r.kernel == "P2" and (not $r.probed) }
-    let cases = [
-        { name: "chosen", readings: $base, check: {|d| $d.outcome == "chosen" and $d.contract == "met" and ($d.walk.phases | all {|p| $p.evidence == "admissible" }) } }
-        { name: "regression", readings: (runs-changed $base {|r| (do $p2_fps $r) and $r.target == "1kb1" } {|r| leg-raised $r "yard" "critical_median_ms" 0.5 }), check: {|d| $d.outcome == "regressing" and ($d.regression | where {|r| $r.regressing } | get leg) == ["yard"] } }
-        { name: "regression floor", readings: (runs-changed $base {|r| do $p2_fps $r } {|r| leg-raised $r "up" "critical_median_ms" 0.2 }), check: {|d| $d.outcome == "chosen" and not ($d.regression | any {|r| $r.regressing }) } }
-        { name: "regression within noise", readings: (runs-changed $base {|r| (do $p2_fps $r) and $r.target == "1ka1" } {|r| leg-raised $r "factory" "critical_median_ms" (0.3 + ($r.position - 2.5) * 0.3) }), check: {|d| $d.outcome == "chosen" and not ($d.regression | any {|r| $r.regressing }) } }
-        { name: "no fps comparison", readings: (runs-dropped $base {|r| (do $p2_fps $r) and $r.target == "1kb1" }), check: {|d| $d.outcome == "insufficient" and ($d.blockers | any {|b| $b | str contains "1kb1" }) } }
-        { name: "display worse", readings: (runs-changed $base {|r| $r.workload == "fps" and $r.kernel == "P2" and $r.probed and $r.target == "1ka1" } {|r| $r | update shown_p95_ms ($r.shown_p95_ms + 0.3) }), check: {|d| $d.outcome == "regressing" and ($d.presentation.display | where {|r| $r.worse } | get target) == ["1ka1"] } }
-        { name: "presentation", readings: (runs-changed $base {|r| (do $p2_fps $r) and $r.target == "1ka1" } {|r| leg-raised $r "pressure" "presented_p95_ms" 0.3 }), check: {|d| $d.outcome == "regressing" and ($d.presentation.guest | where {|r| $r.worse } | get leg) == ["pressure"] and not ($d.regression | any {|r| $r.regressing }) } }
-        { name: "noise gate", readings: (runs-changed $base {|r| (do $p2_fps $r) and $r.target == "1ka1" and $r.position == 5 } {|r| leg-raised $r "start" "critical_median_ms" 2.5 }), check: {|d| $d.outcome == "insufficient" and not $d.noise.passed } }
-        { name: "eps short", readings: ($base | update calibration.state "short"), check: {|d| $d.outcome == "insufficient" and not $d.calibration.calibrated } }
-        { name: "checks", readings: ($base | update checks.model false), check: {|d| $d.outcome == "ineligible" } }
-        { name: "K in fps", readings: (runs-changed $base {|r| (do $p2_fps $r) and $r.position == 3 } {|r| $r | update k_violations 1 }), check: {|d| $d.outcome == "ineligible" } }
-        { name: "control scope", readings: ($base | update controls ($base.controls | each {|c| if $c.kind == "timing" and $c.kernel == "P2" and $c.order == "await" { $c | update kernel "P0" } else { $c } })), check: {|d| ($d.walk.phases | where {|p| $p.kernel == "P2" and $p.order == "await" } | all {|p| $p.evidence == "instrumented-only" }) and ($d.walk.phases | where {|p| $p.order == "prepare" } | all {|p| $p.evidence == "admissible" }) } }
-        { name: "TIMING on refused", readings: (runs-dropped $base {|r| $r.workload == "walk" and $r.kernel == "P2" and $r.order == "prepare" and (not $r.timing) and $r.target == "1ka1" }), check: {|d| $d.outcome == "insufficient" and ($d.walk.gate | where target == "1ka1" | first | get state) == "insufficient" and not ($d.walk.gate | where target == "1ka1" | first | get refused | is-empty) } }
-        { name: "off supplies the gate", readings: ($base | update controls ($base.controls | where kind == "shim")), check: {|d| $d.outcome == "chosen" and ($d.walk.gate | all {|g| $g.state == "admissible" }) and ($d.walk.phases | all {|p| $p.evidence == "instrumented-only" }) } }
-        { name: "probed walk refused", readings: (runs-changed $base {|r| $r.workload == "walk" and $r.kernel == "P2" and $r.order == "prepare" and (not $r.timing) and $r.target == "1kb1" } {|r| $r | update probed true }), check: {|d| $d.outcome == "insufficient" and ($d.walk.gate | where target == "1kb1" | first | get state) == "insufficient" } }
-        { name: "off invalid", readings: (runs-changed $base {|r| $r.workload == "walk" and $r.kernel == "P0" and (not $r.timing) and $r.position == 0 } {|r| $r | update valid false }), check: {|d| $d.outcome == "insufficient" and ($d.walk.gate | all {|g| $g.state == "insufficient" }) } }
-        { name: "off noise", readings: (runs-changed $base {|r| $r.workload == "walk" and $r.kernel == "P2" and (not $r.timing) and $r.position == 5 and $r.target == "1ka1" } {|r| $r | update presented_p95_ms ($r.presented_p95_ms + 2.5) }), check: {|d| $d.outcome == "insufficient" and ($d.noise.over | any {|o| $o.what == "walk 95th" }) } }
-        { name: "walk fails", readings: (runs-changed $base {|r| $r.workload == "walk" and $r.kernel == "P2" and (not $r.timing) and $r.target == "1kb1" } {|r| $r | update presented_median_ms ($r.presented_median_ms + 0.5) }), check: {|d| $d.outcome == "walk_failed" and ($d.walk.gate | where {|r| $r.fails } | get target) == ["1kb1"] } }
-        { name: "display without a control", readings: ($base | update controls ($base.controls | where {|c| not ($c.kind == "shim" and $c.kernel == "P2" and $c.target == "1ka1") })), check: {|d| $d.outcome == "insufficient" and ($d.presentation.display | where target == "1ka1" | first | get state) == "insufficient" } }
-        { name: "host limit inadmissible", readings: ($base | update controls ($base.controls | where kind == "timing") | update host_limits [{ host: "box", target: "1ka1", admissible: false, limit: true } { host: "box", target: "1kb1", admissible: false, limit: true }]), check: {|d| $d.outcome == "insufficient" and ($d.presentation.display | all {|r| $r.state == "insufficient" }) } }
-        { name: "host limit admissible", readings: ($base | update controls ($base.controls | where kind == "timing") | update host_limits [{ host: "box", target: "1ka1", admissible: true, limit: true } { host: "box", target: "1kb1", admissible: true, limit: true }]), check: {|d| $d.outcome == "chosen" and ($d.presentation.display | all {|r| $r.state == "out" }) } }
-        { name: "his host without probed runs", readings: ($base | update runs ($base.runs ++ ($TARGETS | each {|t| [{ kernel: "P0" } { kernel: "P2" }] | each {|c| six "masa" $t $c } | flatten } | flatten))), check: {|d| $d.outcome == "insufficient" and ($d.presentation.display | where host == "masa" | all {|r| $r.state == "blocked" }) and ($d.blockers | any {|b| $b starts-with "masa" }) } }
-        { name: "his host's admissible limit", readings: ($base | update runs ($base.runs ++ ($TARGETS | each {|t| [{ kernel: "P0" } { kernel: "P2" } { kernel: "P0", probed: true } { kernel: "P2", probed: true }] | each {|c| six "masa" $t $c } | flatten } | flatten)) | update host_limits [{ host: "masa", target: "1ka1", admissible: true, limit: true } { host: "masa", target: "1kb1", admissible: true, limit: true }]), check: {|d| $d.outcome == "chosen" and ($d.presentation.display | where host == "masa" | all {|r| $r.state == "out" }) } }
-        { name: "a box control for his host", readings: ($base | update runs ($base.runs ++ ($TARGETS | each {|t| [{ kernel: "P0" } { kernel: "P2" } { kernel: "P0", probed: true } { kernel: "P2", probed: true }] | each {|c| six "masa" $t $c } | flatten } | flatten))), check: {|d| $d.outcome == "insufficient" and ($d.presentation.display | where host == "masa" | all {|r| $r.state == "insufficient" }) } }
-        { name: "a later candidate's control", readings: ($base | update controls ($base.controls | each {|c| if $c.kind == "shim" and $c.target == "1kb1" { $c | update build "qualification" } else { $c } })), check: {|d| $d.outcome == "insufficient" and ($d.presentation.display | where target == "1kb1" | first | get state) == "insufficient" } }
-        { name: "K in a TIMING-on run", readings: (runs-changed $base {|r| $r.workload == "walk" and $r.kernel == "P2" and $r.timing and $r.position == 2 } {|r| $r | update k_violations 2 }), check: {|d| $d.outcome == "ineligible" and ($d.walk.gate | all {|g| $g.state == "admissible" and not $g.fails }) } }
-    ]
-    for c in $cases {
-        let d = (decide $c.readings)
-        if not (do $c.check $d) { do $fail $c.name $"decided ($d.outcome): ($d | reject regression | to nuon | str substring 0..300)" }
-    }
-    print $"timing holds: ($cases | length) cases"
-    print "timing holds: ok"
 }

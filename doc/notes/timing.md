@@ -11,8 +11,6 @@ The recipes are in `kernel/just/timing.just` and run under the real nu:
 | Recipe | What it does |
 |---|---|
 | `just -f kernel/just/timing.just select <readings> <out dir>` | Reads a readings record and writes `decision.nuon` in the directory, printing the outcome |
-| `just -f kernel/just/timing.just select-holds <script> <scratch>` | Runs the selector's own fixtures, the script named so that a mutant's copy can run in its place |
-| `just -f kernel/just/timing.just select-sample <readings>` | Writes the fixtures' clean comparison as a readings record, to run `select` over |
 
 ## The readings
 
@@ -49,14 +47,9 @@ contract is met. The outcome is one of `ineligible`, `insufficient`,
 `regressing`, `walk_failed`, and `chosen`, checked in that order; only
 `chosen` meets the contract.
 
-## The holds
-
-`select-holds` builds a clean comparison on both targets and changes it
-one way a case, 26 cases, each expecting one outcome or one state.
-
 ## What it does not read yet
 
 The real readers do not yet write the readings record. gauge.nu's
 reports do not yet carry K's violations or the late wakes, which come
-with JointTiming's comparison. Until then the selector runs on
-synthetic readings alone.
+with JointTiming's comparison. Until then the selector has no readings
+record to read.

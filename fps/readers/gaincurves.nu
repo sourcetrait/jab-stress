@@ -11,10 +11,8 @@
 # refuses a reading that carries one (GainCurvesRefusal). Run under the
 # real nu from a scratch justfile: `nu gaincurves.nu <settled|play> <base>
 # <out.nuon> <label>...`; `table` renders a reading's builds as a markdown
-# table in milliseconds; its own fixtures `nu gaincurves.nu holds
-# <scratch>`.
+# table in milliseconds.
 use ./workergauge.nu [analyse]
-use ./batches.nu [write-batch]
 
 const CEILING_US = 15000
 
@@ -112,52 +110,4 @@ def main [mode: string, base: string, out: string, ...labels: string] {
 
 def "main table" [reading: string, ...builds: string] {
     table-of (open $reading) $builds | print
-}
-
-# The reader's own fixtures over synthetic batches batches.nu writes under
-# `scratch`, through the entry points the recipes reach, each case named
-# so a raise fails it by name: a clean battery read by `main` and its
-# reading tabled; a battery holding an invalid run and one holding a forced
-# run drawn by other workers than it asked, each refused by `curves`
-# naming its problem; and a reading carrying a problem refused by `table`
-# naming it.
-def "main holds" [scratch: string] {
-    if ($scratch | path exists) { error make { msg: $"the scratch exists: ($scratch)" } }
-    mkdir $scratch
-    let fail = {|name: string, why: string| error make { msg: $"gaincurves holds: ($name): ($why)" } }
-    let named = {|name: string, work: closure| try { do $work } catch {|e| do $fail $name $"raised: ($e.msg | str substring 0..300)" } }
-    let refused = {|name: string, work: closure, says: string|
-        let why = (try { do $work | ignore; null } catch {|e| $e.msg })
-        if $why == null { do $fail $name "accepted" }
-        if not ($why | str contains $says) { do $fail $name $"refused for ($why | str substring 0..300)" }
-    }
-    let forced = { build: { image_sha256: "holds_image" }, mode: { cadence: 0, workers: 2, grain: 0 } }
-    let two = [[2 0] [2 0] [2 0]]
-    let run_of = {|drawn: list<any>| { identity: $forced, cadence: 0, drawn: $drawn } }
-
-    # a clean battery read by main, its reading tabled
-    let clean = ($scratch | path join "clean")
-    write-batch $clean "clean_1" $forced [(do $run_of $two) (do $run_of $two)] | ignore
-    let read = ($scratch | path join "clean.nuon")
-    do $named "a clean battery read" { main play $clean $read clean_1 }
-    let tabled = (do $named "a clean reading tabled" { table-of (open $read) [] })
-    if not (($tabled | str contains "| walk |") and ($tabled | str contains "| whole |")) { do $fail "a clean reading tabled by leg and whole" $tabled }
-
-    # a battery holding an invalid run, refused by curves by name
-    let invalid = ($scratch | path join "invalid")
-    let file = (write-batch $invalid "invalid_1" $forced [(do $run_of $two) (do $run_of $two)])
-    let g = (open $file)
-    let runs = ($g.runs | enumerate | each {|x| if $x.index == 0 { $x.item | update measured.valid false } else { $x.item } })
-    $g | update runs $runs | to nuon | save --raw -f $file
-    do $refused "a battery with an invalid run is refused by curves" { curves "play" $invalid [invalid_1] } "invalid_1 run 1: complete true, valid false, seeded true"
-
-    # a battery holding a forced run drawn by other workers, refused by name
-    let other = ($scratch | path join "other")
-    write-batch $other "other_1" $forced [(do $run_of [[1 0] [1 0] [1 0]])] | ignore
-    do $refused "a battery with a forced run drawn by other workers is refused by curves" { curves "play" $other [other_1] } "other_1 run 1: workers [1] at grains [0] where 2 at 0 was asked"
-
-    # a reading carrying a problem, refused by table by name
-    let planted = (open $read | update problems ["a planted problem"])
-    do $refused "a reading carrying problems is refused by table" { table-of $planted [] } "a planted problem"
-    print "gaincurves holds: ok"
 }

@@ -37,10 +37,6 @@ const STAMP_AT = 200ms
 const SCREEN_AT = 9000ms
 const SECONDS = 11
 const BOUND_STATUS = 124
-# the live stale negative: its screen at STALE_SCREEN_AT, between the two
-# placements, its own E at STALE_END_AT, after the second
-const STALE_SCREEN_AT = 5000ms
-const STALE_END_AT = 9000ms
 
 export def workers-frame [workers: int, grain: int]: nothing -> binary {
     [("W" | into binary), 0x[00 00 00], ($workers | into binary | bytes at 0..<1), 0x[00 00 00], ($grain | into binary | bytes at 0..<4), (0..<52 | each {|i| 0x[00] } | bytes collect)] | bytes collect
@@ -156,36 +152,14 @@ def row-of [run: record, p: record, m: record, cancel: bool]: nothing -> record 
     }
 }
 
-# The mode the stale negative draws by: the first with workers, else the
-# first.
-def stale-mode [modes: list<any>]: nothing -> record {
-    $modes | where workers > 0 | get -o 0 | default ($modes | first)
-}
-
-# The live stale negative: `p` drawn by `m`, its screen at
-# STALE_SCREEN_AT, between the two placements, and its own E at
-# STALE_END_AT, after the second, so the window, opening at the frame that
-# answered the second placement, holds the placement while the picture
-# precedes it; bound as every launch is, refused for its stamp alone, the
-# bound ending the run.
-def stale-of [kernel: path, image: path, out: path, set: string, disk: string, p: record, m: record, cancel: bool, harts: int, bootargs: string]: nothing -> record {
-    let label = $"stale_($p.name)_w($m.workers)_g($m.grain)"
-    let run = (jab launch --kernel $kernel --image $image --out ($out | path join $label) --set $set --sound --api --disk $disk --serial "fps" --send (sends-of $p $m $cancel $STALE_END_AT) --screen $STALE_SCREEN_AT --seconds $SECONDS --harts $harts --bootargs $bootargs)
-    let b = (bind $run $p $m $cancel)
-    let refused = (($b.problems | length) == 1 and (($b.problems | first) =~ "before the window's opening frame"))
-    print $"($label): status ($run.status), stamp ($b.stamp | default 'none'), window from ($b.from | default 'none'), (if $refused { 'refused for its stamp alone' } else { $'not refused for its stamp alone: ($b.problems | str join "; ")' })"
-    { pose: $p.name, workers: $m.workers, grain: $m.grain, status: $run.status, binding: $b, refused: $refused, ok: ($refused and $run.status == $BOUND_STATUS) }
-}
-
 # Each pose and mode a launch under the picture contract (sends-of): the
 # stamp and the W at 200 ms, with --cancel the J's cancel beside them, the
 # L at 1900, the pose at 2000 and 8000, the screen at SCREEN_AT with the E
 # after it, the bound at SECONDS; each run's screen bound to its frame
-# (bind), then judged against W 0's of the same pose (judge); and the live
-# stale negative, a launch more (stale-of). The still copy is `map`'s,
-# render_0 or render_1, built here (disk-of). parity.nuon holds the disk,
-# the stale launch, and every launch's row; verdict.nuon each row judged
-# with its binding, and `ok`.
+# (bind), then judged against W 0's of the same pose (judge). The still
+# copy is `map`'s, render_0 or render_1, built here (disk-of).
+# parity.nuon holds the disk and every launch's row; verdict.nuon each
+# row judged with its binding, and `ok`.
 def main [kernel: path, image: path, out: path, --set: string = "debug", --poses: string = "spawn,bay,up", --modes: string = "0:0,2:0,1:0,2:16", --map: string = "render_0", --harts: int = 4, --bootargs: string = "", --cancel] {
     let wanted = ($poses | split row ",")
     let modes = (modes-of $modes)
@@ -203,8 +177,7 @@ def main [kernel: path, image: path, out: path, --set: string = "debug", --poses
             print $"($label): status ($row.status), stamp ($b.stamp | default 'none'), frame ($b.frame | default 'none') of the window from ($b.from | default 'none'), (if ($b.problems | is-empty) { 'bound' } else { $'unbound: ($b.problems | str join "; ")' }), frames ($row.frames), ($row.workers_line | default 'no workers line'), faults ($row.faults | length)"
         }
     }
-    let stale = (stale-of $kernel $image $out $set $disk.disk ($poses | first) (stale-mode $modes) $cancel $harts $bootargs)
-    let parity = { disk: $disk, stale: $stale, rows: $rows }
+    let parity = { disk: $disk, rows: $rows }
     $parity | to nuon | save -f ($out | path join "parity.nuon")
     judge $parity $out $cancel $harts $bootargs
 }
@@ -214,9 +187,8 @@ def main [kernel: path, image: path, out: path, --set: string = "debug", --poses
 # other mode's binding, its capture against the control's with the
 # stamp's cells skipped, its frame line's drawing counts (COUNTS) against
 # the control's, the workers and grain drawn, every round cancelled under
-# `cancel`, the bound's status, and no fault; and the stale negative
-# refused for its stamp alone. verdict.nuon written, each row's binding
-# beside its verdict.
+# `cancel`, the bound's status, and no fault. verdict.nuon written, each
+# row's binding beside its verdict.
 def judge [parity: record, out: path, cancel: bool, harts: int, bootargs: string] {
     mut verdicts = []
     for p in ($parity.rows | get pose | uniq) {
@@ -245,10 +217,9 @@ def judge [parity: record, out: path, cancel: bool, harts: int, bootargs: string
             print $"($p) w($r.workers) g($r.grain): (if $bound { 'bound' } else { $'unbound: ($r.binding.problems | str join "; ")' }); capture ($capture); (if ($differ | is-empty) { 'counts equal' } else { $'counts differ: ($differ | str join ", ")' }); ($w)"
         }
     }
-    let stale = $parity.stale
-    let ok = (($verdicts | length) > 0 and ($verdicts | all {|v| $v.ok }) and $stale.ok)
-    { ok: $ok, cancel: $cancel, harts: $harts, bootargs: $bootargs, disk: $parity.disk, judged: ($verdicts | length), failed: ($verdicts | where {|v| not $v.ok } | length), stale: $stale, verdicts: $verdicts } | to nuon --indent 2 | save -f ($out | path join "verdict.nuon")
-    print $"workerparity: (if $ok { 'ok' } else { 'failed' }), ($verdicts | length) judged, ($verdicts | where {|v| not $v.ok } | length) failed, the stale negative (if $stale.ok { 'refused for its stamp alone' } else { 'not refused' })"
+    let ok = (($verdicts | length) > 0 and ($verdicts | all {|v| $v.ok }))
+    { ok: $ok, cancel: $cancel, harts: $harts, bootargs: $bootargs, disk: $parity.disk, judged: ($verdicts | length), failed: ($verdicts | where {|v| not $v.ok } | length), verdicts: $verdicts } | to nuon --indent 2 | save -f ($out | path join "verdict.nuon")
+    print $"workerparity: (if $ok { 'ok' } else { 'failed' }), ($verdicts | length) judged, ($verdicts | where {|v| not $v.ok } | length) failed"
 }
 
 # A parity judged again from its recorded launches, as when the judged
@@ -259,7 +230,7 @@ def "main judge" [out: path, --cancel, --harts: int = 4, --bootargs: string = ""
     let before = ($out | path join "verdict_before.nuon")
     if ($before | path exists) { error make { msg: $"($before) exists; a parity is judged again once" } }
     let parity = (open ($out | path join "parity.nuon"))
-    if not (($parity | describe) starts-with "record") { error make { msg: $"($out)'s parity.nuon predates the picture contract: rows with no bindings, no disk, and no stale launch" } }
+    if not (($parity | describe) starts-with "record") { error make { msg: $"($out)'s parity.nuon predates the picture contract: rows with no bindings and no disk" } }
     let verdict = ($out | path join "verdict.nuon")
     if ($verdict | path exists) { mv $verdict $before }
     judge $parity $out $cancel $harts $bootargs

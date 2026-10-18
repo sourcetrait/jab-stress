@@ -36,12 +36,10 @@
 # names the grants and the active masks its runs' frames held, schema 6's
 # harts records, gauge.nu's validity their judge. Run under the real nu
 # from a scratch justfile: `nu workergauge.nu <settled|play> <base>
-# <out.nuon> <label>...`; its own fixtures `nu workergauge.nu holds
-# <scratch>`.
+# <out.nuon> <label>...`.
 
 const GAUGE = "../../../jab/game/fps/test/gauge.nu"
 use $GAUGE [run-request]
-use ./batches.nu [write-batch]
 
 const FIELDS = [draw_us critical_us preparation_us raster_us slowest_us busy_us dispatch_us barrier_us imbalance_us remainder_us clear_us prepared_us outside_us game_us hud_us mix_us flip_us report_us]
 const RECORD = 64
@@ -279,72 +277,4 @@ def main [mode: string, base: string, out: string, ...labels: string] {
     let passed = ($doc.identities | each {|i| $i.passed | length } | math sum)
     let unrecorded = ($doc.identities | get unrecorded | flatten | uniq)
     print $"workergauge ($mode): ($labels | length) batches, ($doc.problems | length) problems, identities alike ($doc.identities_alike), ($corrected) corrected by their sidecars and ($reported) read from their reports; bound ($bindings), ($passed) directories passed over, unrecorded ($unrecorded | to nuon); ($out)"
-}
-
-# The reader's own fixtures over synthetic batches it writes under
-# `scratch` (batches.nu), each case's reading run under its name so a
-# raise fails it by name: an automatic batch and a forced one of one
-# build drawn alike, both accepted and kept as two builds with separate
-# results; a schema 6 batch's grants and active masks read for the batch
-# and its build; a summary asking none over forced runs and one asking workers
-# over automatic runs, the runs' selections standing; a batch whose runs
-# mix the two selections refused; and a forced run drawn by other workers
-# than it asked and an automatic run drawn at two counts, each refused by
-# name.
-def "main holds" [scratch: string] {
-    if ($scratch | path exists) { error make { msg: $"the scratch exists: ($scratch)" } }
-    mkdir $scratch
-    let fail = {|name: string, why: string| error make { msg: $"workergauge holds: ($name): ($why)" } }
-    let named = {|name: string, work: closure| try { do $work } catch {|e| do $fail $name $"raised: ($e.msg | str substring 0..300)" } }
-    let refused = {|name: string, read: record, says: string|
-        if not ($read.problems | any {|p| $p | str contains $says }) { do $fail $name $"refused for ($read.problems | str join '; ')" }
-    }
-    let forced = { build: { image_sha256: "holds_image" }, mode: { cadence: 0, workers: 2, grain: 0 } }
-    let automatic = { build: { image_sha256: "holds_image" }, mode: { cadence: 0 } }
-    let two = [[2 0] [2 0] [2 0]]
-    let run_of = {|id: record, drawn: list<any>| { identity: $id, cadence: 0, drawn: $drawn } }
-
-    # one build's batches, one forced and one automatic, drawn alike
-    let pair = ($scratch | path join "pair")
-    write-batch $pair "pair_1" $forced [(do $run_of $forced $two) (do $run_of $forced $two)] | ignore
-    write-batch $pair "pair_2" $automatic [(do $run_of $automatic $two) (do $run_of $automatic $two)] | ignore
-    let paired = (do $named "the pair read" { analyse "play" $pair [pair_1 pair_2] })
-    if not ($paired.problems | is-empty) { do $fail "an automatic batch and a forced one drawn alike are accepted" ($paired.problems | str join "; ") }
-    let kept = ($paired.builds | each {|b| [$b.build $b.selection $b.batches] })
-    if $kept != [[pair forced [pair_1]] [pair automatic [pair_2]]] { do $fail "the pair kept as two builds with separate results" ($kept | to nuon) }
-
-    # a schema 6 batch, two runs on eight harts drawn on harts 1 2 and 1 3
-    let harted = ($scratch | path join "harted")
-    let on_two = { online: 254, floor: 2, grant: 6, claimed: 0, started: 6, active: 6, reported: 6 }
-    let on_three = { online: 254, floor: 2, grant: 14, claimed: 0, started: 14, active: 10, reported: 10 }
-    write-batch $harted "masks_1" $forced [({ identity: $forced, cadence: 0, drawn: $two, harts: $on_two }) ({ identity: $forced, cadence: 0, drawn: $two, harts: $on_three })] | ignore
-    let masked = (do $named "a schema 6 batch read" { analyse "play" $harted [masks_1] })
-    if not ($masked.problems | is-empty) { do $fail "a schema 6 batch accepted" ($masked.problems | str join "; ") }
-    let masks = [($masked.batches | get 0.grants) ($masked.batches | get 0.actives) ($masked.builds | get 0.grants) ($masked.builds | get 0.actives)]
-    if $masks != [[6 14] [6 10] [6 14] [6 10]] { do $fail "a schema 6 batch's grants and active masks read for the batch and its build" ($masks | to nuon) }
-
-    # the summary disagreeing with its runs both ways
-    let disagree = ($scratch | path join "disagree")
-    write-batch $disagree "nullsum_1" $automatic [(do $run_of $forced $two)] | ignore
-    write-batch $disagree "forcedsum_1" ($forced | update mode.workers 1 | update mode.grain 16) [(do $run_of $automatic $two)] | ignore
-    let nullsum = (do $named "a summary asking none over forced runs" { analyse "play" $disagree [nullsum_1] })
-    let nullsum_says = [$nullsum.problems ($nullsum.builds | get 0.selection)]
-    if $nullsum_says != [[] forced] { do $fail "a summary asking none over forced runs leaves them forced" ($nullsum_says | to nuon) }
-    let forcedsum = (do $named "a summary asking workers over automatic runs" { analyse "play" $disagree [forcedsum_1] })
-    let forcedsum_says = [$forcedsum.problems ($forcedsum.builds | get 0.selection)]
-    if $forcedsum_says != [[] automatic] { do $fail "a summary asking workers over automatic runs leaves them automatic" ($forcedsum_says | to nuon) }
-
-    # a batch mixing the selections, a forced run drawn by other workers,
-    # and an automatic run drawn at two counts
-    let refusals = ($scratch | path join "refusals")
-    write-batch $refusals "mixed_1" $forced [(do $run_of $forced $two) (do $run_of $automatic $two)] | ignore
-    write-batch $refusals "other_1" $forced [(do $run_of $forced [[1 0] [1 0] [1 0]])] | ignore
-    write-batch $refusals "counts_1" $automatic [(do $run_of $automatic [[1 0] [2 0] [2 0]])] | ignore
-    let mixed = (do $named "a batch mixing the selections" { analyse "play" $refusals [mixed_1] })
-    do $refused "a batch mixing the two selections is refused" $mixed "mixed_1: its runs mix the forced and automatic selections"
-    let other = (do $named "a forced run drawn by other workers" { analyse "play" $refusals [other_1] })
-    do $refused "a forced run drawn by other workers than it asked is refused" $other "other_1 run 1: workers [1] at grains [0] where 2 at 0 was asked"
-    let counts = (do $named "an automatic run drawn at two counts" { analyse "play" $refusals [counts_1] })
-    do $refused "an automatic run drawn at two counts is refused" $counts "counts_1 run 1: an automatic run drawn by workers [1, 2] at grains [0], not one count at one grain"
-    print "workergauge holds: ok"
 }

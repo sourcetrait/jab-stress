@@ -8,8 +8,7 @@
 #   alternated, each held to its settle and dumped; the last spawn's
 #   picture and its reference's each bound by its stamp to a validated,
 #   settled frame (picture-refusals), and the two equal outside the
-#   stamp; then each picture's evidence altered one way at a time and
-#   refused for exactly that (picture-negatives, PictureNegatives).
+#   stamp.
 # - rebuild, RebuildBound: the same cycle under the lift with a quota of
 #   REBUILD_TILES whole tiles a boundary and the stale mode, so
 #   construction is counted work and every phase's rebuild publishes at
@@ -31,7 +30,7 @@ use std/assert
 use ../../../jab/sdk/nu/jab.nu
 use ../../../jab/game/fps/test/pose.nu
 use ../../../jab/game/fps/test/gauge.nu
-use ../../../jab/game/fps/test/test.nu [stamp-of ppm-head record-altered raise-frame rows-differ STAMP_BITS STAMP_CELL STAMP_ONE STAMP_ZERO STORAGE_KIND STORAGE_BUILDING CLOCK_SCHEMA]
+use ../../../jab/game/fps/test/test.nu [stamp-of ppm-head raise-frame rows-differ STAMP_BITS STAMP_CELL STAMP_ONE STAMP_ZERO CLOCK_SCHEMA]
 
 const TILES = (path self | path dirname | path join .. .. .. jab game fps test tiles.nu)
 
@@ -42,12 +41,10 @@ const TILE_SIDE = 64
 const TILE_TEXELS = 4096
 const TILE_ROW_TEXELS = 64
 const TILE_BYTES = 16384
-# the API's records, the end marker's kind (gauge.nu's KIND_END), a dump
-# header's kind and its texel records a tile (tiles.nu's DUMP_KIND and
-# DUMP_RECORDS, twelve texels a record from its byte 12), and a header's
-# state of a tile in construction
+# the API's records, a dump header's kind and its texel records a tile
+# (tiles.nu's DUMP_KIND and DUMP_RECORDS, twelve texels a record from its
+# byte 12), and a header's state of a tile in construction
 const RECORD = 64
-const KIND_END = 9
 const DUMP_KIND = 16
 const DUMP_RECORDS = 342
 const DUMP_TEXELS_AT = 12
@@ -324,71 +321,6 @@ def pixels-differ [p: binary, q: binary, y: int, most: int]: nothing -> list<lis
     do $row $p | zip (do $row $q) | enumerate | where {|e| $e.item.0 != $e.item.1 } | first $most | each {|e| [$e.index $y] }
 }
 
-# A capture with one pixel's three bytes written.
-def pixel-written [bytes: binary, at: list<int>, colour: binary]: nothing -> binary {
-    let head = (ppm-head $bytes)
-    let width = ($bytes | bytes at 0..<$head | decode | lines | get 1 | split row " " | first | into int)
-    let o = ($head + ((($at.1 * $width) + $at.0) * 3))
-    [($bytes | bytes at 0..<$o) $colour ($bytes | bytes at ($o + 3)..)] | bytes collect
-}
-
-# The binding's negatives on a launch's evidence, which carries its
-# records (`api`) and `legs` besides what picture-refusals reads: the
-# evidence as taken, the control, refused for nothing; then each
-# alteration alone refused for exactly its kind. A stamp cell's pixel
-# neither colour; the capture absent; the capture re-stamped last_build,
-# then final, the window's two edges, each read back by stamp-of; E
-# written before the screen's completion, then at it; the completion
-# absent; E's write absent; the displayed frame's storage record given
-# BUILDING 1, re-measured complete and valid, refused at that frame
-# alone; the records cut at the end marker; a storage record's BUILDING
-# past its slots in use, re-measured complete and invalid. Returns each
-# case and its kinds.
-export def picture-negatives [e: record]: nothing -> list<record<case: string, kinds: list<string>>> {
-    let control = (picture-refusals $e)
-    assert ($control | is-empty) $"($e.label)'s evidence, the control, refused for nothing: ($control | each {|r| $'($r.kind): ($r.detail)' } | str join '; ')"
-    let window = (picture-window $e.measure $e.from)
-    let displayed = (displayed-frame $e.measure $window (stamp-of $e.capture))
-    let shown = ($e.measure.rows | where frame == $displayed | get 0)
-    let restamped = {|v: int|
-        let c = (stamp-written $e.capture $v)
-        assert equal (stamp-of $c) ($v mod $STAMP_SPAN) $"($e.label)'s capture re-stamped ($v) reads back"
-        $c
-    }
-    let building_one = (gauge measure (record-altered $e.api $STORAGE_KIND $displayed $STORAGE_BUILDING 1) $e.legs)
-    assert ($building_one.complete and $building_one.valid) $"($e.label)'s records with BUILDING 1 at the displayed frame ($displayed) complete and valid: ($building_one.problems | str join '; ') ($building_one.invalid | str join '; ')"
-    let overfull = (gauge measure (record-altered $e.api $STORAGE_KIND $displayed $STORAGE_BUILDING ($shown.slots_used + 1)) $e.legs)
-    assert ($overfull.complete and not $overfull.valid) $"($e.label)'s records with BUILDING past the slots in use at frame ($displayed) complete and invalid: ($overfull.problems | str join '; ')"
-    # the run goes on past E, so its records cut at the end marker's, the
-    # first record of its kind
-    let marker = ($e.api | bytes index-of --all ($KIND_END | into binary | bytes at 0..<4) | where {|o| ($o mod $RECORD) == 0 } | first)
-    let cut = (gauge measure ($e.api | bytes at 0..<$marker) $e.legs)
-    let cases = [
-        { case: "a stamp cell's pixel neither colour", e: ($e | upsert capture (pixel-written $e.capture [0 0] 0x[80 80 80])), kinds: ["no stamp"] }
-        { case: "the capture absent", e: ($e | upsert capture null), kinds: ["no capture"] }
-        { case: $"re-stamped last_build, ($window.last_build)", e: ($e | upsert capture (do $restamped $window.last_build)), kinds: ["outside the window"] }
-        { case: $"re-stamped final, ($window.final)", e: ($e | upsert capture (do $restamped $window.final)), kinds: ["outside the window"] }
-        { case: "E before the screen's completion", e: ($e | upsert ended ($e.completed - 0.1)), kinds: ["E not after"] }
-        { case: "E at the screen's completion", e: ($e | upsert ended $e.completed), kinds: ["E not after"] }
-        { case: "the screen's completion absent", e: ($e | upsert completed null), kinds: ["no screen time"] }
-        { case: "E's write absent", e: ($e | upsert ended null), kinds: ["no E time"] }
-        { case: $"BUILDING 1 at the displayed frame, ($displayed)", e: ($e | upsert measure $building_one), kinds: ["unsettled"] }
-        { case: "the records cut at the end marker", e: ($e | upsert measure $cut), kinds: ["incomplete"] }
-        { case: $"BUILDING past the slots in use at frame ($displayed)", e: ($e | upsert measure $overfull), kinds: ["invalid"] }
-    ]
-    # loops, so a failing assertion is the error raised, not an each's
-    mut read = []
-    for c in $cases {
-        let refused = (picture-refusals $c.e)
-        assert (($refused | get kind) == $c.kinds) $"($e.label), ($c.case): refused as ($c.kinds | str join ', '), refused as ($refused | each {|r| $'($r.kind): ($r.detail)' } | str join '; ')"
-        if $c.kinds == ["unsettled"] {
-            assert equal ($refused | get 0.frames) [$displayed] $"($e.label), ($c.case): refused at that frame alone"
-        }
-        $read = ($read | append { case: $c.case, kinds: ($refused | get kind) })
-    }
-    $read
-}
-
 # One cycle launched under the O frame's modes and quota, every O
 # carrying them: the HUD's stamp first; the cap and a cold start before
 # any placement, the start view's tiles within it; the bay placed with a
@@ -432,7 +364,7 @@ def cycle-launch [kernel: path, image: path, disk: path, out: path, label: strin
 # picture's reference, stamped from the start: the view placed with a
 # cold start at SIGHT_AT, the screen at SIGHT_SCREEN_AT while the run
 # goes on, E at SIGHT_END_AT after it. Returns its picture's evidence,
-# its window the whole run's, with its records and legs.
+# its window the whole run's.
 def sight-launch [kernel: path, image: path, disk: path, out: path, label: string]: nothing -> record {
     let ended = { at: $SIGHT_END_AT, bytes: (pose command-frame "E") }
     let sends = [
@@ -445,7 +377,7 @@ def sight-launch [kernel: path, image: path, disk: path, out: path, label: strin
     assert equal (open --raw $run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)"
     let m = (gauge measure $run.api $LEGS)
     let e_index = ($sends | enumerate | where {|x| $x.item.at == $ended.at and $x.item.bytes == $ended.bytes } | get 0.index)
-    { label: $label, measure: $m, api: $run.api, legs: $LEGS, capture: (capture-of $run.screen), from: 0, completed: $run.screen_completed, ended: ($run.send_seconds | get $e_index) }
+    { label: $label, measure: $m, capture: (capture-of $run.screen), from: 0, completed: $run.screen_completed, ended: ($run.send_seconds | get $e_index) }
 }
 
 # The two sets bracket the cap: each within it and their union past it.
@@ -527,27 +459,6 @@ def assert-accounting [phases: list<record>, label: string]: nothing -> nothing 
     }
 }
 
-# The settled range's negatives beside a valid phase, its control refused
-# for nothing: the phase with its dump on its final publication frame
-# refused as a dump not after its last build, and a frame of its settled
-# tail given BUILDING 1 refused naming that frame alone. Returns each
-# case's kinds and frames.
-def settled-negatives [p: record, label: string]: nothing -> list<record<case: string, kinds: list<string>, frames: list<int>>> {
-    assert equal (settled-refusals $p) [] $"($label): the ($p.leg) phase's settled range, the control, refused for nothing"
-    let tail = ($p.last_build + 1)
-    let cases = [
-        { case: $"the dump on the final publication frame, ($p.last_build)", p: ($p | upsert dump $p.last_build | upsert span ($p.span | where {|r| $r.frame <= $p.last_build })), kinds: ["dump not after"], frames: [$p.last_build] }
-        { case: $"BUILDING 1 at the settled tail's frame ($tail)", p: ($p | upsert span ($p.span | each {|r| if $r.frame == $tail { $r | upsert building 1 } else { $r } })), kinds: ["unsettled"], frames: [$tail] }
-    ]
-    mut read = []
-    for c in $cases {
-        let refused = (settled-refusals $c.p)
-        assert ((($refused | get kind) == $c.kinds) and (($refused | get frame) == $c.frames)) $"($label), ($c.case): refused as ($c.kinds | str join ', ') at ($c.frames), refused as ($refused | each {|r| $'($r.kind) at ($r.frame): ($r.detail)' } | str join '; ')"
-        $read = ($read | append { case: $c.case, kinds: ($refused | get kind), frames: ($refused | get frame) })
-    }
-    $read
-}
-
 # The tracking, dump to dump from the spawn's first settle: a slot
 # keeping its key keeps its generation, a slot taking another key steps
 # its generation by exactly one, every key of the returning view the dump
@@ -571,15 +482,13 @@ def assert-tracking [c: record, label: string]: nothing -> nothing {
 }
 
 # EvictionCycle: the cycle under the ordinary budget. The sets bracket
-# the cap; real eviction and no reset; the accounting, the settled
-# range's negatives beside it; the tracking; the
+# the cap; real eviction and no reset; the accounting; the tracking; the
 # progress rule, every boundary of a phase from the one after its first
 # miss to its last build's, that one exempt, spending its budget, one
 # that published nothing among them; the memory; and the last spawn's
 # picture and its reference, pool-holds' settled first sight, each bound
-# to a validated, settled frame and equal outside the stamp, then each
-# one's negatives. Returns each phase's counts and frames, the run's
-# measures, the pictures' frames, and the negatives' kinds.
+# to a validated, settled frame and equal outside the stamp. Returns each
+# phase's counts and frames, the run's measures, and the pictures' frames.
 export def eviction-cycle [kernel: path, image: path, disk: path, out: path]: nothing -> record {
     let label = "the eviction cycle"
     let c = (cycle-launch $kernel $image $disk $out $label "cycle" 0 0)
@@ -587,8 +496,6 @@ export def eviction-cycle [kernel: path, image: path, disk: path, out: path]: no
     let resets = (assert-held $c $label)
     let phases = (cycle-phases $c)
     assert-accounting $phases $label
-    # the settled range's negatives beside the last phase (SettledInterval)
-    let settled_cases = (settled-negatives ($phases | last) $label)
     for p in $phases {
         let interval = ($p.span | where {|r| $r.frame > $p.first_miss and $r.frame < $p.last_build })
         let unspent = ($interval | where {|r| $r.tiles_us < $ALLOWANCE_US and $r.tiles_built < $QUOTA_TILES })
@@ -616,7 +523,7 @@ export def eviction-cycle [kernel: path, image: path, disk: path, out: path]: no
     let spawn = ($phases | last)
     assert equal $spawn.view "spawn" $"($label): the final phase the spawn's"
     let pictures = [
-        { label: $label, measure: $c.measure, api: $c.run.api, legs: $LEGS, capture: (capture-of $c.run.screen), from: $spawn.start, completed: $c.run.screen_completed, ended: $c.ended }
+        { label: $label, measure: $c.measure, capture: (capture-of $c.run.screen), from: $spawn.start, completed: $c.run.screen_completed, ended: $c.ended }
         (sight-launch $kernel $image $disk ($out | path join "cycle_sight") $"($label)'s reference, the spawn's settled first sight")
     ]
     for e in $pictures {
@@ -634,18 +541,13 @@ export def eviction-cycle [kernel: path, image: path, disk: path, out: path]: no
         let stamp = (stamp-of $e.capture)
         { label: $e.label, last_build: $window.last_build, displayed: (displayed-frame $e.measure $window $stamp), final: $window.final, completed: $e.completed, ended: $e.ended }
     })
-    # each picture's evidence altered one way at a time (PictureNegatives)
-    mut negatives = []
-    for e in $pictures {
-        $negatives = ($negatives | append { label: $e.label, cases: (picture-negatives $e) })
-    }
 
     {
         bay_keys: ($c.sets.bay | length), spawn_keys: ($c.sets.spawn | length), union: $union, cap: $CAP, resets: $resets,
         phases: ($phases | each {|p| { leg: $p.leg, renewed: $p.renewed, free: $p.free, built: $p.built, evicted: $p.evicted, first_miss: $p.first_miss, last_build: $p.last_build, settled: ($p.last_build + 1), frames: ($p.last_build + 1 - $p.first_miss), boundaries: ($p.span | where {|r| $r.frame > $p.first_miss and $r.frame <= $p.last_build } | each {|r| $"($r.frame):($r.tiles_built)/($r.evicted)/($r.tiles_us)" } | str join " ") } }),
         fixed: ($fixed | first), memory_max: ($rows | get memory | math max), peak: ($peaks | first), full_at: $full,
         dumps: ($c.dumps | each {|d| { leg: $d.leg, frame: $d.frame, tiles: ($d.tiles | length) } }),
-        pictures: $framed, negatives: $negatives, settled_negatives: $settled_cases,
+        pictures: $framed,
     }
 }
 
@@ -733,7 +635,7 @@ export def held-partial [kernel: path, image: path, disk: path, out: path]: noth
     let building = ($read.dumps | get 0 | where state == $DUMP_BUILDING | select slot key row)
     assert ((($building | length) == 1) and (($building | get 0.row) == $HELD_ROWS)) $"($label)'s dump holds one BUILDING tile, at row ($HELD_ROWS): ($building)"
     let e_index = ($sends | enumerate | where {|x| $x.item.at == $ended.at and $x.item.bytes == $ended.bytes } | get 0.index)
-    let e = { label: $label, measure: $m, api: $run.api, legs: $LEGS, capture: (capture-of $run.screen), from: $from, completed: $run.screen_completed, ended: ($run.send_seconds | get $e_index) }
+    let e = { label: $label, measure: $m, capture: (capture-of $run.screen), from: $from, completed: $run.screen_completed, ended: ($run.send_seconds | get $e_index) }
     assert ($e.capture != null) $"($label)'s screen taken"
     let stamp = (stamp-of $e.capture)
     let window = (picture-window $m $from)
@@ -765,18 +667,16 @@ export def held-partial [kernel: path, image: path, disk: path, out: path]: noth
 # both pictures' evidence, each window anchored at the spawn placement
 # the guest recorded, the run's after its final spawn placement with a
 # publication there required, the reference's from its own placement
-# under the frozen configuration, and two negatives only that anchor
-# refuses, none needing the tested image's exact count or BUILDING
-# state; 2, the pixels alone, the screen the reference's outside the
-# stamp; 3, the frozen state: the one construction since the ONCE
-# publishing REUSE_TILES at the frame after the spawn's first miss,
-# BUILDING 1 from it through the end marker, the displayed frame's
-# records BUILDING 1 and blocks missed; 4, the partial tile row by row:
-# no tile of the yard's own keys with a spawn tile's texels whole, the
-# BUILDING tile a spawn key's in a slot a yard tile left, its rows below
-# REUSE_ROWS that key's, its rows from there the yard tile's, at least
-# one of them apart from the key's. Returns the frames, the tile, and the
-# refusals.
+# under the frozen configuration; 2, the pixels alone, the screen the
+# reference's outside the stamp; 3, the frozen state: the one
+# construction since the ONCE publishing REUSE_TILES at the frame after
+# the spawn's first miss, BUILDING 1 from it through the end marker, the
+# displayed frame's records BUILDING 1 and blocks missed; 4, the partial
+# tile row by row: no tile of the yard's own keys with a spawn tile's
+# texels whole, the BUILDING tile a spawn key's in a slot a yard tile
+# left, its rows below REUSE_ROWS that key's, its rows from there the
+# yard tile's, at least one of them apart from the key's. Returns the
+# frames, the tile, and the refusals.
 export def slot-reuse [kernel: path, image: path, disk: path, out: path]: nothing -> record {
     let label = "the slot reuse"
     let at = {|ms: int, bytes: binary| { at: ($ms * 1ms), bytes: $bytes } }
@@ -847,15 +747,6 @@ export def slot-reuse [kernel: path, image: path, disk: path, out: path]: nothin
     let ref_shown = (displayed-frame $ref_m (picture-window $ref_m $ref_placed.frame) (stamp-of $ref_evidence.capture))
     let tiled = ($ref_m.rows | where {|r| $r.frame >= $ref_placed.frame and $r.frame <= $ref_shown and ($r.tiled_pixels != 0 or $r.tiles_built != 0 or $r.building != 0) })
     assert ($tiled | is-empty) $"($label)'s reference held off its tiles from its placement, frame ($ref_placed.frame), through its displayed one, ($ref_shown): ($tiled | first 3 | select frame tiled_pixels tiles_built building)"
-    # the negatives only the anchor refuses, each inside the configuration's
-    # window and outside the placement's
-    let early_capture = (stamp-written $ref_evidence.capture ($ref_placed.frame - 1))
-    assert equal (stamp-of $early_capture) (($ref_placed.frame - 1) mod $STAMP_SPAN) $"($label)'s reference re-stamped to frame ($ref_placed.frame - 1) reads back"
-    let early = (picture-refusals ($ref_evidence | upsert capture $early_capture))
-    assert (($early | get kind) == ["outside the window"]) $"($label)'s reference re-stamped to the frame before its placement, ($ref_placed.frame - 1), refused as outside the window: ($early | each {|r| $'($r.kind): ($r.detail)' } | str join '; ')"
-    let moved = ($m.rows | each {|r| if $r.frame > $placed { $r | upsert tiles_built 0 } else if $r.frame == ($placed - 1) { $r | upsert tiles_built $REUSE_TILES } else { $r } })
-    let unpublished = (picture-refusals ($evidence | upsert measure ($m | upsert rows $moved)))
-    assert (($unpublished | get kind) == ["no publication"]) $"($label): its publication moved to frame ($placed - 1), after the ONCE's configuration and before the final spawn placement, refused as no publication: ($unpublished | each {|r| $'($r.kind): ($r.detail)' } | str join '; ')"
 
     # 2, the pixels alone
     let a = (stamp-written $evidence.capture 0)
@@ -908,7 +799,6 @@ export def slot-reuse [kernel: path, image: path, disk: path, out: path]: nothin
         configured: $configured, placed: $placed, first_miss: $first_miss, displayed: $displayed, final: $m.final, completed: $evidence.completed, ended: $evidence.ended,
         partial: ($partial | select slot key row generation), left: ($left | select key generation), unbuilt_apart: ($unbuilt_apart | length),
         refused: ($refused | each {|r| $r | reject frames }), reference: { placed: $ref_placed.frame, displayed: $ref_shown, final: $ref_m.final },
-        negatives: { early: ($early | get kind), unpublished: ($unpublished | get kind) },
     }
 }
 

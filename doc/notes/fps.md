@@ -36,7 +36,7 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     `crops <out> <pose>` cuts each region where the two pictures differ out
     of both, side by side.
   - `census.just` holds the tile census's reading and the census
-    reader's holds.
+    reader over a serial log (`reader-holds`).
   - `qualification.just` runs the qualification's reader,
     `fps/readers/qualification.nu`: `candidate out [tag]` builds jab's
     release tree and writes the candidate's record, both checkouts clean
@@ -46,7 +46,7 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     problem the check names and fails on any; `report +paths` writes the
     report from records, the last path its file, `--compared <file>`
     rendering a `gauge.nu compare` output as the comparison with the
-    first baseline; `holds scratch` runs the reader's holds.
+    first baseline.
   - `poses.just` captures a map's poses on an image.
   - `scaling.just` builds the debug and owner candidates a parity reads,
     runs `workerparity.nu`'s parity, its faults, and its judge, runs
@@ -73,8 +73,8 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   run on a debug image. `eviction.nu` holds the tile eviction fixtures:
   `cycle` (EvictionCycle), the spawn view and the bay under 512 slots on
   the ordinary budget, with its picture and a reference launch's each
-  bound to a validated, settled frame by its stamp, then each picture's
-  negatives, about 210 seconds; `rebuild` (RebuildBound), the same cycle
+  bound to a validated, settled frame by its stamp, under 210 seconds;
+  `rebuild` (RebuildBound), the same cycle
   under the lift with a quota of 32 tiles a boundary and the stale mode,
   each phase publishing at exactly its frames, about 105 seconds; and
   `held` (HeldPartial), the spawn's construction held partial by the
@@ -83,7 +83,7 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   worker 2 held until the join releases it, the spawn's return from the
   yard leaving one tile in construction in a slot a yard tile left, its
   picture checked against the bright view held off its tiles and the
-  partial tile read row by row, about 60 seconds. The yard draws none
+  partial tile read row by row, under 60 seconds. The yard draws none
   of the spawn's materials: under full-bright lumels a tile's texels are
   its material's at its level and tile, so a view sharing materials can
   leave a partial its own key's texels. `stress.just`'s `eviction image out [fixture...]`
@@ -101,10 +101,7 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   build and before the end marker; a frame from the one after that build
   through the displayed one unsettled; and either time missing, or E not
   after the screen. The stamp's helpers are jab's test.nu's, imported.
-  `picture-negatives` proves each refusal on real evidence: the
-  unaltered evidence refused for nothing, then one alteration at a time,
-  each refused for exactly its kind, a re-written stamp read back each
-  time. `held` is the live case, a picture refused as unsettled alone.
+  In `held` a live picture is refused as unsettled alone.
 - A run goes on past its E to the launch's bound, so its records hold
   frames after the end marker; a cut meant to drop the marker cuts at
   the marker's own record, the first of its kind.
@@ -117,16 +114,14 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   `pool`, `eviction`, `join`, and `layout`.
 - `fps/readers/` holds the readers of the gauge's batteries and
   captures: `admission.nu`, `poolgauge.nu`, `packetgauge.nu`,
-  `workergauge.nu`, `gaincurves.nu` with its batch helper `batches.nu`,
-  `grainpairs.nu`,
+  `workergauge.nu`, `gaincurves.nu`, `grainpairs.nu`,
   `lane.nu`, `tilecensus.nu` with its resolver `tilecensus_resolve.nu`,
   `identity_corrections.nu`, `workerparity.nu`, `footprint.nu`,
   `qualification.nu` with the shim control's rule `observer.nu`, and
   `export.nu`, which exports a commit's image with its provenance, the
   game's by default and walk's with `--program example/walk` (the
   kernel's `walk-export`, [Kernel candidates](candidates.md)). Each runs as
-  `nu <reader> ...` through a justfile's recipe; the readers with
-  fixtures of their own run them as `nu <reader> holds ...`.
+  `nu <reader> ...` through a justfile's recipe.
 - `qualification.nu` reads a target's bench run through jab's gauge, its
   `bench-doc` for each run's standing and its `run-request` for each run's
   identity, and holds every identity to the candidate's record and the
@@ -134,11 +129,7 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   each target's steps by label; the diagnostics another, each the route
   legs and the summary fields it reads. The bench is held to the
   candidate's bench file read from jab's git at the candidate's commit,
-  so a record can be made from a bench run copied off another host. Its
-  holds build synthetic bench runs from jab's test.nu capture records,
-  `fx-items` and `fx-bytes`, each route leg filled by a placement's
-  answer the holds splice in, and need jab's bench files committed at
-  HEAD, since the candidate they write names HEAD.
+  so a record can be made from a bench run copied off another host.
 - `observer.nu` is ProbeRuns' observer control as a function: two arms of
   runs, each a name and its whole-run summary, every measure's arm
   statistics, effect, noise, and whether it is within it. ProbeRuns'

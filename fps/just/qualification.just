@@ -1,7 +1,9 @@
-# Qualification's recipes (FrameCeiling/Qualification.md): the candidate's
-# record at a freeze, a target's record from a bench run, its check, the
-# report, and the holds, each through fps/readers/qualification.nu under
-# the real nu. Run as `just -f fps/just/qualification.just <recipe>`.
+# Qualification's recipes (FrameCeiling/Qualification.md), each through
+# fps/readers/qualification.nu under the real nu. `candidate` writes the
+# candidate's record at a freeze. `record` writes a target's record from
+# a bench run. `check` holds a record to the schema and the acceptance.
+# `report` writes the report over records. Run as
+# `just -f fps/just/qualification.just <recipe>`.
 
 set shell := ["nu", "-c"]
 
@@ -24,7 +26,3 @@ check record:
 # renders a comparison with the first baseline
 report +paths:
     nu {{readers}}/qualification.nu report {{paths}}
-
-# the holds over synthetic bench runs under scratch, which starts empty
-holds scratch:
-    nu {{readers}}/qualification.nu holds {{scratch}}

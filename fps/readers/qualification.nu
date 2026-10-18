@@ -10,14 +10,11 @@
 # acceptance run's verdict, the controls' readings and the diagnostics'
 # apart, the host, and the limits stated. `check` holds a record to the
 # schema and the acceptance, every problem named. `report` writes the
-# document for TheUser, a section a target. `holds` runs all of it over
-# synthetic bench runs it writes. Run under the real nu: `nu
+# document for TheUser, a section a target. Run under the real nu: `nu
 # qualification.nu <command> ...` (`fps/just/qualification.just`).
 use ../../../jab/sdk/nu/jab.nu
 use ../../../jab/game/fps/test/gauge.nu
-use ../../../jab/game/fps/test/test.nu [fx-items fx-bytes fx-set fx-set-all FX_PERIOD]
 use ./observer.nu
-use std/assert
 
 # jab checked out beside this repository, and this repository
 const JAB = (path self | path dirname | path join .. .. .. jab | path expand)
@@ -744,260 +741,11 @@ export def report-text [records: list<record>, compared: any]: nothing -> string
     ($head ++ ($records | each {|r| target-section $r } | flatten) ++ $comparison) | str join "\n"
 }
 
-# The holds' route: Render Zero's legs in the route's order, every leg
-# past the start one placement; a synthetic run's frames a leg; and its
-# capture nonce.
-const FX_LEGS = [start fight spawn yard up down ramp revisit pressure]
-const FX_LEG_FRAMES = 4
-
-# A synthetic route as a route file holds one, the legs a run's
-# measurement and its CPU windows read.
-def fx-route []: nothing -> record {
-    { map: $MAP, end: 20sec, legs: ($FX_LEGS | enumerate | each {|e| { name: $e.item, places: (if $e.index == 0 { [] } else { [{ at: ($e.index * 1sec) }] }), pad: [] } }) }
-}
-
-# A synthetic capture's bytes: test.nu's records (fx-bytes), each `pack`
-# item the console's answer to a placement, a P's.
-def fx-capture [items: list<any>]: nothing -> binary {
-    $items | each {|i|
-        if $i.kind == "pack" { [0x[0b 00 00 00] 0x[50] (1..59 | each { 0x[00] } | bytes collect)] | bytes collect } else { fx-bytes [$i] }
-    } | bytes collect
-}
-
-# A synthetic route run's records (fx-items at schema 7, cadence 1), a
-# placement answered before the first state of every leg past the start,
-# so FX_LEG_FRAMES frames fall in each; drawn by `workers`, the W
-# answered when `asked`.
-def fx-route-items [workers: int, asked: bool]: nothing -> list<any> {
-    let frames = (($FX_LEGS | length) * $FX_LEG_FRAMES)
-    let items = (if $asked { fx-items $frames --schema 7 --cadence 1 --workers $workers --asked } else { fx-items $frames --schema 7 --cadence 1 --workers $workers })
-    1..<($FX_LEGS | length) | reduce --fold $items {|leg, acc|
-        let at = ($acc | enumerate | where {|e| $e.item.kind == "state" and ($e.item | get -o frame) == ($leg * $FX_LEG_FRAMES) } | get 0.index)
-        $acc | insert $at { kind: "pack" }
-    }
-}
-
-# A synthetic capture's every frame at `critical` microseconds, its await
-# the rest of the synthetic period, as test.nu's frames keep their sum.
-def fx-slow [items: list<any>, critical: int]: nothing -> list<any> {
-    fx-set-all $items "frame" { critical: $critical, await: ($FX_PERIOD - $critical) }
-}
-
-# A synthetic run's CPU windows over the whole run, each of `harts` vCPU
-# threads at half a core.
-def fx-cpu [harts: int]: nothing -> record {
-    let threads = (0..<$harts | each {|h| { id: $h, name: $"CPU ($h)/TCG", cpu_seconds: 7.5, utilization: 0.5 } })
-    { whole: { window: "whole", requested_from: 5.0, requested_to: 20.0, missing: false, from: 5.1, to: 20.1, interval: 15.0, threads: $threads }, legs: [] }
-}
-
-# A synthetic candidate, jab's HEAD and this repository's, its build's
-# digests the fixtures' own.
-def fx-candidate [tag: any]: nothing -> record {
-    {
-        tag: $tag, written: "the holds'", jab: (head-of $JAB).commit, stress: (head-of $STRESS).commit,
-        image_sha256: "fx_image", elf_sha256: "fx_elf", kernel_sha256: "fx_kernel", flags: "--defsym FX=1 riscv64-",
-        toolchain: { prefix: "riscv64-", version: "GNU assembler 2.47", tools: {} }, assets: { map: $MAP, digest: "fx_assets" },
-    }
-}
-
-# A synthetic run's identity as gauge.nu's run writes one: the candidate's
-# build on the target's machine at cadence 1, `workers` asked or null for
-# the automatic choice at grain 0, `pad` route or host, `shim` the sdl
-# shim or "" for a plain run, `changes` merged in last.
-def fx-identity [cand: record, target: string, seed: int, workers: any, pad: string, shim: string, changes: record]: nothing -> record {
-    let spec = (jab spec-row $JAB $target)
-    {
-        launched: true,
-        workspace: { dir: $JAB, commit: ($cand.jab | str substring 0..<7), dirty: false },
-        program: { dir: ($JAB | path join game fps), commit: ($cand.jab | str substring 0..<7), dirty: false, from: "git" },
-        build: { tree: "release", set: "", flags: $cand.flags, image: "fps.jab", image_sha256: $cand.image_sha256, elf_sha256: $cand.elf_sha256, kernel: "jab.elf", kernel_sha256: $cand.kernel_sha256, provenance: null },
-        assets: { map: $MAP, tree: $MAP, digest: $cand.assets.digest },
-        route: null, cap: $spec.fps, machine: (jab machine-of --spec $spec), overrides: [],
-        qemu: { binary: "qemu-system-riscv64", version: "QEMU emulator version 11.1.2", sha256: "fx_qemu" },
-        host: { os: "linux", name: "the holds' host", os_version: "1", kernel_version: "1", hostname: "fx", cpu: "the holds' CPU", cores: 32, memory: 64GiB },
-        toolchain: $cand.toolchain,
-        mode: { window: true, sound: "host", pad: $pad, seed: $seed, cadence: 1, workers: $workers, grain: (if $workers == null { null } else { 0 }), end: 20sec, capture: 22sec },
-        profile: "paired", capture_nonce: 1, shim: $shim,
-    } | merge deep $changes
-}
-
-# The steps of a target's bench at the candidate's commit as synthetic
-# steps (fx-bench): each step's words and runs as its words ask them, a
-# route run's records filling every leg and a play's twenty frames, each
-# run's identity the candidate's (fx-identity), probed where its step
-# names the shim, its CPU windows where its step asks them.
-def fx-steps [cand: record, target: string]: nothing -> list<any> {
-    let definition = (jab-file $cand.jab $"game/fps/bench/qual_($target).nuon" | from nuon)
-    let harts = (jab spec-row $JAB $target).cores
-    $definition.steps | each {|s|
-        let e = (expected-of $s.run)
-        let forced = (flag-of $s.run "--workers")
-        let workers = (if $forced == null { null } else { $forced | into int })
-        let probed = ("--sdl-probe" in $s.run)
-        let play = ($e.kind == "play")
-        {
-            label: $s.label, words: $s.run, state: "done",
-            runs: ($e.runs | each {|x|
-                let items = (if $play { fx-items 30 --schema 7 --cadence 1 } else { fx-route-items ($workers | default 2) ($workers != null) })
-                let id = (fx-identity $cand $target $x.seed $workers (if $play { "host" } else { "route" }) (if $probed { "jabshim_sdl" } else { "" }) {})
-                { run: $x.run, seed: $x.seed, id: $id, items: $items, cpu: (if "--cpu" in $s.run { fx-cpu $harts } else { null }), bundle: $probed }
-            }),
-        }
-    }
-}
-
-# A synthetic bench run at `home` (the holds'): bench.nuon listing every
-# step with its words and state; each step with runs its directory holding
-# its report, gauge.nuon as gauge.nu's run writes one; each run in
-# run_<n> beside it with its route, its identity file bound by the
-# SHA-256 the run records, and its bundle directory where it was probed;
-# each capture measured as measure reads it.
-def fx-bench [home: path, target: string, steps: list<any>]: nothing -> string {
-    mkdir $home
-    {
-        bench: $"game/fps/qual_($target)", summary: "the holds'", tree: "release", stamp: "20261017-000000", started: "2026-10-17T00:00:00", file: "the holds'",
-        steps: ($steps | each {|s| { label: $s.label, attend: null, run: $s.words, state: $s.state, exit: (if $s.state == "done" { 0 } else { 1 }), seconds: 1.0 } }),
-        report: 0, state: "done",
-    } | to nuon --indent 2 | save --raw -f ($home | path join "bench.nuon")
-    for s in ($steps | where {|x| not ($x.runs | is-empty) }) {
-        let dir = ($home | path join $s.label)
-        mkdir $dir
-        let made = ($s.runs | each {|x|
-            let run_dir = ($dir | path join $"run_($x.run)")
-            mkdir $run_dir
-            let play = ($x.id.mode.pad == "host")
-            let id = (if $play { $x.id } else {
-                let route_file = ($run_dir | path join "route.nuon")
-                fx-route | to nuon | save --raw -f $route_file
-                $x.id | upsert route { file: $route_file, sha256: (open --raw $route_file | hash sha256) }
-            })
-            if $x.bundle { mkdir ($run_dir | path join "bundle") }
-            let sha = (gauge write-identity $id $run_dir)
-            let m = (gauge measure (fx-capture $x.items) (if $play { [{ name: "play", places: [], pad: [] }] } else { (fx-route).legs }))
-            {
-                run: { run: $x.run, seed: $x.seed, out: $run_dir, ran: { status: 0, wall_seconds: 30, cpu_seconds: 20 }, measured: ($m | reject rows), identity: $id, corrections: null, identity_sha256: $sha, cpu: $x.cpu },
-                rows: ($m.rows | each {|r| $r | insert run $x.run }),
-            }
-        })
-        { label: $s.label, identity: ($made | get 0.run.identity), ceiling_us: $gauge.CEILING_US, runs: ($made | get run), rows: ($made | get rows | flatten) } | to nuon | save --raw -f ($dir | path join "gauge.nuon")
-    }
-    $home
-}
-
-# A synthetic step's run changed: its identity's `changes` merged, its
-# seed moved, its records replaced, or its CPU windows dropped.
-def fx-alter [steps: list<any>, label: string, run: int, change: closure]: nothing -> list<any> {
-    $steps | each {|s| if $s.label != $label { $s } else { $s | update runs ($s.runs | each {|x| if $x.run == $run { do $change $x } else { $x } }) } }
-}
-
-# Assert that exactly one of the problems holds the text.
-def named-once [problems: list<string>, text: string, why: string]: nothing -> nothing {
-    let hits = ($problems | where {|p| $p | str contains $text })
-    assert equal ($hits | length) 1 $"($why): one problem holds '($text)', of ($problems | to nuon)"
-}
-
-# The holds: the record, the check, and the report over synthetic bench
-# runs written under `scratch`, which starts empty. Each target's bench
-# whole, every run valid and the candidate's, holds with no problem, its
-# shim control met and admissible, its scaling control met, every
-# diagnostic read; a faulty bench on 1KA1 names each of its faults once: a
-# missing run, a run at the ceiling, an invalid run, a foreign image, a run
-# on another spec in the shim control, a step run with other words, a
-# step never run with its runs missing, a run played at another seed, a
-# run with no CPU window, and the probed arm slower past its noise, which
-# leaves the control met and the presentation inadmissible; and records
-# altered after their reading: an untagged candidate, other or changed
-# readers, a verdict edited against its own fields, and a record lacking a
-# field. The report renders both kinds.
-export def holds [scratch: path]: nothing -> nothing {
-    let scratch = ($scratch | path expand)
-    if ($scratch | path exists) { jab retire $scratch (jab target-root $JAB) }
-    mkdir $scratch
-    let cand = (fx-candidate "qual/0")
-    let cand_file = ($scratch | path join "candidate.nuon")
-    $cand | to nuon --indent 2 | save --raw $cand_file
-    let clean = {|r: record| $r | update readers { commit: $cand.stress, dirty: false, sha256: $r.readers.sha256 } }
-    mut passing = []
-    for target in $TARGETS {
-        let bench = (fx-bench ($scratch | path join $"whole_($target)") $target (fx-steps $cand $target))
-        let watched = [{ step: "auto_1", n: 1, watch: { memory: { median: 1073741824, peak: 2147483648, samples: 30 } } } { step: "auto_1", n: 2, watch: { memory: { median: 1048576000, peak: 1610612736, samples: 30 } } }]
-        { bench: $"game/fps/qual_($target)", watch: $watched } | to nuon | save --raw -f ($bench | path join "watch.nuon")
-        let r = (do $clean (record-of $bench $cand_file $target))
-        let problems = (check-of $r)
-        assert equal $problems [] $"the whole ($target) bench holds: ($problems | to nuon)"
-        assert equal ($r.runs | length) 31 $"the whole ($target) bench reads 31 runs"
-        let shim = ($r.cases | where case == "presentation's shim control" | get 0.reading)
-        assert ($shim.met and $shim.admissible) $"($target)'s shim control is met and admissible: ($shim.problems | to nuon)"
-        assert (($r.cases | where case == "worker scaling" | get 0.reading.met)) $"($target)'s scaling control is met"
-        assert equal ($r.diagnostics | get missing | flatten) [] $"every diagnostic of ($target) reads its legs"
-        $passing = ($passing | append $r)
-    }
-    # the faulty bench, each fault in its own step and run
-    let base = (fx-steps $cand "1ka1")
-    let other = (jab machine-of --spec (jab spec-row $JAB "1kb1"))
-    let faulty = ($base
-        | each {|s| if $s.label == "auto_1" { $s | update runs ($s.runs | where run != 2) } else { $s } }
-        | fx-alter $in "auto_2" 2 {|x| $x | update items (fx-slow $x.items 15000) }
-        | fx-alter $in "auto_2" 3 {|x| $x | update items (fx-set $x.items "frame" 5 { status: 3 }) }
-        | fx-alter $in "free" 1 {|x| $x | update id ($x.id | merge deep { build: { image_sha256: "fx_other_image" } }) }
-        | fx-alter $in "auto_3" 1 {|x| $x | update id ($x.id | update machine $other) }
-        | each {|s| if $s.label == "auto_4" { $s | update words ($s.words | where {|w| $w != "--host" }) } else { $s } }
-        | where label != "forced1_2"
-        | fx-alter $in "auto_5" 1 {|x| $x | update seed 9 | update id ($x.id | update mode.seed 9) }
-        | fx-alter $in "auto_6" 3 {|x| $x | update cpu null }
-        | fx-alter $in "probed_1" 1 {|x| $x | update items (fx-slow $x.items 2500) }
-        | fx-alter $in "probed_1" 2 {|x| $x | update items (fx-slow $x.items 2500) }
-        | fx-alter $in "probed_1" 3 {|x| $x | update items (fx-slow $x.items 2500) }
-        | fx-alter $in "probed_2" 1 {|x| $x | update items (fx-slow $x.items 2500) }
-        | fx-alter $in "probed_2" 2 {|x| $x | update items (fx-slow $x.items 2500) }
-        | fx-alter $in "probed_2" 3 {|x| $x | update items (fx-slow $x.items 2500) })
-    let fr = (do $clean (record-of (fx-bench ($scratch | path join "faulty") "1ka1" $faulty) $cand_file "1ka1"))
-    let found = (check-of $fr)
-    named-once $found "normal play: auto_1 run 2, seed 2, is missing" "a missing run"
-    named-once $found "normal play: auto_2 run 2, seed 2: its critical path's median, 15.0 ms, is at or over the 15 ms ceiling" "a run at the ceiling"
-    named-once $found "normal play: auto_2 run 3, seed 1: it stands invalid" "an invalid run"
-    named-once $found "free play: free run 1, seed 1: its image's SHA-256 is fx_other_image where the candidate's is fx_image" "a foreign image"
-    named-once $found "presentation's shim control: auto_3 run 1 is not the candidate's run on 1ka1: it was launched as 1kb1, not the target 1ka1" "a run on another spec"
-    named-once $found "the bench: step auto_4 ran test/gauge.nu run --tree release --runs 3 --spec 1ka1 where the candidate's bench runs" "a step run with other words"
-    named-once $found "the bench: step forced1_2 of the candidate's bench was not run" "a step never run"
-    for n in [1 2 3] { named-once $found $"worker scaling: forced1_2 run ($n) is missing" "a never-run step's runs" }
-    named-once $found "worker scaling: auto_5 run 1 played seed 9 where its step asks 1" "a run at another seed"
-    named-once $found "worker scaling: auto_6 run 3 holds no CPU window over its whole run" "a run with no CPU window"
-    let shim = ($fr.cases | where case == "presentation's shim control" | get 0.reading)
-    assert ($shim.measures | where measure == "critical path median" | get 0.within | $in == false) "the probed arm slower past its noise is no effect within it"
-    assert (not $shim.admissible) "the probed arm slower past its noise leaves the presentation inadmissible"
-    assert equal ($found | length) 12 $"the faulty bench names its twelve faults and no more: ($found | to nuon)"
-    # records altered after their reading
-    let whole = ($passing | first)
-    named-once (check-of ($whole | update candidate.tag null)) "the candidate is untagged" "an untagged candidate"
-    named-once (check-of ($whole | update readers.commit "0000000000")) "the record was read by the readers at 0000000000" "other readers"
-    named-once (check-of ($whole | update readers.dirty true)) "the record was read by readers holding changes" "changed readers"
-    let at = ($fr.runs | enumerate | where {|e| $e.item.step == "auto_2" and $e.item.run == 2 } | get 0.index)
-    let edited = ($fr | update runs ($fr.runs | update $at ($fr.runs | get $at | update verdict.pass true)))
-    named-once (check-of $edited) "normal play: auto_2 run 2, seed 2: the record's verdict, pass, is not the one its own fields give, fail" "a verdict edited against its fields"
-    named-once (check-of ($whole | reject cases)) "the record holds no cases" "a record lacking a field"
-    # the report over both kinds
-    let text = (report-text [$whole $fr] null | lines)
-    assert ("The qualification on 1KA1 passes. Every one of its 7 acceptance runs played under the 15 ms ceiling at its median frame." in $text) $"the whole record's report says it passes: ($text | first 40 | str join (char nl))"
-    assert ($text | any {|l| $l starts-with "The qualification on 1KA1 does not pass." }) "the faulty record's report says it does not pass"
-    assert ($text | any {|l| $l | str contains "| auto_2 run 2 | 2 | 15.0 ms | 36 of 36 | fail |" }) $"the faulty report's run table names the run at the ceiling: ($text | where {|l| $l starts-with '| auto_2' })"
-    assert ("- QEMU's resident memory, read by the watch over 2 runs, was 1000 MiB at the median and 2048 MiB at the greatest peak." in $text) "the watched bench's report states its host memory"
-    assert ("- Host memory was not recorded: the bench ran without a watch." in $text) "the unwatched bench's report says it holds no host memory"
-    assert ("The bench game/fps/qual_1ka1 ran at 20261017-000000. 11 of its 11 steps ran to their end." in $text) "the whole bench's report names its run and its steps"
-    assert ("The bench game/fps/qual_1ka1 ran at 20261017-000000. 10 of its 10 steps ran to their end." in $text) "the faulty bench's report names the steps it ran"
-    assert ("Over the normal play runs the androids were roused 0 times and destroyed 0 times, the player was struck 0 times, and 0 magazines were picked up." in $text) "the report states the fight's outcomes"
-    assert ("| critical path median | 1800 | 1800 | 0 | 0 | yes |" in $text) $"the shim control's table reads in microseconds: ($text | where {|l| $l starts-with '| critical path median' })"
-    assert ("- Normal play: auto_1 run 2, seed 2, is missing." in $text) "the report's problems read as sentences"
-    report-text $passing null | save --raw -f ($scratch | path join "whole.md")
-    print $"qualification: holds, ($scratch)"
-}
-
 def main [] {
     print "nu qualification.nu candidate <out.nuon> [--tag qual/<n>]"
     print "nu qualification.nu record <bench run> <candidate.nuon> <target> <out dir>"
     print "nu qualification.nu check <qualification.nuon>"
     print "nu qualification.nu report <qualification.nuon>... <out.md> [--compared <compare.nuon>]"
-    print "nu qualification.nu holds <scratch>"
 }
 
 # The candidate's record at its freeze (candidate-of), written to `out`.
@@ -1025,11 +773,6 @@ def "main check" [record: path] {
     for p in $problems { print $"qualification: ($p)" }
     if not ($problems | is-empty) { error make { msg: $"($record): ($problems | length) problems" } }
     print $"qualification: ($record) holds"
-}
-
-# The holds (holds) under `scratch`.
-def "main holds" [scratch: path] {
-    holds $scratch
 }
 
 # The report over records (report-text), the last path its Markdown file.

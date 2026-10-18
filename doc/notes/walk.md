@@ -13,7 +13,6 @@ The recipes are in `kernel/just/walk.just` and run under the real nu:
 | `just -f kernel/just/walk.just cadence <probe dir> <out.nuon>` | Reads a probed run: its bundle is checked first, then the program's records inside it |
 | `just -f kernel/just/walk.just guest <run dir> <out.nuon>` | Reads a run that was not probed, from its own `api.out` and `identity.nuon` |
 | `just -f kernel/just/walk.just replay-of <run dir> <stream>` | Writes a replay stream from a run's records, for a replay build to repeat its workload |
-| `just -f kernel/just/walk.just cadence-holds <script> <scratch>` | Runs the reader's own fixtures, the script named so that a mutant's copy can run in its place |
 | `just -f kernel/just/walk.just cadence-launches <jab checkout> <scratch>` | Builds walk's test variants, runs each through walk's wrapper, and holds what each run must show |
 
 ## walk's own launches

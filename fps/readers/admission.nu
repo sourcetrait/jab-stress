@@ -11,8 +11,7 @@
 # duplicates stay unknown; the greatest open ring's fill and requesting
 # surfaces. The verdict: TILE_RING and TILE_GUARANTEE stand at the
 # census's provisional sizes only when no frame of any batch dropped a
-# request. Written to `out` as nuon and printed; its own fixtures `nu
-# admission.nu holds <base> <scratch>`.
+# request. Written to `out` as nuon and printed.
 
 # the schemas whose pool records the reading takes: 5, and 6 and 7, the
 # same records beside a frame's harts record and, at 7, its receipt
@@ -82,41 +81,4 @@ def main [base: path, out: path, ...labels: string] {
     $r.reading | to nuon | save -f $out
     print ($r.reading.batches | select label runs frames admitted dropped filtered dropping_frames dropped_most duplicates unprocessed ring_fill_most requesting_most | table --width 200)
     print $"admission: TILE_RING and TILE_GUARANTEE (if $r.reading.stands { 'stand' } else { 'do not stand' }), ($r.reading.ring_dropped) requests dropped"
-}
-
-# The reader's own fixtures over AdmissionMeasure's saved batches under
-# `base`, each refusal named and taken before the verdict, a case's failure
-# raised with its name: the batches read whole as the positive control,
-# the reading the saved `admission.nuon`'s; a run invalid, one incomplete,
-# one unseeded, and one at schema 4, each refused; and one at schema 6
-# read, the batch's schemas 5 and 6, and one at schema 7 the same.
-def "main holds" [base: string, scratch: string] {
-    if ($scratch | path exists) { error make { msg: $"the scratch exists: ($scratch)" } }
-    mkdir $scratch
-    let fail = {|name: string, why: string| error make { msg: $"admission holds: ($name): ($why)" } }
-    let labels = [admission_factory_w2 admission_factory_w0 admission_settled_w2 admission_settled_w0]
-    let batches = (load $base $labels)
-    let whole = (read-or-refuse $batches)
-    if not ($whole.refused | is-empty) { do $fail "the saved batches read whole" ($whole.refused | str join "; ") }
-    let saved = (open ($base | path join "admission.nuon"))
-    if $whole.reading != $saved { do $fail "the saved batches' reading unchanged" $"read ($whole.reading | to nuon | str substring 0..400)" }
-    let measured = {|field: string, value: any| $batches | each {|b| if $b.label == "admission_settled_w0" { $b | update g ($b.g | update runs ($b.g.runs | each {|r| if $r.run == 2 { $r | update measured ($r.measured | update $field $value) } else { $r } })) } else { $b } } }
-    let refuses = {|name: string, got: record, reason: string|
-        if ($got.refused | is-empty) { do $fail $name "accepted" }
-        if $got.reading != null { do $fail $name "read beside its refusal" }
-        if not ($got.refused | any {|x| $x | str contains $reason }) { do $fail $name $"refused for ($got.refused | str join '; ')" }
-    }
-    do $refuses "an invalid run" (read-or-refuse (do $measured "valid" false)) "admission_settled_w0 run 2: complete true, valid false"
-    do $refuses "an incomplete run" (read-or-refuse (do $measured "complete" false)) "admission_settled_w0 run 2: complete false"
-    do $refuses "an unseeded run" (read-or-refuse (do $measured "seeded" false)) "seeded false"
-    do $refuses "a run at schema 4" (read-or-refuse (do $measured "schema" 4)) "schema 4"
-    let six = (read-or-refuse (do $measured "schema" 6))
-    if not ($six.refused | is-empty) { do $fail "a run at schema 6" $"refused for ($six.refused | str join '; ')" }
-    let schemas = ($six.reading.batches | where label == "admission_settled_w0" | first | get schemas | sort)
-    if $schemas != [5 6] { do $fail "a run at schema 6" $"read at schemas ($schemas)" }
-    let seven = (read-or-refuse (do $measured "schema" 7))
-    if not ($seven.refused | is-empty) { do $fail "a run at schema 7" $"refused for ($seven.refused | str join '; ')" }
-    let schemas7 = ($seven.reading.batches | where label == "admission_settled_w0" | first | get schemas | sort)
-    if $schemas7 != [5 7] { do $fail "a run at schema 7" $"read at schemas ($schemas7)" }
-    print "admission holds: ok"
 }

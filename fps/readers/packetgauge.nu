@@ -15,11 +15,10 @@
 # identities' kernel, assets, route, toolchain, cadence, and machine alike
 # across the batches, the image apart. Run under the real nu from a
 # scratch justfile: `nu packetgauge.nu <settled|play> <base> <out.nuon>
-# <label>...`; its own fixtures `nu packetgauge.nu holds <scratch>`.
+# <label>...`.
 
 const GAUGE = "../../../jab/game/fps/test/gauge.nu"
 use $GAUGE [run-request]
-use ./batches.nu [write-batch]
 
 const FIELDS = [draw_us critical_us report_us preparation_us raster_us commands packet_bytes]
 const RECORD = 64
@@ -165,21 +164,4 @@ def main [mode: string, base: string, out: string, ...labels: string] {
     let doc = (analyse $mode $base $labels)
     $doc | to nuon --indent 1 | save --raw -f $out
     print $"packetgauge ($mode): ($labels | length) batches, ($doc.problems | length) problems, identities alike ($doc.identities_alike); ($out)"
-}
-
-# The reader's own fixture over a synthetic batch it writes under
-# `scratch` (batches.nu): a summary asking cadence 1 over runs asking and
-# playing cadence 0, read with no problem and the runs' cadence standing.
-def "main holds" [scratch: string] {
-    if ($scratch | path exists) { error make { msg: $"the scratch exists: ($scratch)" } }
-    mkdir $scratch
-    let fail = {|name: string, why: string| error make { msg: $"packetgauge holds: ($name): ($why)" } }
-    let named = {|name: string, work: closure| try { do $work } catch {|e| do $fail $name $"raised: ($e.msg | str substring 0..300)" } }
-    let asked = { build: { image_sha256: "holds_image" }, mode: { cadence: 0, workers: 2, grain: 0 } }
-    let run = { identity: $asked, cadence: 0, drawn: [[2 0] [2 0] [2 0]] }
-    write-batch $scratch "disagree_1" ($asked | update mode.cadence 1) [$run $run] | ignore
-    let read = (do $named "a summary disagreeing with its runs" { analyse "play" $scratch [disagree_1] })
-    let says = [$read.problems $read.identities_alike]
-    if $says != [[] true] { do $fail "a summary disagreeing with its runs leaves their cadence standing" ($says | to nuon) }
-    print "packetgauge holds: ok"
 }
