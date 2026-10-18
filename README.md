@@ -16,7 +16,6 @@ Have questions, concerns, ideas, or requests?
 Upvote an existing discussion or create one if not found.
 
 ### AI
-
 LLM generation is heavily used.
 
 ### Contributors
