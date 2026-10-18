@@ -13,6 +13,7 @@ note is a file under `doc/notes/`; this file is their index.
 | [JointTiming's selector](notes/timing.md) | `kernel/timing/` and `kernel/just/timing.just`: the selector that decides JointTiming's comparison, its readings, and its decision |
 | [Kernel candidates](notes/candidates.md) | `kernel/export/` and `kernel/just/export.just`: kernel and example changes waiting under a build symbol, how their cases run, and how a measured kernel is exported with its provenance |
 | [Fresh builds](notes/freshbuild.md) | `nu/mod/nuance/freshbuild/`: a fresh build of every tuple Jab's source builds, each artifact's SHA-256 recorded for a later build to be held to |
+| [The import-map checker](notes/importmap.md) | `nu/mod/nuance/importmap/`: Jab's and the workbench's nushell trees held to the migration contract while their code moves into modules |
 
 ## Layout
 

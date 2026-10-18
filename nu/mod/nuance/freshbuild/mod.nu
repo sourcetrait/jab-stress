@@ -52,7 +52,7 @@ def build-at [jab: path, cache: path, program: string, tuple: list<string>]: [
     {exit: $r.exit_code, stderr: ($r.stderr | lines | last 8 | str join "\n")}
 }
 
-# A program's disk built as a run builds it, `genromfs` over its assets, or null.
+# A program's disk as a run builds it, `genromfs` over its assets, or null.
 def disk-of [jab: path, target: path, program: string, tree: string]: nothing -> oneof<string, nothing> {
     let manifest = (open ($jab | path join $program 'program.jab.toml'))
     let declared = ($manifest | get -o assets | default '')
@@ -165,7 +165,9 @@ export def manifest [jab: path, out: path]: nothing -> record<commit: string, bu
     if ($twice | is-not-empty) { error make {msg: $"rows taken twice: ($twice | str join '; ')"} }
     let disks = ($rows | where role == 'romfs_disk' | group-by {|r| $"($r.program) ($r.profile)" })
     let unsteady = ($disks | transpose key rows | where {|g| ($g.rows | get sha256 | uniq | length) > 1 } | get key)
-    if ($unsteady | is-not-empty) { error make {msg: $"disks of one tree built to two digests: ($unsteady | str join '; ')"} }
+    if ($unsteady | is-not-empty) {
+        error make {msg: $"disks of one tree built to two digests: ($unsteady | str join '; ')"}
+    }
     {commit: $commit, builds: $builds, rows: $rows} | to nuon --indent 1 | save ($out | path join 'manifest.nuon')
     {commit: $commit, builds: ($builds | length), rows: ($rows | length)}
 }
