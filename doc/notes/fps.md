@@ -39,10 +39,11 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     reader over a serial log (`reader-holds`).
   - `qualification.just` runs the qualification's reader,
     `fps/readers/qualification.nu`: `candidate out [tag]` builds jab's
-    release tree and writes the candidate's record, both checkouts clean
-    and the tag, when given, on both HEADs; `record bench candidate
-    target out` writes a target's `qualification.nuon` from a bench run
-    of `game/fps/bench/qual_<target>.nuon`; `check record` prints every
+    release tree and writes the candidate's record, jab's checkout clean
+    and the tag, when given, on its HEAD, this repository's changes and
+    tag recorded; `record bench candidate target out` writes a target's
+    `qualification.nuon` from a bench run of
+    `game/fps/bench/qual_<target>.nuon`; `check record` prints every
     problem the check names and fails on any; `report +paths` writes the
     report from records, the last path its file, `--compared <file>`
     rendering a `gauge.nu compare` output as the comparison with the
@@ -129,7 +130,8 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   each target's steps by label; the diagnostics another, each the route
   legs and the summary fields it reads. The bench is held to the
   candidate's bench file read from jab's git at the candidate's commit,
-  so a record can be made from a bench run copied off another host.
+  so a record can be made from a bench run copied off another host. The
+  readers that wrote a record are its provenance, never a refusal.
 - `observer.nu` is ProbeRuns' observer control as a function: two arms of
   runs, each a name and its whole-run summary, every measure's arm
   statistics, effect, noise, and whether it is within it. ProbeRuns'

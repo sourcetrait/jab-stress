@@ -10,7 +10,7 @@ set shell := ["nu", "-c"]
 readers := justfile_directory() / "../readers"
 
 # the candidate's record at its freeze, the release tree built first; tag
-# names the tag on both checkouts' HEADs, none unless given
+# names the tag on jab's HEAD, none unless given
 candidate out tag="":
     nu {{readers}}/qualification.nu candidate {{out}} --tag '{{tag}}'
 

@@ -97,9 +97,11 @@ def short [commit: any]: nothing -> string {
 }
 
 # The candidate at its freeze (Qualification.md's freeze): the release
-# tree built at jab's HEAD (`jab.nu build`), then jab's commit and this
-# repository's, each its checkout's HEAD with no changes, `tag` naming both
-# when given and refused unless it names each HEAD; the release fps image,
+# tree built at jab's HEAD (`jab.nu build`), then jab's commit, its
+# checkout's HEAD with no changes, `tag` when given refused unless it
+# names that HEAD; this repository's commit, its checkout's HEAD,
+# recorded with whether the checkout holds changes and the commit `tag`
+# names there, null for none, and never refused; the release fps image,
 # its ELF, and the kernel built with it, each by its SHA-256, the image's
 # flags free of DEBUG; the toolchain those flags name, each tool the file
 # its prefix resolves to with that file's SHA-256 (gauge.nu's
@@ -109,6 +111,12 @@ export def candidate-of [tag: string]: nothing -> record {
     let repos = [[repo, dir]; [jab $JAB] [stress $STRESS]]
     let heads = ($repos | each {|r|
         let h = (head-of $r.dir)
+        # this repository's changes and tag recorded, never refused
+        if $r.repo == "stress" {
+            let named = (if $tag == "" { null } else { ^git -C $r.dir rev-parse $"($tag)^{commit}" | complete })
+            let tagged = (if $named == null or $named.exit_code != 0 { null } else { $named.stdout | str trim })
+            return { repo: $r.repo, commit: $h.commit, dirty: $h.dirty, tagged: $tagged }
+        }
         if $h.dirty { error make { msg: $"($r.dir) holds changes; a candidate is a commit with every file of it committed" } }
         if $tag != "" {
             let named = (^git -C $r.dir rev-parse $"($tag)^{commit}" | complete)
@@ -133,6 +141,7 @@ export def candidate-of [tag: string]: nothing -> record {
         written: (date now | format date "%Y-%m-%dT%H:%M:%S%z"),
         jab: ($heads | where repo == jab | get 0.commit),
         stress: ($heads | where repo == stress | get 0.commit),
+        stress_checkout: ($heads | where repo == stress | get 0 | select dirty tagged),
         image_sha256: (sha-of $image),
         elf_sha256: (sha-of $elf),
         kernel_sha256: (sha-of $kernel),
@@ -500,12 +509,12 @@ def schema-problems [r: any]: nothing -> list<string> {
 }
 
 # A record held to the schema and the acceptance: its schema
-# (schema-problems); the candidate tagged; the readers the candidate's,
-# with no changes; the bench the candidate's bench file, every step done;
-# every acceptance run present, valid, on the target's named spec, its
-# identity the candidate's, and passing, its verdict the one its own
-# fields give (verdict-of, agreement-of); every control met; every
-# diagnostic's legs read. Every problem named, none for a record that
+# (schema-problems); the candidate tagged; the bench the candidate's bench
+# file, every step done; every acceptance run present, valid, on the
+# target's named spec, its identity the candidate's, and passing, its
+# verdict the one its own fields give (verdict-of, agreement-of); every
+# control met; every diagnostic's legs read. The readers that wrote it
+# are its provenance alone. Every problem named, none for a record that
 # holds.
 export def check-of [r: any]: nothing -> list<string> {
     let schema = (schema-problems $r)
@@ -514,10 +523,6 @@ export def check-of [r: any]: nothing -> list<string> {
     let spec = (try { jab spec-row $JAB $r.target } catch { null })
     if $r.target not-in $TARGETS or $spec == null { return [$"the record's target, ($r.target), is no target of the qualification's matrix"] }
     let tag = (if $cand.tag == null { ["the candidate is untagged, so no qualification stands on it"] } else { [] })
-    let readers = ([
-        (if $r.readers.commit != $cand.stress { $"the record was read by the readers at (short $r.readers.commit) where the candidate's are at (short $cand.stress)" })
-        (if $r.readers.dirty { "the record was read by readers holding changes" })
-    ] | compact)
     let bench = ($r.bench.problems | each {|p| $"the bench: ($p)" })
     let acceptance = ($r.cases | where kind == acceptance | each {|c|
         let missing = ($c.missing | each {|m| $"($c.case): ($m.step) run ($m.run), seed ($m.seed), is missing" })
@@ -548,7 +553,7 @@ export def check-of [r: any]: nothing -> list<string> {
         let unread = (if ($d.readings | is-empty) { [$"($d.case): no normal play route run to read"] } else { [] })
         $unread ++ ($d.missing | each {|m| $"($d.case): ($m)" })
     } | flatten)
-    $tag ++ $readers ++ $bench ++ $acceptance ++ $controls ++ $presented ++ $diagnostics
+    $tag ++ $bench ++ $acceptance ++ $controls ++ $presented ++ $diagnostics
 }
 
 # A list's median by nearest rank, the gauge's statistics' rule; null for
