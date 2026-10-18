@@ -1,6 +1,6 @@
 SourceTrait Jab Stress
 ================================================================================
-[![License Badge]][License]
+[![License Badge]][License] [![Rein Badge]][AI]
 
 Assorted in-development testing for Jab and its components.
 
@@ -15,6 +15,10 @@ Let us know! Upvote an existing issue or create one if not found.
 Have questions, concerns, ideas, or requests?  
 Upvote an existing discussion or create one if not found.
 
+## AI
+
+LLM generation is heavily used.
+
 ### Contributors
 Contributors, please review [SOURCETRAIT.md](./SOURCETRAIT.md).  
 
@@ -24,7 +28,6 @@ By committing to this repository you
 to [Asmov LLC](https://asmov.software)
 all right, title, and interest worldwide in all copyright covering your
 contribution.
-
 
 License (AGPL3)
 --------------------------------------------------------------------------------
@@ -50,3 +53,5 @@ If not, see https://www.gnu.org/licenses/.
 [Docs Badge]: https://img.shields.io/badge/docs-blue
 [License]: #License-AGPL3
 [License Badge]: https://img.shields.io/badge/license-AGPL3-blue.svg
+[AI]: #AI
+[Rein Badge]: https://img.shields.io/badge/rein-AI-blue.svg
