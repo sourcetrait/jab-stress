@@ -37,7 +37,7 @@ def dir-of [file: path, r: record]: nothing -> any {
     gauge identity dirs $file $r | where {|d| ($d | path type) == "dir" } | get -o 0
 }
 
-# A step's words: the definition's at the candidate's commit, else the bench run's own
+# A step's words: the definition's at the candidate's commit, else the run's own
 def step-words [label: string, listed: record, definition: any]: nothing -> list<string> {
     let defined = ($definition | get -o steps | default [] | where label == $label | get -o 0.run)
     if $defined != null { $defined } else { $listed.steps | where label == $label | get -o 0.run | default [] }
@@ -194,7 +194,7 @@ def watch-of [bench: path]: nothing -> any {
     if ($file | path exists) { open $file } else { null }
 }
 
-# A packaged bench's freeze: the candidate holding its package's ELF, the manifest held to the candidate
+# A packaged bench's freeze: the candidate holding its package's ELF
 def frozen-of [bench: path, cand: record, candidate: path]: nothing -> record<cand: record, manifest: any, problems: list<string>> {
     let file = ($bench | path join "preflight" "package.nuon")
     if not ($file | path exists) { return { cand: $cand, manifest: null, problems: [$"the packaged bench carries no package manifest at ($file), so the freeze's ELF is unknown"] } }

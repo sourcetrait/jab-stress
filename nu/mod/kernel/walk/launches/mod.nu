@@ -182,7 +182,7 @@ def recorded [out: path, label: string, --replay: path]: nothing -> record {
     { identity: $identity, bytes: $bytes, reading: $reading, stream: (walk stream-of $bytes --test) }
 }
 
-# A landed run's recorded cases read again by today's reader, each held as its launch held it
+# A landed run's cases read again by today's reader, each held as it was held
 export def reread [tree: path, out: path] {
     let root = ($tree | path expand)
     let runs = ($root | path join "runs")

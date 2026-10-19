@@ -50,7 +50,7 @@ def "main runner work" [harness: string, given: string] {
     runner work $harness $given
 }
 
-# A run's directory landed in the data checkout, retention's archive kept, checked.
+# A run's directory landed in the data checkout, its archive kept, checked
 def "main runner land" [dir: path, subject: string, set: string, stamp: string, manifest: path, --data: string = "", --source: string = ""] {
     landing land $dir $subject $set $stamp $manifest --data $data --source $source
 }

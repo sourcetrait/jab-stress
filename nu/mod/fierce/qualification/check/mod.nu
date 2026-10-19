@@ -43,7 +43,7 @@ def reopened [bench: path, inventory: string]: nothing -> record<checked: int, p
     { checked: ($read | length), problems: ($problems ++ $absent) }
 }
 
-# The bench laid out again in `work`: its listing beside every step's report made again
+# The bench laid out again in `work`, every step's report made again
 def rebuilt [bench: path, work: path]: nothing -> nothing {
     mkdir $work
     for f in ["bench.nuon" "watch.nuon"] {
@@ -64,7 +64,7 @@ def rebuilt [bench: path, work: path]: nothing -> nothing {
     }
 }
 
-# The candidate's record the check reads: the file given, held to the record's SHA-256
+# The candidate's record the check reads: the file given, held to its SHA-256
 def candidate-file [r: record, given: string, work: path]: nothing -> record<file: string, problems: list<string>> {
     if $given != "" {
         let sha = (open --raw $given | hash sha256)
@@ -76,7 +76,7 @@ def candidate-file [r: record, given: string, work: path]: nothing -> record<fil
     { file: $file, problems: [$"the candidate's record was not reopened: the record's own copy of it stands in"] }
 }
 
-# Where the record's stored answers differ from those derived again, each item with both
+# Where the record's stored answers differ from those derived again, both kept
 def history-of [stored: record, fresh: record]: nothing -> list<any> {
     let runs = ($fresh.runs | each {|f|
         let s = ($stored.runs | where {|x| $x.step == $f.step and $x.run == $f.run } | get -o 0)
@@ -120,7 +120,7 @@ export def check-of [r: any, bench: path, work: path, --inventory: string = "", 
     { problems: $problems, ledger: $ledger, verdicts: $verdicts, history: (history-of $r $fresh), reopened: { inventory: (if $inventory == "" { null } else { $inventory | path expand }), checked: $held.checked, problems: $held.problems }, record: $fresh }
 }
 
-# A record checked: derived again from its bench's kept inputs into `out`, its verdicts printed
+# A record derived again from its bench's kept inputs into `out`, verdicts printed
 export def main [record: path, --bench: string = "", --inventory: string = "", --candidate: string = "", --out: string = ""] {
     let r = (open $record)
     let out = (if $out == "" { $record | path expand | path dirname | path join "check" } else { $out | path expand })

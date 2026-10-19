@@ -25,7 +25,7 @@ def "main report" [...paths: path, --compared: string = ""] {
 
 # The candidate's host package for a target, one tar from its export
 def "main package" [candidate: path, export: path, target: string, out: path, --stage: string = ""] {
-    qualification package $candidate $export $target $out --stage $stage | ignore
+    qualification package $candidate $export $target $out --stage $stage
 }
 
 def main [] { help main }

@@ -129,7 +129,7 @@ def storage-problems [dir: path, storage: list<any>, inventory: list<any>]: noth
     $twice ++ $kinds ++ $objects ++ $shapes ++ $strays ++ $held ++ $gone ++ $misheld ++ $members ++ $unnamed
 }
 
-# The repository holding a run: the one given, else the run's own when it sits in runs/
+# The repository holding a run: the one given, else the one its runs/ sits in
 def root-of [dir: path, root: string]: nothing -> any {
     if $root != "" { return ($root | path expand) }
     let up = ($dir | path dirname | path dirname | path dirname)
@@ -240,7 +240,7 @@ export def restored [dir: path]: nothing -> list<string> {
     $laid ++ $extra ++ $sums ++ $rows ++ $absent ++ $unrestored
 }
 
-# A reader's required inputs a restoration lacks, each named; none where all are there
+# A reader's required inputs a restoration lacks, each named
 export def required [dir: path, reader: string]: nothing -> list<string> {
     let table = (open --raw $CONSUMERS | decode utf-8 | from nuon)
     let shape = (nutype problems $table (open --raw $CONSUMER_TYPE | decode utf-8) $CONSUMER_TYPE)

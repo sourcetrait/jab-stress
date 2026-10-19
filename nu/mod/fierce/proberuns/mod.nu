@@ -146,7 +146,7 @@ export def run-reading [dir: path, --eps: int = 10000]: nothing -> record {
     $after | merge { stage: null, refusals: [], renders: $read.renders, load: $read.load, frames: $read.frames }
 }
 
-# Runs, each a label, a run, and its directory, read and pooled per cadence and leg
+# Runs, each a label, a run, and a directory, read and pooled by cadence and leg
 export def analyse-runs [runs: list<any>, --eps: int = 10000]: nothing -> record {
     let runs = ($runs | each {|r|
         if $r.dir == null { { label: $r.label, run: $r.run, dir: null, stage: "run", refusals: ["its run's directory is not beside its report"] } } else {

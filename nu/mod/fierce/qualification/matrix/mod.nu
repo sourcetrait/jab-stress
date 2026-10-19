@@ -65,7 +65,7 @@ export const PACKAGED = {
     image: "fierce/fierce.jab", kernel: "kernel/jab.elf", assets: "asset/render_0", route: "route/route_render_0.nuon",
 }
 
-# The candidate's bench as its package runs it: the preflight first, every run naming the package's inputs, nothing built
+# The candidate's bench as its package runs it: the preflight, packaged inputs
 export def packaged-bench [definition: record, target: string]: nothing -> record {
     let at = {|rel: string| $"{package}/($rel)" }
     let inputs = ["--image" (do $at $PACKAGED.image) "--kernel" (do $at $PACKAGED.kernel) "--assets" (do $at $PACKAGED.assets)]
@@ -211,7 +211,7 @@ export def run-name [r: record]: nothing -> string {
     $"($r.step) run ($r.run)"
 }
 
-# A case's problems from a record: its missing and reseeded runs, its verdicts or reading
+# A case's problems: its missing and reseeded runs, its verdicts or reading
 export def case-problems [r: record, c: record]: nothing -> list<string> {
     let missing = ($c.missing | each {|m| $"($m.step) run ($m.run), seed ($m.seed), is missing" })
     let reseeded = $c.problems

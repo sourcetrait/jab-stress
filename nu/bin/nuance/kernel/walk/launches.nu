@@ -8,7 +8,7 @@ def main [jab_dir: path, scratch: path, --only: string = ""] {
     launches $jab_dir $scratch --only $only
 }
 
-# A landed run's recorded cases read again by today's reader, each held as its launch held it
+# A landed run's cases read again by today's reader, each held as it was held
 def "main reread" [tree: path, out: path] {
     launches reread $tree $out
 }

@@ -67,7 +67,7 @@ def knob-frame [letter: string, value: int]: nothing -> binary {
     [($letter | into binary), 0x[00 00 00], ($value | into binary | bytes at 0..<1), (0..<59 | each {|i| 0x[00] } | bytes collect)] | bytes collect
 }
 
-# A launch's sends under the picture contract, the serial backend's, the snapshots asked after the screen
+# A launch's sends: the picture contract's, the serial W, the X after the screen
 def sends-of [p: record]: nothing -> list<any> {
     let hold = (if ($p | get -o hold | default false) { [{ at: $STAMP_AT, bytes: (knob-frame $CONSOLE_A 1) }] } else { [] })
     [
@@ -180,7 +180,7 @@ export def images [export: path] {
     print $"footprint images: ($images | length) built from ($source.commit), one kernel's code under all"
 }
 
-# A map's copy with its androids dropped but those kept, compiled to a disk in `dir`
+# A map's copy, its androids dropped but those kept, compiled to a disk in `dir`
 def kept-disk [map: string, keep: list<string>, dir: path]: nothing -> record<name: string, tree: string, disk: string, sha256: string> {
     let src = (open ($GAME | path join "content" "map" $"($map).nuon"))
     let unknown = ($keep | where {|k| ($src.entities | where {|e| $e.class == "android" and $e.name == $k } | is-empty) })
@@ -194,7 +194,7 @@ def kept-disk [map: string, keep: list<string>, dir: path]: nothing -> record<na
     { name: $name, tree: $tree, disk: $disk, sha256: (open --raw $disk | hash sha256) }
 }
 
-# A pose's disk for a capture, its map's still copy or a copy keeping its androids, made once in `out` and reused
+# A pose's disk, its map's still copy or one keeping its androids, made once
 def disk-for [map: string, keep: list<string>, out: path]: nothing -> record {
     let dir = ($out | path join (if ($keep | is-empty) { $"disk_($map)" } else { $"disk_($map)_($keep | str join '_')" }))
     let record = ($dir | path join "disk.nuon")
@@ -231,7 +231,7 @@ def row-of [run: record, image: record, p: record]: nothing -> record {
     }
 }
 
-# Each launch whose bake differs from the crate's replication of it, the folds' ground
+# Each launch whose bake differs from the crate's replication, the folds' ground
 def bake-problems [rows: list<any>, reference: record]: nothing -> list<string> {
     let crate = $reference.lumels
     $rows | each {|r|
@@ -300,7 +300,7 @@ export def capture [export: path, poses: path, out: path, --only: string = ""] {
     }
 }
 
-# The clamp's plan over a pose already captured: the threshold, the clamped blocks, the witnesses
+# The clamp's plan over a captured pose: its threshold, clamped blocks, witnesses
 export def clamp-plan [dir: path, surface: int, --owner: string = "owner", --levels: string = "levels"] {
     let c = (open ($dir | path join "pose.nuon"))
     let s = ($c.rows | where label == $levels | first | get binding.state)
@@ -368,7 +368,7 @@ def departure-of [b: record]: nothing -> record<new_off: int, own_sharper: int, 
     { new_off: $b.new_off, own_sharper: $b.own_sharper, holds: ($b.new_off == 0 and $b.own_sharper == 0) }
 }
 
-# A view's population held: nothing unresolved, a block judged, and its kind's own blocks
+# A view's population held: none unresolved, one judged, its kind's own judged
 def population-of [c: record, rows: path]: nothing -> record<counts: record, problems: list<string>> {
     let pop = $c.reference.population
     let unresolved = ($pop.classes | transpose class blocks | where {|x| $x.class not-in [judged sky] and $x.blocks > 0 } | each {|x| $"($x.blocks) blocks unresolved, ($x.class)" })
@@ -388,7 +388,7 @@ def population-of [c: record, rows: path]: nothing -> record<counts: record, pro
     { counts: $pop, problems: ($unresolved ++ $none ++ $actors ++ $clamp) }
 }
 
-# Every captured pose judged against the pose set's inventory, reading.nuon written
+# Every captured pose judged against the pose set, reading.nuon written
 export def read [out: path, poses: path] {
     let inventory = (open $poses | get name)
     let captured = (glob ($out | path join "*" "pose.nuon") | sort | each {|f| open $f })

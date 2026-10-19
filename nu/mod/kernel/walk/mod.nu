@@ -381,7 +381,7 @@ def replay-dts [bytes: binary]: nothing -> record<seed: int, dts: list<int>, fau
     { seed: (le $bytes 16 8), dts: (0..<$n | each {|i| le $bytes ($REPLAY_HEADER + $i * 4) 4 }), faults: [] }
 }
 
-# A replay run held to the stream its identity binds: its SHA-256, seed, frames, and dt
+# A replay run held to the stream its identity binds: SHA-256, seed, frames, dt
 def replay-bound-faults [stream: record, identity: record, replay: any]: nothing -> list<any> {
     let bound = ($identity | get -o replay)
     if $bound == null { return [(fault "the replay" 1 ["a REPLAY build's identity names no replay stream"])] }
@@ -493,7 +493,7 @@ export def guest-side [stream: record, eps: int]: nothing -> record {
     }
 }
 
-# A stream read on the one path both readings take: rules, receipts, binding, build
+# A stream read on the path both readings take: rules, receipts, binding, build
 def guest-of [bytes: binary, identity: record, eps: int, test: bool, replay: any]: nothing -> record<result: record, stream: record> {
     let stream = (stream-of $bytes --test=$test)
     let base = { reader: "walk cadence", mode: "guest", guest_only: true, limits: $LIMITS }
@@ -516,7 +516,7 @@ def guest-of [bytes: binary, identity: record, eps: int, test: bool, replay: any
     { result: $result, stream: $stream }
 }
 
-# A guest-only reading: the stream, the receipts, the binding, the build, the guest
+# A guest-only reading: its stream, receipts, binding, build, and guest
 export def guest-reading [bytes: binary, identity: record, --eps: int = 10000, --test, --replay: path]: nothing -> record {
     (guest-of $bytes $identity $eps $test $replay).result
 }
@@ -610,7 +610,7 @@ def stretches-of [rows: list<any>, timing: bool]: nothing -> list<any> {
     }
 }
 
-# A probed run read paired: its bundle, its stream, the pairing, the renders, the stretches
+# A probed run read paired: bundle, stream, pairing, renders, and stretches
 export def paired-reading [probe: path, --eps: int = 10000, --replay: path]: nothing -> record {
     let dir = ($probe | path expand)
     let bundle = ($dir | path join "bundle")

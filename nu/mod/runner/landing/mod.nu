@@ -72,7 +72,7 @@ def stream-of [path: string]: nothing -> string {
     match ($path | path parse | get extension) { "stdout" => "stdout", "stderr" => "stderr", _ => "file" }
 }
 
-# An original's disposition by the manifest's retention rules, the first that matches
+# An original's disposition by the retention rules, the first that matches
 def disposition-of [path: string, rules: list<any>]: nothing -> record<disposition: string, reason: string> {
     let hit = ($rules | where {|r| $path =~ $r.match } | get -o 0)
     if $hit == null { { disposition: kept, reason: "" } } else { { disposition: $hit.disposition, reason: ($hit | get -o reason | default "") } }
@@ -160,7 +160,7 @@ def landed [dest: path, classed: list<record>, producer: string]: nothing -> rec
     { inventory: $inventory, storage: $storage }
 }
 
-# The inventory, the storage, and the run record written, the run held to its record
+# The inventory, storage, and run record written, the run held to its record
 def recorded [dest: path, rows: record, head: record, root: path]: nothing -> nothing {
     $rows.inventory | to nuon --indent 1 | save -f ($dest | path join inventory.nuon)
     $rows.storage | to nuon --indent 1 | save -f ($dest | path join storage.nuon)
@@ -170,7 +170,7 @@ def recorded [dest: path, rows: record, head: record, root: path]: nothing -> no
     if ($problems | is-not-empty) { error make { msg: $"the landed run breaks its record: ($problems | str join '; ')" } }
 }
 
-# A run's directory landed in the data checkout, retention's archive and hashes, checked
+# A run's directory landed in the data checkout, its archive and hashes, checked
 export def land [dir: path, subject: string, set: string, stamp: string, manifest: path, --data: string = "", --source: string = ""]: nothing -> record {
     let src = ($dir | path expand)
     let root = (if $data == "" { $DATA } else { $data | path expand })
@@ -288,7 +288,7 @@ def carrier-of [path: string, storage: list<record>]: nothing -> any {
     $storage | where {|s| $path in $s.holds } | get -o 0.object
 }
 
-# A landed run of schema 1 moved to schema 2 with its further originals, its receipt
+# A landed run of schema 1 moved to schema 2, its further originals, a receipt
 export def migrate [run: path, manifest: path, scratch: path, --data: string = ""]: nothing -> record {
     let run = ($run | path expand)
     let root = (if $data == "" { $DATA } else { $data | path expand })

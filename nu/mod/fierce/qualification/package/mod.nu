@@ -19,7 +19,7 @@ def held [file: path, sha: string, what: string]: nothing -> string {
     $file
 }
 
-# The candidate's host package for a target: its guest artifacts by role from its export, its bench packaged
+# The candidate's host package for a target, from its export, its bench packaged
 export def main [candidate: path, export: path, target: string, out: path, --stage: string = ""] {
     let cand = (open --raw $candidate | decode utf-8 | from nuon)
     let target = ($target | str lowercase)
