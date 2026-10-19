@@ -16,7 +16,7 @@ tilecensus base out *labels:
     nu {{readers}}/tilecensus.nu {{base}} {{out}} {{labels}}
 
 reader-holds tree serial:
-    use {{tree}}/kit/fierce/test/census_holds.nu [census-reader-holds]; census-reader-holds (open --raw {{serial}} | decode); print "reader-holds: ok"
+    use {{tree}}/kit/fierce/nu/mod/census [census-reader-holds]; census-reader-holds (open --raw {{serial}} | decode); print "reader-holds: ok"
 
 gauge-load:
     use {{jab}}/kit/fierce/nu/mod/gauge; print "loaded"

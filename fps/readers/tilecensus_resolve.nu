@@ -1,5 +1,5 @@
 # TileCensus's run binding (GaugeStanding, CensusRunBinding) in a nu of its
-# own, called by tilecensus.nu: the gauge loaded beside census.nu's parse
+# own, called by tilecensus.nu: the gauge loaded beside census's parse
 # slows every command that takes a closure in proportion to the code loaded
 # (41 s against 5.4 s on one run's log), so the census is read where the gauge
 # is not. For each request, a report and a run number in it: the run

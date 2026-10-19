@@ -4,7 +4,7 @@
 # yaws under the room's light, each drawn by two debug images and held
 # byte for byte, unstamped.
 use ../../../../jab/nu/mod/launch
-use ../../../../jab/kit/fierce/test/pose.nu
+use ../../../../jab/kit/fierce/nu/mod/pose
 
 def level-frame [bright: bool, held: bool, --parity, --gradient]: nothing -> binary {
     let flag = {|on: bool| if $on { 0x[01] } else { 0x[00] } }

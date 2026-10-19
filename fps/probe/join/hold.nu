@@ -8,7 +8,7 @@
 # slowest is about the whole of it, since the held worker's band waits
 # on the other's join, where an unheld round's is about half.
 use ../../../../jab/nu/mod/launch
-use ../../../../jab/kit/fierce/test/pose.nu
+use ../../../../jab/kit/fierce/nu/mod/pose
 use ../../../../jab/kit/fierce/nu/mod/console
 use ../../../../jab/kit/fierce/nu/mod/gauge
 

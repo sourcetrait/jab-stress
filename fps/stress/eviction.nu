@@ -1,6 +1,6 @@
 # The release tier's tile eviction fixtures (TileEviction) on a debug
 # image of jab's fps and the still disk, each a launch read from its
-# records (gauge measure) and its tile dumps' keys (tiles.nu's `keys`, in
+# records (gauge measure) and its tile dumps' keys (the tiles bin's `keys`, in
 # a nu of its own), asserting as the fps campaign specifies them:
 #
 # - cycle, EvictionCycle: the ordinary budget, real lumels, the default
@@ -28,14 +28,14 @@
 # through `stress.just`'s `eviction image out`; every fixture by default.
 use std/assert
 use ../../../jab/nu/mod/launch
-use ../../../jab/kit/fierce/test/pose.nu
+use ../../../jab/kit/fierce/nu/mod/pose
 use ../../../jab/kit/fierce/nu/mod/console
 use ../../../jab/kit/fierce/nu/mod/gauge
 use ../../../jab/kit/fierce/nu/mod/picture
 use ../../../jab/kit/fierce/nu/mod/gauge/stream [CLOCK_SCHEMA]
 use ../../../jab/kit/fierce/nu/mod/picture [STAMP_BITS STAMP_CELL STAMP_ONE STAMP_ZERO]
 
-const TILES = (path self | path dirname | path join .. .. .. jab kit fierce test tiles.nu)
+const TILES = (path self | path dirname | path join .. .. .. jab kit fierce nu bin nuance tiles.nu)
 
 # the cap under which the two views' keys bracket the pool, each within
 # it and their union past it
@@ -45,7 +45,7 @@ const TILE_TEXELS = 4096
 const TILE_ROW_TEXELS = 64
 const TILE_BYTES = 16384
 # the API's records, a dump header's kind and its texel records a tile
-# (tiles.nu's DUMP_KIND and DUMP_RECORDS, twelve texels a record from its
+# (tiles' DUMP_KIND and DUMP_RECORDS, twelve texels a record from its
 # byte 12), and a header's state of a tile in construction
 const RECORD = 64
 const DUMP_KIND = 16
@@ -184,7 +184,7 @@ def jobs-frame [delayed: int, delay_us: int, cancel: bool, fault: int, --hold]: 
     [("J" | into binary), 0x[00 00 00], ($delayed | into binary | bytes at 0..<1), 0x[00 00 00], ($delay_us | into binary | bytes at 0..<4), (if $cancel { 0x[01] } else { 0x[00] }), ($fault | into binary | bytes at 0..<1), (if $hold { 0x[01] } else { 0x[00] }), (0..<49 | each {|i| 0x[00] } | bytes collect)] | bytes collect
 }
 
-# A capture's dumps keyed through tiles.nu in a nu of its own: each
+# A capture's dumps keyed through the tiles bin in a nu of its own: each
 # dump's tiles by their headers and texel hashes, and the problems.
 def dump-keys [api: path, out: path]: nothing -> record<dumps: list<any>, problems: list<any>> {
     let r = (^nu $TILES keys $api $out | complete)

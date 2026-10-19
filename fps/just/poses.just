@@ -6,7 +6,7 @@ set shell := ["nu", "-c"]
 jab := justfile_directory() / "../../../jab"
 
 pose-map map image poses out kernel set="debug":
-    nu {{jab}}/kit/fierce/test/pose.nu {{map}} {{poses}} {{out}} --kernel {{kernel}} --image {{image}} --set {{set}}
+    use {{jab}}/kit/fierce/nu/mod/pose; pose capture {{map}} {{poses}} {{out}} --kernel {{kernel}} --image {{image}} --set {{set}}
 
 cand-build dir set:
     nu {{jab}}/nu/bin/do.nu build {{dir}} --set {{set}}

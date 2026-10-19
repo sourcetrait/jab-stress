@@ -5,7 +5,7 @@
 # every round cancelled through the J frame; `fault` a worker's fault on
 # the highest active hart at each count
 use ../../../jab/nu/mod/launch
-use ../../../jab/kit/fierce/test/pose.nu
+use ../../../jab/kit/fierce/nu/mod/pose
 use ../../../jab/kit/fierce/nu/mod/console
 use ../../../jab/kit/fierce/nu/mod/gauge
 use ../../../jab/kit/fierce/nu/mod/picture

@@ -3,7 +3,7 @@
 # each level of `levels`, under `lighting`, each run's last count line,
 # its window's rows, and its screen, with the tiled and held references.
 use ../../../../jab/nu/mod/launch
-use ../../../../jab/kit/fierce/test/pose.nu
+use ../../../../jab/kit/fierce/nu/mod/pose
 use ../../../../jab/kit/fierce/nu/mod/console
 use ../../../../jab/kit/fierce/nu/mod/gauge
 

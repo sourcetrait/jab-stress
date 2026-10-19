@@ -1,7 +1,7 @@
 # TileCensus's reading (FrameCeiling.md, TilePool): a CENSUS build's runs of
 # the gauge's routes, a batch a label under one base directory holding its
 # gauge.nuon and each run's serial.log, the census's lines read by jab's
-# `test/census.nu`. A run is refused before its census is read unless its
+# `nu/mod/census`. A run is refused before its census is read unless its
 # capture is complete and valid (GaugeStanding) and its directory is the one
 # whose identity file binds to the run's recorded SHA-256, through `gauge
 # identity of`, the identity's seed the run's (CensusRunBinding), resolved in
@@ -12,7 +12,7 @@
 # run is summarized nowhere. Every census frame of an accepted run takes the
 # leg the gauge's row of the same frame names; frames past the
 # measurement's final frame are counted outside and read no further. A frame
-# stands valid as census.nu judges it, whole and accounting; a working set
+# stands valid as census judges it, whole and accounting; a working set
 # over 30 or 120 frames stands only when every frame of its window is present
 # and valid, the window whole since the census's first frame. Per batch,
 # side, and leg, and over every leg: the eligible and straddling blocks and
@@ -30,7 +30,7 @@
 # invalid, a mismatch, more than one lighting revision. Run under the real nu
 # from a scratch justfile: `nu tilecensus.nu <base> <out.nuon> <label>...`.
 
-use ../../../jab/kit/fierce/test/census.nu
+use ../../../jab/kit/fierce/nu/mod/census
 
 const RESOLVER = (path self | path dirname | path join "tilecensus_resolve.nu")
 

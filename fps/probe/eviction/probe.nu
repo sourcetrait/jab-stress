@@ -4,12 +4,12 @@
 # and texel signatures read back with the pool's counters a frame. Mode
 # building dumps the spawn view's settle after a cold start under the
 # ordinary budget in pairs, a plain D and one with byte 8 at the same
-# moment, read by tiles.nu's keys in a nu of its own.
+# moment, read by the tiles bin's keys in a nu of its own.
 use ../../../../jab/nu/mod/launch
-use ../../../../jab/kit/fierce/test/pose.nu
+use ../../../../jab/kit/fierce/nu/mod/pose
 use ../../../../jab/kit/fierce/nu/mod/gauge
 
-const TILES = (path self | path dirname | path join .. .. .. .. jab kit fierce test tiles.nu)
+const TILES = (path self | path dirname | path join .. .. .. .. jab kit fierce nu bin nuance tiles.nu)
 const RECORD = 64
 # the quota mode's: 32 whole tiles a boundary, and 32 tiles and 8 rows
 const QUOTA_WHOLE = (32 * 4096)

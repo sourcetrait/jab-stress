@@ -2,7 +2,7 @@
 # `handoff-set` runs the test's sets. `handoff`, `builder`, and
 # `builder-on` run one fixture alone. `oblique`, `identity`, `rows`,
 # `dueprobe`, and `litsteps` run the probes. `keys`, `litsteps-live`, and
-# `handoff-stats` run jab's tiles.nu. `packetgauge`, `workergauge`, and
+# `handoff-stats` run jab's tiles bin. `packetgauge`, `workergauge`, and
 # `reader` run the fps readers. `nucheck` checks a file as a module.
 # Run as `just -f fps/just/handoff.just <recipe>`. jab is the checkout
 # beside this repository, and its target is the SDK's own.
@@ -43,7 +43,7 @@ identity base handoff_disk still_disk out:
 
 # a capture's dumps keyed: each tile's header and its texels' SHA-256
 keys api out:
-    nu {{jab}}/kit/fierce/test/tiles.nu keys {{api}} {{out}}
+    nu {{jab}}/kit/fierce/nu/bin/nuance/tiles.nu keys {{api}} {{out}}
 
 # the pool's counters a frame, the last eight
 rows api:
@@ -58,10 +58,10 @@ litsteps capture rect ch:
     nu {{probe}}/handoff/litsteps.nu {{capture}} "{{rect}}" {{ch}}
 
 litsteps-live capture rect ch out:
-    nu {{jab}}/kit/fierce/test/tiles.nu lit-steps {{capture}} "{{rect}}" {{ch}} {{out}}
+    nu {{jab}}/kit/fierce/nu/bin/nuance/tiles.nu lit-steps {{capture}} "{{rect}}" {{ch}} {{out}}
 
 handoff-stats spec index out:
-    nu {{jab}}/kit/fierce/test/tiles.nu handoff {{spec}} {{index}} {{out}}
+    nu {{jab}}/kit/fierce/nu/bin/nuance/tiles.nu handoff {{spec}} {{index}} {{out}}
 
 packetgauge mode base out *labels:
     nu {{readers}}/packetgauge.nu {{mode}} {{base}} {{out}} {{labels}}

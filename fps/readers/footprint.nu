@@ -17,11 +17,11 @@
 use ../../../jab/nu/mod/target
 use ../../../jab/nu/mod/build
 use ../../../jab/nu/mod/launch
-use ../../../jab/kit/fierce/test/pose.nu
+use ../../../jab/kit/fierce/nu/mod/pose
 use ../../../jab/kit/fierce/nu/mod/console
 use ../../../jab/kit/fierce/nu/mod/gauge
 use ../../../jab/kit/fierce/nu/mod/picture
-use ../../../jab/kit/fierce/nu/map.nu
+use ../../../jab/kit/fierce/nu/mod/map
 use ./export.nu [symbols-of provenance-of]
 use ./workerparity.nu [disk-of answered-frames]
 
@@ -51,7 +51,7 @@ const SCREEN_AT = 9000ms
 const SECONDS = 11
 const BOUND_STATUS = 124
 
-# The console's P frame with the pose's roll, which pose.nu's pose-frame
+# The console's P frame with the pose's roll, which pose's pose-frame
 # sends as 0: the kind, three of padding, the eye's x, y, and z, then the
 # yaw, pitch, and roll in degrees as singles, zero to the frame's end.
 def placement [p: record]: nothing -> binary {
