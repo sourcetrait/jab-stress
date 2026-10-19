@@ -5,7 +5,7 @@ answer for it. The SDK's build returns before assembling when its stamp
 and its record hold, so an image hashed after a build that found its
 inputs current proves only that the cache was reused. Every build here
 goes into a cache directory made for the run, `XDG_CACHE_HOME` pointed at
-it, where the SDK's `target-root` puts the checkout's one target.
+it, where the SDK's `target root` puts the checkout's one target.
 
 ## const MATRIX
 
@@ -40,7 +40,8 @@ Every `program.jab.toml` of the checkout outside `.git`, `.target`, and
 
 ## def build-at
 
-`nu sdk/nu/jab.nu build`: at the workspace's root it builds the kernel and
+`nu nu/bin/do.nu build`, or `sdk/nu/jab.nu`'s on a tree from before the
+bins: at the workspace's root it builds the kernel and
 every program, at a program path the kernel and that program, and with
 `--kernel` at the kernel's directory the kernel alone, each at the tuple.
 No `--set` is passed for the empty tuple.
@@ -48,7 +49,7 @@ No `--set` is passed for the empty tuple.
 ## def disk-of
 
 The SDK builds a program's own disk at a test or a run, never at a build
-(`sdk/nu/jab.nu`'s `assets-image`, called by `test-args` and `run-line`),
+(the disk module's `assets-image`, called by `test-args` and `run-line`),
 so this builds it the same way: `genromfs -d <dir> -f <out>/<name>.romfs
 -V <name>`, the directory the manifest's `assets`, relative to it, or its
 `target_assets`, a tree under the target's asset shard,

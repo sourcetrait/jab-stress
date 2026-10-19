@@ -172,4 +172,4 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   lists a recipe reads are its `assets/fierce/poses/`, and a run's record
   goes to its `runs/`.
 - A recipe that runs the debug build finds Jab's target through the
-  SDK's `target-root`.
+  SDK's `target root`.

@@ -99,7 +99,7 @@ def short [commit: any]: nothing -> string {
 }
 
 # The candidate at its freeze (Qualification.md's freeze): the release
-# tree built at jab's HEAD (`jab.nu build`), then jab's commit, its
+# tree built at jab's HEAD (`do.nu build`), then jab's commit, its
 # checkout's HEAD with no changes, `tag` when given refused unless it
 # names that HEAD; this repository's commit, its checkout's HEAD,
 # recorded with whether the checkout holds changes and the commit `tag`

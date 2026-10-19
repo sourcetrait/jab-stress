@@ -57,7 +57,7 @@ Land a run's record as the data checkout's layout note says, under
 record again through the probe's current reader. Nothing is run and
 nothing is written. Each control's checks are worked out again from the
 logs and the trace saved in the record, and the probe's own record is
-worked out again from the saved shim log by `jab sdl-report`. Every check
+worked out again from the saved shim log by `sdl report`. Every check
 and every count is then compared with the record's `controls.nuon`. The
 command prints one NUON record and exits non-zero when anything differs
 or when the reader refuses a log it once read.
@@ -68,7 +68,7 @@ checkouts doing the reread. Each control lists its discrepancies, empty
 when it reads as recorded.
 
 - The stripped control is left unread in one case only: its shim log
-  passes the probe's own reader, `jab sdl-log`, and the stripped QEMU
+  passes the probe's own reader, `sdl log`, and the stripped QEMU
   that the log names has gone since the capture. The control is then
   marked as not reread, and the rest of the record still counts. Every
   other problem with that log fails the reread: the record holds no

@@ -1,4 +1,4 @@
-# Probe of jab.nu's due-order and the launch loop's list idioms.
+# Probe of the launch module's due-order and its loop's list idioms.
 use ../../../../jab/nu/mod/launch
 
 def names [order: list<any>]: nothing -> list<string> {
