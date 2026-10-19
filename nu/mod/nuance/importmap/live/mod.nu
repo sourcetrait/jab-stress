@@ -1,4 +1,4 @@
-const SKIP = ['.git' 'target' '.target' 'extern']
+const SKIP = ['.git' '.target' 'extern']
 const DEF = '^(?P<exp>export )?def (?:--[a-z-]+ )*(?:"(?P<q>[^"]+)"|''(?P<s>[^'']+)''|(?P<b>[^\s\[]+))'
 const CONST = '^(?P<exp>export )?const (?P<n>[A-Za-z_][A-Za-z0-9_]*)'
 
@@ -40,8 +40,13 @@ def recipes-of [text: string]: nothing -> list<string> {
 export def sources-of [repo: string, root: path]: [
     nothing -> table<repo: string, file: string, kind: string, src: string>
 ] {
-    let kept = {|f: string| not ($f | path relative-to $root | path split | any {|p| $p in $SKIP }) }
-    let pruned = ($SKIP | each {|d| $"**/($d)/**" })
+    let cargo = (glob ($root | path join '**' 'Cargo.toml') --exclude ($SKIP | append 'target' | each {|d| $"**/($d)/**" })
+        | each {|f| $f | path dirname | path join 'target' | path relative-to $root })
+    let kept = {|f: string|
+        let rel = ($f | path relative-to $root)
+        not (($rel | path split | any {|p| $p in $SKIP }) or ($cargo | any {|t| $rel | str starts-with ($t + '/') }))
+    }
+    let pruned = ($SKIP | each {|d| $"**/($d)/**" }) ++ ($cargo | each {|t| $"**/($t)/**" })
     let nus = (glob ($root | path join '**' '*.nu') --exclude $pruned
         | where {|f| do $kept $f }
         | sort

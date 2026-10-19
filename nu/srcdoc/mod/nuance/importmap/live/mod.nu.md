@@ -5,8 +5,11 @@ signatures, and calls, every one by nushell's own parser or tokens.
 
 ## const SKIP
 
-`.git`, the targets, and `extern`, whose links reach a toolchain's tree;
-`glob` is told not to walk them at all.
+`.git`, `.target`, and `extern`, whose links reach a toolchain's tree,
+wherever they stand, and beside them each cargo target, the `target`
+beside a `Cargo.toml` (`sources-of`), never a `target` elsewhere, since
+the SDK's `target` module and its mirror are sources; `glob` is told not
+to walk any of them.
 
 ## def declarations-of
 
