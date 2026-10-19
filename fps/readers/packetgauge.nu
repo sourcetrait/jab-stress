@@ -17,7 +17,7 @@
 # scratch justfile: `nu packetgauge.nu <settled|play> <base> <out.nuon>
 # <label>...`.
 
-const GAUGE = "../../../jab/game/fps/test/gauge.nu"
+const GAUGE = "../../../jab/kit/fierce/test/gauge.nu"
 use $GAUGE [run-request]
 
 const FIELDS = [draw_us critical_us report_us preparation_us raster_us commands packet_bytes]

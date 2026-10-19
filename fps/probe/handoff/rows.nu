@@ -1,6 +1,6 @@
 # The rows gauge.nu's stream reads from a run's API capture, the pool's
 # counters a frame, for a probe of a handoff run.
-use ../../../../jab/game/fps/test/gauge.nu
+use ../../../../jab/kit/fierce/test/gauge.nu
 
 def main [api: path] {
     let s = (gauge stream (open --raw $api | into binary))

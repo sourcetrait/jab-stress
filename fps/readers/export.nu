@@ -1,9 +1,10 @@
 # ImageProvenance (FrameCeiling.md, TwoWorkers' audit): a measured image
 # frozen with its provenance. `git archive` of a commit's `sdk/src`, the
 # program's `src/` and manifest, and the directory its manifest's
-# `assets` names, the program `--program`'s (game/fps unless given, at
-# the commit's own place for it, `game/fps/1k` before FpsRootLayout and
-# `game/fps` after; walk's CADENCE images `example/walk`), into
+# `assets` names, the program `--program`'s (the game unless given, at
+# the commit's own place for it, `game/fps/1k` before FpsRootLayout,
+# `game/fps` after, and `kit/fierce` from KitFierce; walk's CADENCE
+# images `example/walk`), into
 # `<cands>/export_<commit>`, each symbol of `--set` added to the name after
 # a dash (`export_<commit>-footprint`), the
 # manifest's `sdk`, `includes`, and `link` redirected into the export,
@@ -72,17 +73,21 @@ export def provenance-of [repo: string, full: string, image: string, symbols: li
     $provenance
 }
 
-def main [repo: string, commit: string, cands: string, jf: string, expected: string, --set: string = "", --program: string = "game/fps"] {
+# The game's place at a commit: kit/fierce from KitFierce, game/fps/1k
+# before FpsRootLayout, game/fps between.
+def game-place [repo: string, full: string]: nothing -> list<string> {
+    let has = {|p: string| (^git -C $repo cat-file -e $"($full):($p)/program.jab.toml" | complete).exit_code == 0 }
+    if (do $has "kit/fierce") { ["kit" "fierce"] } else if (do $has "game/fps/1k") { ["game" "fps" "1k"] } else { ["game" "fps"] }
+}
+
+def main [repo: string, commit: string, cands: string, jf: string, expected: string, --set: string = "", --program: string = ""] {
     let full = (^git -C $repo rev-parse $commit | complete | get stdout | str trim)
     if $full == "" { error make { msg: $"($commit) names no commit in ($repo)" } }
     let short = ($full | str substring 0..<7)
     let names = (symbols-of $set)
     let refused = ($names | where {|n| $n in [DEBUG RELEASE] })
     if not ($refused | is-empty) { error make { msg: $"an export is a release build with `release` its own symbol; ($refused | str join ', ') cannot be among --set's" } }
-    let place = (if $program == "game/fps" {
-        let tiered = ((^git -C $repo cat-file -e $"($full):game/fps/1k/program.jab.toml" | complete).exit_code == 0)
-        if $tiered { ["game" "fps" "1k"] } else { ["game" "fps"] }
-    } else { $program | split row "/" | where {|s| $s != "" } })
+    let place = (if $program == "" { game-place $repo $full } else { $program | split row "/" | where {|s| $s != "" } })
     let rel = ($place | str join "/")
     let shown = (^git -C $repo show $"($full):($rel)/program.jab.toml" | complete)
     if $shown.exit_code != 0 { error make { msg: $"($rel)/program.jab.toml is not in ($full): ($shown.stderr | str trim)" } }

@@ -5,12 +5,12 @@
 # every round cancelled through the J frame; `fault` a worker's fault on
 # the highest active hart at each count
 use ../../../jab/sdk/nu/jab.nu
-use ../../../jab/game/fps/test/pose.nu
-use ../../../jab/game/fps/test/gauge.nu
-use ../../../jab/game/fps/test/test.nu [variant-tree raise-frame stamp-of unstamped-differ]
+use ../../../jab/kit/fierce/test/pose.nu
+use ../../../jab/kit/fierce/test/gauge.nu
+use ../../../jab/kit/fierce/test/test.nu [variant-tree raise-frame stamp-of unstamped-differ]
 
 # the game's directory, jab checked out beside this repository
-const GAME = (path self | path dirname | path join .. .. .. jab game fps)
+const GAME = (path self | path dirname | path join .. .. .. jab kit fierce)
 
 # the frame line, its bands a count a hart, harts 1 to GFX_SLOTS
 const FRAME = "fps: frame in {us} us: {sectors} sectors, {walls} walls, {pieces} pieces, {planes} planes, {openings} openings, {sprites} sprites, {uncovered} uncovered; clear, planes, walls, portals, sprites, raster us {clear}, {plane_us}, {wall_us}, {portal_us}, {sprite_us}, {raster_us}; spans {spans}, pixels {pixels}, lit spans {lit_spans}, lit pixels {lit_pixels}, light us {light_us}, rejected {rejected}, samples {samples}, tiles built {tiles_built}, tiled {tiled}, resets {resets}, slots {slots}, commands {commands}, flushes {flushes}, workers {workers}, grain {grain}, rounds {rounds}, bands {bands1} {bands2} {bands3} {bands4} {bands5} {bands6} {bands7}, dispatch us {dispatch}, barrier us {barrier}, slowest us {slowest}, busy us {busy}, cancelled {cancelled}"

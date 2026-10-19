@@ -15,15 +15,15 @@
 # lists the pictures' regions; `crops` cuts each region out of both
 # pictures side by side for reading.
 use ../../../jab/sdk/nu/jab.nu
-use ../../../jab/game/fps/test/pose.nu
-use ../../../jab/game/fps/test/gauge.nu
-use ../../../jab/game/fps/test/test.nu [raise-frame stamp-of]
-use ../../../jab/game/fps/nu/map.nu
+use ../../../jab/kit/fierce/test/pose.nu
+use ../../../jab/kit/fierce/test/gauge.nu
+use ../../../jab/kit/fierce/test/test.nu [raise-frame stamp-of]
+use ../../../jab/kit/fierce/nu/map.nu
 use ./export.nu [symbols-of provenance-of]
 use ./workerparity.nu [disk-of answered-frames]
 
 # the game's directory, jab checked out beside this repository
-const GAME = (path self | path dirname | path join .. .. .. jab game fps)
+const GAME = (path self | path dirname | path join .. .. .. jab kit fierce)
 # the images: today's picture and the candidate's, the surfaces, and
 # today's levels and the candidate's, each a label and the set it is built
 # with; the copy of the export it builds in is `<export>_<label>`
@@ -144,8 +144,9 @@ def "main images" [export: path] {
         let built = (^nu $tool build $target --set $b.set | complete)
         if $built.exit_code != 0 { error make { msg: $"the ($b.label) build of ($target): ($built.stdout + $built.stderr | lines | last 6 | str join ' | ')" } }
         let out = (jab program-out $target debug)
-        let image = ($out | path join "fps.jab")
-        if not ($image | path exists) { error make { msg: $"no fps.jab at ($out)" } }
+        let name = (open ($target | path join "program.jab.toml") | get name)
+        let image = ($out | path join $"($name).jab")
+        if not ($image | path exists) { error make { msg: $"no ($name).jab at ($out)" } }
         let names = (symbols-of $b.set)
         let flags = (open --raw ($out | path join "flags") | decode | lines | first)
         let missing = ($names | where {|n| not ($flags | str contains $"--defsym ($n)=1") })

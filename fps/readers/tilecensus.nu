@@ -30,7 +30,7 @@
 # invalid, a mismatch, more than one lighting revision. Run under the real nu
 # from a scratch justfile: `nu tilecensus.nu <base> <out.nuon> <label>...`.
 
-use ../../../jab/game/fps/test/census.nu
+use ../../../jab/kit/fierce/test/census.nu
 
 const RESOLVER = (path self | path dirname | path join "tilecensus_resolve.nu")
 

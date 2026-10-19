@@ -13,7 +13,7 @@
 # justfile: `nu identity_corrections.nu <base> <release flags file> <nm>
 # <out.nuon> <battery>...`.
 
-const GAUGE = "../../../jab/game/fps/test/gauge.nu"
+const GAUGE = "../../../jab/kit/fierce/test/gauge.nu"
 use $GAUGE [correction-of]
 
 # the symbols only a debug build of fps carries (workers.S)

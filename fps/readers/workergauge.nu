@@ -38,7 +38,7 @@
 # from a scratch justfile: `nu workergauge.nu <settled|play> <base>
 # <out.nuon> <label>...`.
 
-const GAUGE = "../../../jab/game/fps/test/gauge.nu"
+const GAUGE = "../../../jab/kit/fierce/test/gauge.nu"
 use $GAUGE [run-request]
 
 const FIELDS = [draw_us critical_us preparation_us raster_us slowest_us busy_us dispatch_us barrier_us imbalance_us remainder_us clear_us prepared_us outside_us game_us hud_us mix_us flip_us report_us]

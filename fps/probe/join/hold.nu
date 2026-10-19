@@ -8,8 +8,8 @@
 # slowest is about the whole of it, since the held worker's band waits
 # on the other's join, where an unheld round's is about half.
 use ../../../../jab/sdk/nu/jab.nu
-use ../../../../jab/game/fps/test/pose.nu
-use ../../../../jab/game/fps/test/gauge.nu
+use ../../../../jab/kit/fierce/test/pose.nu
+use ../../../../jab/kit/fierce/test/gauge.nu
 
 const SET_AT = 1300ms
 const END_AT = 3500ms

@@ -28,11 +28,11 @@
 # through `stress.just`'s `eviction image out`; every fixture by default.
 use std/assert
 use ../../../jab/sdk/nu/jab.nu
-use ../../../jab/game/fps/test/pose.nu
-use ../../../jab/game/fps/test/gauge.nu
-use ../../../jab/game/fps/test/test.nu [stamp-of ppm-head raise-frame rows-differ STAMP_BITS STAMP_CELL STAMP_ONE STAMP_ZERO CLOCK_SCHEMA]
+use ../../../jab/kit/fierce/test/pose.nu
+use ../../../jab/kit/fierce/test/gauge.nu
+use ../../../jab/kit/fierce/test/test.nu [stamp-of ppm-head raise-frame rows-differ STAMP_BITS STAMP_CELL STAMP_ONE STAMP_ZERO CLOCK_SCHEMA]
 
-const TILES = (path self | path dirname | path join .. .. .. jab game fps test tiles.nu)
+const TILES = (path self | path dirname | path join .. .. .. jab kit fierce test tiles.nu)
 
 # the cap under which the two views' keys bracket the pool, each within
 # it and their union past it

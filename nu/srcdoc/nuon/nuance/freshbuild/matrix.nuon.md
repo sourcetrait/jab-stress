@@ -7,12 +7,12 @@ program, `*` for the whole workspace, or `kernel` for the kernel alone,
 with the tuples it is built at.
 
 - `*`: release and DEBUG, as `build` and the suite build them.
-- game/fps: COUNT, CENSUS, COUNT and HANDOFF, HANDOFF, OWNER, and STATS
+- kit/fierce: COUNT, CENSUS, COUNT and HANDOFF, HANDOFF, OWNER, and STATS
   under DEBUG; FOOTPRINT, LEVELS, and both, the level comparison's
   images; RELEASE, and RELEASE with FOOTPRINT, the pool export's builds.
   STATS and HANDOFF condition no assembly; their builds differ by the
   defined symbol alone.
-- game/fps/test/fillrate: VECTOR, release and under DEBUG.
+- kit/fierce/test/fillrate: VECTOR, release and under DEBUG.
 - example/walk: launches.nu's six CADENCE_TEST tuples, the walk export's
   four CADENCE tuples, and PREPARE under DEBUG.
 - example/bounce, wasd, and pad: PREPARE under DEBUG.

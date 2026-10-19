@@ -3,8 +3,8 @@
 # each level of `levels`, under `lighting`, each run's last count line,
 # its window's rows, and its screen, with the tiled and held references.
 use ../../../../jab/sdk/nu/jab.nu
-use ../../../../jab/game/fps/test/pose.nu
-use ../../../../jab/game/fps/test/gauge.nu
+use ../../../../jab/kit/fierce/test/pose.nu
+use ../../../../jab/kit/fierce/test/gauge.nu
 
 const POOL_LIFTED = 1
 const POOL_ONCE = 8

@@ -43,7 +43,7 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     and the tag, when given, on its HEAD, this repository's changes and
     tag recorded; `record bench candidate target out` writes a target's
     `qualification.nuon` from a bench run of
-    `game/fps/bench/qual_<target>.nuon`; `check record` prints every
+    `kit/fierce/bench/qual_<target>.nuon`; `check record` prints every
     problem the check names and fails on any; `report +paths` writes the
     report from records, the last path its file, `--compared <file>`
     rendering a `gauge.nu compare` output as the comparison with the
@@ -139,7 +139,7 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
 - `footprint.nu` takes its still copies, its stamps, and its bindings
   from `workerparity.nu`'s `disk-of` and `answered-frames` and jab's
   gauge, and each image's provenance from `export.nu`'s `provenance-of`.
-  Its pose set is the data checkout's `assets/fps/poses/footprint.nuon`,
+  Its pose set is the data checkout's `assets/fierce/poses/footprint.nuon`,
   each row a map, the eye, and the three angles, roll among them, which it
   sends in a P frame of its own. A LEVELS capture's frame must be drawn
   from one packet, since a flush restarts the span indices its pixels
@@ -157,7 +157,7 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   launch takes its screen between the two placements and must be refused
   for its stamp alone.
 - The pose lists for the capture recipes are asset data in the data
-  checkout, `assets/fps/poses/`: `census_render_1.nuon` and
+  checkout, `assets/fierce/poses/`: `census_render_1.nuon` and
   `render_1_settled.nuon` on Render One, `census_still.nuon` on Render
   Zero's still copy, `spawn.nuon`, Render Zero's spawn, and
   `footprint.nuon`, the level comparison's seventeen views on both maps'
@@ -169,7 +169,7 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   and the readers import its modules by paths relative to their own
   files, and the justfiles reach it the same way.
 - The data checkout is beside it too, at `../jab-stress-data`: the pose
-  lists a recipe reads are its `assets/fps/poses/`, and a run's record
+  lists a recipe reads are its `assets/fierce/poses/`, and a run's record
   goes to its `runs/`.
 - A recipe that runs the debug build finds Jab's target through the
   SDK's `target-root`.

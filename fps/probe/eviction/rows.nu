@@ -1,6 +1,6 @@
 # The pool's counters a frame from a run's API capture, every frame from
 # the first with a configuration of its own, for planning TileEviction.
-use ../../../../jab/game/fps/test/gauge.nu
+use ../../../../jab/kit/fierce/test/gauge.nu
 
 def main [api: path] {
     let bytes = (open --raw $api | into binary)

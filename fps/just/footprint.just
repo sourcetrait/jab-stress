@@ -10,7 +10,7 @@ data := justfile_directory() / "../../../jab-stress-data"
 images export:
     nu {{readers}}/footprint.nu images {{export}}
 
-capture export out only="" poses=(data / "assets" / "fps" / "poses" / "footprint.nuon"):
+capture export out only="" poses=(data / "assets" / "fierce" / "poses" / "footprint.nuon"):
     nu {{readers}}/footprint.nu capture {{export}} {{poses}} {{out}} --only '{{only}}'
 
 read out:

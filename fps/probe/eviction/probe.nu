@@ -6,10 +6,10 @@
 # ordinary budget in pairs, a plain D and one with byte 8 at the same
 # moment, read by tiles.nu's keys in a nu of its own.
 use ../../../../jab/sdk/nu/jab.nu
-use ../../../../jab/game/fps/test/pose.nu
-use ../../../../jab/game/fps/test/gauge.nu
+use ../../../../jab/kit/fierce/test/pose.nu
+use ../../../../jab/kit/fierce/test/gauge.nu
 
-const TILES = (path self | path dirname | path join .. .. .. .. jab game fps test tiles.nu)
+const TILES = (path self | path dirname | path join .. .. .. .. jab kit fierce test tiles.nu)
 const RECORD = 64
 # the quota mode's: 32 whole tiles a boundary, and 32 tiles and 8 rows
 const QUOTA_WHOLE = (32 * 4096)

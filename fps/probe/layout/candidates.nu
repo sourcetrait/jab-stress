@@ -1,4 +1,4 @@
-# TileLayout's LayoutProbe candidates: jab's game/fps `src` at a commit
+# TileLayout's LayoutProbe candidates: jab's kit/fierce `src` at a commit
 # copied to <cands>/layout_<case>_<commit> beside a candidate's manifest,
 # the checkout's SDK by absolute path, the layout's edits applied to
 # render.inc, raster.S, tile.S, main.S, and world.S, each find matched
@@ -15,7 +15,7 @@
 # count a tiled block's reads and the 64-byte lines they enter by class.
 # `layout.just`'s `layout-cands` runs it.
 
-const GAME = (path self | path dirname | path join .. .. .. .. jab game fps)
+const GAME = (path self | path dirname | path join .. .. .. .. jab kit fierce)
 
 const CASES = [
     { name: "rows_walls", layout: "LAYOUT_ROWS", classes: "TILE_CLASS_WALLS" }
@@ -485,7 +485,7 @@ def main [cands: path, commit: string, ...names: string] {
     if not ($head | str starts-with $commit) {
         error make { msg: $"the checkout is at ($head), not ($commit)" }
     }
-    let changed = (^git -C $jab status --porcelain -- game/fps/src | str trim)
+    let changed = (^git -C $jab status --porcelain -- kit/fierce/src | str trim)
     if $changed != "" { error make { msg: $"the checkout's src has changes: ($changed)" } }
     let unknown = ($names | where {|n| $n not-in ($CASES | get name) })
     if ($unknown | is-not-empty) { error make { msg: $"no such case: ($unknown | str join ', ')" } }

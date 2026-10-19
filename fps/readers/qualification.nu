@@ -13,7 +13,7 @@
 # document for TheUser, a section a target. Run under the real nu: `nu
 # qualification.nu <command> ...` (`fps/just/qualification.just`).
 use ../../../jab/sdk/nu/jab.nu
-use ../../../jab/game/fps/test/gauge.nu
+use ../../../jab/kit/fierce/test/gauge.nu
 use ./observer.nu
 
 # jab checked out beside this repository, and this repository
@@ -101,7 +101,7 @@ def short [commit: any]: nothing -> string {
 # checkout's HEAD with no changes, `tag` when given refused unless it
 # names that HEAD; this repository's commit, its checkout's HEAD,
 # recorded with whether the checkout holds changes and the commit `tag`
-# names there, null for none, and never refused; the release fps image,
+# names there, null for none, and never refused; the game's release image,
 # its ELF, and the kernel built with it, each by its SHA-256, the image's
 # flags free of DEBUG; the toolchain those flags name, each tool the file
 # its prefix resolves to with that file's SHA-256 (gauge.nu's
@@ -125,12 +125,12 @@ export def candidate-of [tag: string]: nothing -> record {
         }
         { repo: $r.repo, commit: $h.commit }
     })
-    let game = ($JAB | path join game fps)
+    let game = ($JAB | path join kit fierce)
     let built = (^nu ($JAB | path join sdk nu jab.nu) build $game | complete)
     if $built.exit_code != 0 { error make { msg: $"the release build of ($game): ($built.stdout + $built.stderr | lines | last 6 | str join ' | ')" } }
     let out = (jab program-out $game release)
-    let image = ($out | path join fps.jab)
-    let elf = ($out | path join fps.elf)
+    let image = ($out | path join fierce.jab)
+    let elf = ($out | path join fierce.elf)
     let kernel = (jab program-kernel $game release)
     for f in [$image $elf $kernel] { if not ($f | path exists) { error make { msg: $"the release build left no ($f)" } } }
     let flags = (open --raw ($out | path join flags) | decode | lines | first)
@@ -435,7 +435,8 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
     let listed = (open $listed_file)
     let cand = (open --raw $candidate | decode utf-8 | from nuon)
     let spec = (jab spec-row $JAB $target)
-    let defined = (jab-file $cand.jab $"game/fps/bench/qual_($target).nuon")
+    let defined = (jab-file $cand.jab $"kit/fierce/bench/qual_($target).nuon"
+        | default (jab-file $cand.jab $"game/fps/bench/qual_($target).nuon"))
     let definition = (if $defined == null { null } else { $defined | from nuon })
     let doc = (gauge bench-doc $bench)
     let runs = ($doc.steps | each {|s| step-runs $s $doc $cand $target $spec } | flatten)

@@ -16,10 +16,10 @@ tilecensus base out *labels:
     nu {{readers}}/tilecensus.nu {{base}} {{out}} {{labels}}
 
 reader-holds tree serial:
-    use {{tree}}/game/fps/test/census_holds.nu [census-reader-holds]; census-reader-holds (open --raw {{serial}} | decode); print "reader-holds: ok"
+    use {{tree}}/kit/fierce/test/census_holds.nu [census-reader-holds]; census-reader-holds (open --raw {{serial}} | decode); print "reader-holds: ok"
 
 gauge-load:
-    use {{jab}}/game/fps/test/gauge.nu [identity-of]; print "loaded"
+    use {{jab}}/kit/fierce/test/gauge.nu [identity-of]; print "loaded"
 
 check file:
     nu --ide-check 50 {{file}}

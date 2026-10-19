@@ -5,10 +5,10 @@
 # once every fixture holds.
 #
 # Run as `nu cadence.nu <kernel> <image> <out>`.
-use ../../../jab/game/fps/test/test.nu [cadence-holds]
+use ../../../jab/kit/fierce/test/test.nu [cadence-holds]
 
 def main [kernel: path, image: path, out: path] {
-    let game = ($env.FILE_PWD | path join ".." ".." ".." "jab" "game" "fps" | path expand)
+    let game = ($env.FILE_PWD | path join ".." ".." ".." "jab" "kit" "fierce" | path expand)
     mkdir $out
     cadence-holds $kernel $image $out "DEBUG" $game
     print "cadence: ok"

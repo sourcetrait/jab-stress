@@ -6,7 +6,7 @@
 # untrimmed. Run from a scratch justfile under the real nu: `nu lane.nu
 # <base> <out.nuon> <label>...`, or `use` it and call `analyse`.
 
-const GAUGE = "../../../jab/game/fps/test/gauge.nu"
+const GAUGE = "../../../jab/kit/fierce/test/gauge.nu"
 use $GAUGE [run-request]
 
 const PERIOD = (1000000 / 60)

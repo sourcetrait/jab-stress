@@ -9,7 +9,7 @@
 # the run's; else refused. `nu tilecensus_resolve.nu <requests as NUON>`
 # prints the answers as NUON.
 
-use ../../../jab/game/fps/test/gauge.nu [identity-of]
+use ../../../jab/kit/fierce/test/gauge.nu [identity-of]
 
 def main [requests: string] {
     $requests | from nuon | each {|q|

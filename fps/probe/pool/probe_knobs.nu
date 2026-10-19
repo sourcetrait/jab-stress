@@ -1,6 +1,6 @@
 use ../../../../jab/sdk/nu/jab.nu
-use ../../../../jab/game/fps/test/pose.nu
-use ../../../../jab/game/fps/test/gauge.nu
+use ../../../../jab/kit/fierce/test/pose.nu
+use ../../../../jab/kit/fierce/test/gauge.nu
 
 const SPAWN_POSE = { name: "spawn", x: 29.0, y: 2.5, z: 1.6, yaw: 150, pitch: 0 }
 
@@ -31,8 +31,8 @@ def pool-trace [serial: string]: nothing -> table<frame: int, requesting: list<i
 def main [mode: string, out: path, --seconds: int = 10] {
     let dbg = (jab target-root ($env.FILE_PWD | path join ../../../../jab | path expand) | path join debug)
     let kernel = ($dbg | path join kernel jab.elf)
-    let image = ($dbg | path join game fps fps.jab)
-    let disk = ($dbg | path join game fps still.romfs)
+    let image = ($dbg | path join kit fierce fierce.jab)
+    let disk = ($dbg | path join kit fierce still.romfs)
     let sends = (match $mode {
         "rotation" => [
             { at: 1300ms, bytes: (gauge workers-frame 2 16) }
@@ -55,7 +55,7 @@ def main [mode: string, out: path, --seconds: int = 10] {
         ]
     })
     let run = (jab launch --kernel $kernel --image $image --out $out --set "DEBUG" --sound --api --disk $disk --serial "fps" --send $sends --capture 3000ms --seconds $seconds)
-    let reference = ($dbg | path join game fps spawn_held screen.ppm)
+    let reference = ($dbg | path join kit fierce spawn_held screen.ppm)
     let differ = (if $mode == "stale" and ($run.screen != "") {
         let a = (open --raw $run.screen | into binary)
         let b = (open --raw $reference | into binary)
