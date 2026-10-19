@@ -15,8 +15,9 @@ writes unless `--data` names another root, a scratch one for a trial.
 The landing's class table, a file's class by its name: a log (`.log`,
 `.stdout`, `.stderr`, `.txt`, `.nm`, `.disas`) lands as a container; a
 stream (`.out`, `.in`, `.wrpl`, `.wav`), a record (`.nuon`, `.nuonl`,
-`.toml`, `flags`), a picture (`.ppm`, `.png`), a build (`.jab`, `.elf`,
-`.romfs`, or any file opening with ELF's magic), a source (a copied `.nu`),
+`.toml`, `flags`, a build's `home`), a picture (`.ppm`, `.png`), a build
+(`.jab`, `.elf`, `.romfs`, a flat `.bin`, or any file opening with ELF's
+magic), a source (a copied `.nu`),
 and a fixture (a staged `.jabstage.<nonce>`) land as written. A control
 file (`.json`, a supervised launch's live wire) and any kind the table does
 not list refuse the landing by name, so a new kind is classified on purpose.

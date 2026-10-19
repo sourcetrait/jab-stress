@@ -22,14 +22,14 @@ def files-under [dir: path]: nothing -> list<string> {
 def class-of [file: path]: nothing -> record<role: string, lands: string> {
     let name = ($file | path basename)
     let ext = ($file | path parse | get extension)
-    if $name == "flags" { return { role: record, lands: raw } }
+    if $name in [flags home] { return { role: record, lands: raw } }
     if ($name =~ '\.jabstage\.[A-Za-z0-9]+$') { return { role: fixture, lands: raw } }
     match $ext {
         "log" | "stdout" | "stderr" | "txt" | "nm" | "disas" => { role: log, lands: container }
         "out" | "in" | "wrpl" | "wav" => { role: stream, lands: raw }
         "nuon" | "nuonl" | "toml" => { role: record, lands: raw }
         "ppm" | "png" => { role: picture, lands: raw }
-        "jab" | "elf" | "romfs" => { role: build, lands: raw }
+        "jab" | "elf" | "romfs" | "bin" => { role: build, lands: raw }
         "nu" => { role: source, lands: raw }
         "json" => { role: control, lands: refused }
         _ => (if (open --raw $file | bytes at 0..<4) == 0x[7f 45 4c 46] { { role: build, lands: raw } } else { { role: unknown, lands: refused } })
