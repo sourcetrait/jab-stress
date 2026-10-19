@@ -62,7 +62,9 @@ import of any other file refused; and no file on a cycle.
 
 A call through a monolith, where the landed groups put it, names the def
 by its old name; a call through a module names it by its name inside the
-module.
+module; and a call through an aggregator, a module whose children's api it
+re-exports (`sdl`), names a child's def by its final name less the
+aggregator's words, `sdl log` for sdl/log's `main`.
 
 ## def consumer-rules
 

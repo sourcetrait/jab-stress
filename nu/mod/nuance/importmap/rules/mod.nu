@@ -294,8 +294,14 @@ def def-of [contract: record, landed: list<string>, family: string, target: stri
     }
     let m = ($contract.modules | where {|x| $x.family == $family and $x.file == $target } | get -o 0)
     if $m == null { return null }
+    let own = ($contract.defs
+        | where {|d| $d.family == $family and $d.module == $m.module and (name-in-module $d.name $d.module) == $word }
+        | get -o 0)
+    if $own != null { return $own }
+    let under = $"($m.module)/"
     $contract.defs
-    | where {|d| $d.family == $family and $d.module == $m.module and (name-in-module $d.name $d.module) == $word }
+    | where {|d| $d.family == $family and $d.module != null and ($d.module | str starts-with $under) }
+    | where {|d| (name-in-module $d.name $m.module) == $word }
     | get -o 0
 }
 
