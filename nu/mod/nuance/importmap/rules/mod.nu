@@ -311,7 +311,7 @@ def reached [contract: record, landed: list<string>, roots: record, s: record]: 
     let modules = ($contract.modules | each {|m| {family: $m.family, repo: $m.repo, file: $m.file} })
     let family_files = ($monoliths | append $modules)
     imports lines-of $s.src | each {|imp|
-        let r = (imports resolve $roots $s.repo $s.file $s.kind $s.src $imp $monoliths)
+        let r = (imports resolve $roots $s.repo $s.file $s.kind $s.src $imp $family_files)
         if $r.kind == 'file' {
             let fam = ($family_files | where {|x| $x.repo == $r.repo and $x.file == $r.file } | get -o 0)
             if $fam != null and not (inside $contract $fam.family $s.file) {
@@ -327,6 +327,7 @@ export def consumer-rules [contract: record, landed: list<string>, roots: record
 ] {
     mut out = []
     mut calls = 0
+    let monoliths = (monolith-files $contract $landed)
     for s in $sources {
         let reach = (reached $contract $landed $roots $s)
         if ($reach | is-empty) { continue }
@@ -335,12 +336,17 @@ export def consumer-rules [contract: record, landed: list<string>, roots: record
             let named = ($words | where module == $r.name | get word | append $r.list
                 | where {|w| $w not-in ['' '*'] }
                 | uniq)
+            let through = ($monoliths | any {|x| $x.family == $r.family and $x.file == $r.file })
             for w in $named {
                 $calls += 1
                 let d = (def-of $contract $landed $r.family $r.file $w)
                 if $d != null and $d.class in ['internal' 'private'] {
                     let why = $"a consumer calling ($r.family)'s ($d.class) ($d.def)"
                     $out = ($out | append (refusal consumer $s.repo $s.file $r.line $"($r.name) ($w)" $why))
+                }
+                if $d != null and $through and $d.fate == 'moves' and $d.group in $landed {
+                    let why = $"a consumer calling ($d.def) through ($r.file) after ($d.group) moved it to ($d.module)"
+                    $out = ($out | append (refusal moved $s.repo $s.file $r.line $"($r.name) ($w)" $why))
                 }
             }
         }

@@ -27,9 +27,11 @@ def import-of [line: string]: nothing -> oneof<record<form: string, target: stri
 # A source's imports: each its line, its form, the path it names, and its list.
 export def lines-of [src: string]: nothing -> table<line: int, form: string, target: string, list: list<string>> {
     $src | lines | enumerate | each {|e|
-        let i = (import-of $e.item)
-        if $i != null { $i | insert line ($e.index + 1) }
-    } | compact
+        $e.item | split row ';' | each {|part|
+            let i = (import-of $part)
+            if $i != null { $i | insert line ($e.index + 1) }
+        } | compact
+    } | flatten
 }
 
 # A source's parse-time constants that name a path, each name to its text.
@@ -42,11 +44,14 @@ def refused [why: string]: nothing -> record<kind: string, repo: string, file: s
     {kind: 'refused', repo: '', file: '', detail: $why}
 }
 
-# A recipe's import: the monolith its path ends with, else unread.
-def recipe-target [target: string, monoliths: table]: [
+# A recipe's import: the monolith, or the module directory, its path ends
+# with, the longest when two do, else unread.
+def recipe-target [target: string, known: table]: [
     nothing -> record<kind: string, repo: string, file: string, detail: string>
 ] {
-    let named = ($monoliths | where {|k| $target | str ends-with $k.file })
+    let named = ($known
+        | where {|k| ($target | str ends-with $k.file) or (($k.file | path basename) == 'mod.nu' and ($target | str ends-with ($k.file | path dirname))) }
+        | sort-by {|k| $k.file | str length } --reverse)
     if ($named | is-empty) { return {kind: 'unread', repo: '', file: $target, detail: 'a path through a placeholder'} }
     {kind: 'file', repo: ($named | first | get repo), file: ($named | first | get file), detail: ''}
 }

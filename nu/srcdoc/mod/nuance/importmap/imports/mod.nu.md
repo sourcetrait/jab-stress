@@ -10,8 +10,11 @@ engine a runner's body imports, `rig/sourcetrait/emptwo/prototype/long`.
 
 ## def lines-of
 
-`use`, `export use`, `source`, and `overlay use` at a line's start, the
-path quoted or bare, and the list in brackets that follows it.
+`use`, `export use`, `source`, and `overlay use` at the start of a line or
+of a statement after a `;` on it, the path quoted or bare, and the list in
+brackets that follows it: a recipe's one-line body, `use <jab.nu>; use
+<test.nu> [...]; let ...`, holds two imports, and its first path would
+otherwise carry the `;`.
 
 ## def path-consts
 
@@ -29,7 +32,9 @@ run time, an absolute path, a path that names nothing, a path outside both
 checkouts, and the long engine outside a runner's body. A recipe's path
 runs through a placeholder, so it is read by the monolith whose path it
 ends with, the monoliths given where the landed groups have put them, or
-left unread.
+by the module whose directory it ends with, `{{jab}}/nu/mod/target` the
+SDK's `target`, the longest match when two end it; otherwise it is left
+unread.
 
 ## def cycles-of
 

@@ -70,7 +70,10 @@ aggregator's words, `sdl log` for sdl/log's `main`.
 
 A consumer is any source outside the family whose module it imports; its
 calls through that module, by tokens and by its use list, reach the
-contract's defs, and an internal or private one is refused.
+contract's defs, and an internal or private one is refused. A call
+through a monolith of a def its landed group has moved out is refused
+too: the monolith no longer holds it, so the call fails when it runs, and
+nothing else in the check reads it.
 
 ## def bin-rules
 
