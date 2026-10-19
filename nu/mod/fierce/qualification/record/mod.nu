@@ -194,6 +194,23 @@ def watch-of [bench: path]: nothing -> any {
     if ($file | path exists) { open $file } else { null }
 }
 
+# A packaged bench's freeze: the candidate holding its package's ELF, the manifest held to the candidate
+def frozen-of [bench: path, cand: record, candidate: path]: nothing -> record<cand: record, manifest: any, problems: list<string>> {
+    let file = ($bench | path join "preflight" "package.nuon")
+    if not ($file | path exists) { return { cand: $cand, manifest: null, problems: [$"the packaged bench carries no package manifest at ($file), so the freeze's ELF is unknown"] } }
+    let ids = (open $file | get -o identities | default {})
+    let elf = ($ids | get -o image.elf_sha256)
+    let problems = ([
+        (if ($ids | get -o candidate.file_sha256) != (matrix sha-of $candidate) { $"the package was made for the candidate file of SHA-256 ($ids | get -o candidate.file_sha256 | default 'unrecorded'), where this record's is (matrix sha-of $candidate)" })
+        (if ($ids | get -o image.sha256) != $cand.image_sha256 { $"the package's image is ($ids | get -o image.sha256 | default 'unrecorded'), where the candidate's is ($cand.image_sha256)" })
+        (if ($ids | get -o kernel.elf_sha256.value) != $cand.kernel_sha256 { $"the package's kernel is ($ids | get -o kernel.elf_sha256.value | default 'unrecorded'), where the candidate's is ($cand.kernel_sha256)" })
+        (if ($ids | get -o assets.digest) != $cand.assets.digest { $"the package's asset tree is ($ids | get -o assets.digest | default 'unrecorded'), where the candidate's is ($cand.assets.digest)" })
+        (if $elf == null { "the package's manifest names no ELF" })
+    ] | compact)
+    let manifest = { file: $file, sha256: (matrix sha-of $file), elf_sha256: $elf }
+    { cand: (if ($problems | is-empty) { $cand | update elf_sha256 $elf } else { $cand }), manifest: $manifest, problems: $problems }
+}
+
 # One target's qualification record from a bench run
 export def record-of [bench: path, candidate: path, target: string]: nothing -> record {
     let target = ($target | str lowercase)
@@ -208,8 +225,9 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
         | default (matrix jab-file $cand.jab $"game/fps/bench/qual_($target).nuon"))
     let package = ($listed | get -o package)
     let definition = (if $defined == null { null } else if $package == null { $defined | from nuon } else { matrix packaged-in (matrix packaged-bench ($defined | from nuon) $target) $package })
+    let frozen = (if $package == null { { cand: $cand, manifest: null, problems: [] } } else { frozen-of $bench $cand $candidate })
     let doc = (gauge bench doc $bench)
-    let runs = ($doc.steps | each {|s| step-runs $s $doc $cand $target $spec (step-words $s.label $listed $definition) } | flatten)
+    let runs = ($doc.steps | each {|s| step-runs $s $doc $frozen.cand $target $spec (step-words $s.label $listed $definition) } | flatten)
     let runs = ($runs | each {|r|
         let acceptance = ($CASES | where kind == acceptance | any {|c| $r.step in ($c.steps | get $target) })
         if $acceptance { $r | insert verdict (matrix verdict-of $r) } else { $r }
@@ -229,7 +247,7 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
     let normal = ($CASES | where case == "normal play" | get 0.steps | get $target)
     let routed = ($runs | where {|r| $r.step in $normal and $r.kind == "route" })
     let conditions = (condition-problems $runs $cases)
-    let bench_problems = (bench-problems $listed $definition)
+    let bench_problems = ((bench-problems $listed $definition) ++ $frozen.problems)
     let r = {
         target: $target,
         written: (date now | format date "%Y-%m-%dT%H:%M:%S%z"),
@@ -237,7 +255,7 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
         candidate: ($cand | insert file ($candidate | path expand) | insert sha256 (matrix sha-of $candidate)),
         spec: { name: $spec.name, cores: $spec.cores, ram_bytes: ($spec.ram | into int), display: $spec.display, fps: $spec.fps },
         bench: {
-            dir: $bench, bench: ($listed | get -o bench), stamp: ($listed | get -o stamp), state: ($listed | get -o state), file: ($listed | get -o file),
+            dir: $bench, bench: ($listed | get -o bench), stamp: ($listed | get -o stamp), state: ($listed | get -o state), file: ($listed | get -o file), package: $frozen.manifest,
             steps: ($listed.steps | each {|s|
                 let file = ($bench | path join $s.label "gauge.nuon")
                 { label: $s.label, state: $s.state, exit: ($s | get -o exit), seconds: ($s | get -o seconds), run: $s.run, gauge: (if ($file | path exists) { $file } else { null }), gauge_sha256: (matrix sha-of $file) }

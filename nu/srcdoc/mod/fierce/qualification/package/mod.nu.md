@@ -19,7 +19,11 @@ The package: the export of the candidate's commit (freeze.nu), its
 `source.nuon` naming that commit whole; the release image, its ELF, its
 flags, its demand record, its provenance, and its source record laid
 together, with no `home`, so a reader resolves the program's source from
-the package; the kernel the export's build ran with, its ELF and its
+the package; the image's bytes held to the candidate's, and the ELF to its
+export's provenance, which must name the candidate's commit and image,
+since the export's ELF carries RELEASE in its symbol table where the
+candidate's tree build's does not, the manifest naming the freeze's ELF
+beside the tree build's; the kernel the export's build ran with, its ELF and its
 loaded flat image's SHA-256 both named, each for the check that uses it;
 the asset tree, the checkout's shard's, held to the candidate's digest;
 the factory route at the candidate's commit; and the bench, the

@@ -31,7 +31,8 @@ def schema-problems [r: any]: nothing -> list<string> {
 def reopened [bench: path, inventory: string]: nothing -> record<checked: int, problems: list<string>> {
     if $inventory == "" { return { checked: 0, problems: [] } }
     let rows = (open $inventory)
-    let read = (glob ($bench | path join "*" "run_*" "*") | where {|f| ($f | path basename) in $RUN_FILES } | append ($bench | path join "bench.nuon"))
+    let manifest = ($bench | path join "preflight" "package.nuon")
+    let read = (glob ($bench | path join "*" "run_*" "*") | where {|f| ($f | path basename) in $RUN_FILES } | append ($bench | path join "bench.nuon") | append (if ($manifest | path exists) { [$manifest] } else { [] }))
     let problems = ($read | each {|f|
         let rel = ($f | path relative-to $bench)
         let row = ($rows | where path == $rel | get -o 0)
@@ -48,6 +49,11 @@ def rebuilt [bench: path, work: path]: nothing -> nothing {
     for f in ["bench.nuon" "watch.nuon"] {
         let at = ($bench | path join $f)
         if ($at | path exists) { cp $at ($work | path join $f) }
+    }
+    let manifest = ($bench | path join "preflight" "package.nuon")
+    if ($manifest | path exists) {
+        mkdir ($work | path join "preflight")
+        cp $manifest ($work | path join "preflight" "package.nuon")
     }
     let listed = (open ($bench | path join "bench.nuon"))
     for s in $listed.steps {

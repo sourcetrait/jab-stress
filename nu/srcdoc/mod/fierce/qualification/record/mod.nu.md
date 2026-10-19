@@ -119,13 +119,25 @@ a report states on every target, the RAM past the window held apart.
 The watch's record of a bench run, `nu/bin/nuance.nu watch bench`'s
 watch.nuon in its directory, null where the bench ran unwatched.
 
+## def frozen-of
+
+A packaged bench's freeze, from the manifest its preflight copied into the
+run (`preflight/package.nuon`): the manifest held to the candidate, the
+candidate file's SHA-256 it was made for, the image, the kernel, and the
+asset tree's digest, each mismatch a problem of the bench; then the
+candidate holding the manifest's ELF, the export's, whose symbol table
+carries RELEASE where the candidate's tree build's does not, the image's
+bytes the same. A bench without the manifest keeps the candidate's ELF
+and says the freeze's is unknown.
+
 ## def record-of
 
 One target's qualification record from a bench run (the file header):
 `bench` the run's directory, `candidate` the candidate's record file,
 `target` its named spec. A bench run from a host package (bench.nuon's
 `package`) is held to the candidate's bench file as its package runs it
-(packaged-bench at the package's directory). Its ledger is matrix's
+(packaged-bench at the package's directory), and its runs to the freeze
+(frozen-of), the manifest kept under the bench's `package`. Its ledger is matrix's
 ledger-of over the record, the tag's state, and the bench's and the
 conditions' problems; its verdicts verdicts-of's.
 

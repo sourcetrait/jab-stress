@@ -26,8 +26,9 @@ before anything is reopened.
 
 ## def reopened
 
-Every kept file the check reads, bench.nuon and each run's stream,
-identity, route, and run record, held to its row in the run's inventory
+Every kept file the check reads, bench.nuon, a packaged bench's manifest
+as its preflight kept it, and each run's stream, identity, route, and run
+record, held to its row in the run's inventory
 by SHA-256, a file the inventory keeps and the bench lacks named too: a
 reopened input whose digest differs is the captured data itself, a
 problem. With no inventory, a bench not yet landed, the files are read as
@@ -36,7 +37,9 @@ found.
 ## def rebuilt
 
 The bench laid out again in `work`: its bench.nuon and watch.nuon copied,
-each step's report made again from its kept runs (gauge read batch), so
+a packaged bench's manifest with them at `preflight/package.nuon`, where
+the record reads the freeze's ELF, each step's report made again from its
+kept runs (gauge read batch), so
 the record is derived from the streams and never from a stored report, and
 the bench's own directory is never written.
 
