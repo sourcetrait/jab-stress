@@ -36,8 +36,11 @@ this repository's root:
 A module imports another by its path relative to the importing file,
 named through `path self`, `use (path self ../rules)`, so nushell parses
 each module file once, and reaches Jab's through the checkout beside this
-one, `../jab`, as the older code does; a bin or a script keeps the plain
-relative path, since its top level runs after its parse, where `path self`
-refuses. Run a command as `nu nu/bin/nuance.nu <concept> <verb>
+one, `../jab`, as the older code does. A bin binds each import's path
+first, `const RULES = path self ../mod/nuance/importmap`, then `use
+$RULES`, since its top level runs after its parse, where `path self` as a
+command refuses, and a bare relative path beside a module's `path self` of
+the same module is a second parse of it; an older script keeps the plain
+relative path. Run a command as `nu nu/bin/nuance.nu <concept> <verb>
 ...`. The older trees, `fps/`, `kernel/`, `runners/`, and `sdk/`, with
 their justfiles, predate the layout and move into it.

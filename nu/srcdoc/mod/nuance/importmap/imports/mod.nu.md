@@ -20,7 +20,16 @@ path would otherwise carry the `;`.
 
 ## def path-consts
 
-A source's `const NAME = "path"`, read for a `use $NAME [...]`.
+A source's `const NAME = "path"` and `const NAME = path self <path>`, read
+for a `use $NAME [...]`. A bin binds its imports so, nushell keeping one
+module per path as joined: a bin's bare `use ../mod/map` beside a module's
+`use (path self ..)` of the same map loads it twice, `path self` normalizing
+the one and not the other.
+
+## def target-of
+
+The path an import names, through its constant when the import names one,
+so a rule reads a bound import as the path it binds.
 
 ## def resolve
 

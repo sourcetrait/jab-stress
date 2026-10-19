@@ -1,6 +1,10 @@
 #!/usr/bin/env nu
-use ../mod/nuance/freshbuild
-use ../mod/nuance/importmap
+# The fresh build's module's path, bound at parse time
+const FRESHBUILD = path self ../mod/nuance/freshbuild
+# The import map's module's path, bound at parse time
+const IMPORTMAP = path self ../mod/nuance/importmap
+use $FRESHBUILD
+use $IMPORTMAP
 
 # A fresh build of jab's matrix from its HEAD, each artifact's digest in `out`.
 def "main freshbuild manifest" [jab: path, out: path] {

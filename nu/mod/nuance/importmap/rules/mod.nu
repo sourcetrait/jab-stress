@@ -140,17 +140,28 @@ export def constants [contract: record, landed: list<string>, decls: table]: not
     $out
 }
 
-# Each owned file's declarations in place or at its home, the retired ones gone.
+# Each owned file's declarations in place or at home under its group's names
 export def files [contract: record, landed: list<string>, decls: table]: nothing -> table {
     mut out = []
     for f in $contract.files {
         let old = (mapped $contract $landed $f.repo $f.file)
         let moved = ($f.home != null and $f.group != null and $f.group in $landed)
+        let stays = ($f.home != null and ($old | str starts-with $f.home))
         let here = ($decls | where {|d| $d.repo == $f.repo and $d.file == $old })
         let homed = (if $moved {
             $decls | where {|x| $x.repo == $f.repo and ($x.file | str starts-with $f.home) }
         } else { [] })
         for d in $f.declarations {
+            let added = ($d | get -o added)
+            if $added != null {
+                let at = (if $moved { $homed } else { $here })
+                let there = ($at | any {|x| $x.kind == $d.kind and $x.name == $d.name })
+                if $added in $landed and not $there {
+                    let why = $"($d.kind) ($added) adds, absent"
+                    $out = ($out | append (refusal missing $f.repo ($f.home | default $old) 0 $d.name $why))
+                }
+                continue
+            }
             let at_old = ($here | any {|x| $x.kind == $d.kind and $x.name == $d.name })
             let retired = ($d | get -o retired)
             if $retired != null and $retired in $landed {
@@ -161,13 +172,14 @@ export def files [contract: record, landed: list<string>, decls: table]: nothing
                 continue
             }
             if $moved {
-                let at_home = ($homed | any {|x| $x.kind == $d.kind and $x.name == $d.name })
-                if $at_old {
+                let name = ($d | get -o to | default $d.name)
+                let at_home = ($homed | any {|x| $x.kind == $d.kind and $x.name == $name })
+                if $at_old and not $stays {
                     let why = $"in its old file after ($f.group) landed"
                     $out = ($out | append (refusal stale $f.repo $old 0 $d.name $why))
                 }
                 if not $at_home {
-                    let why = $"($d.kind) of ($f.file), not under it"
+                    let why = $"($d.kind) of ($f.file) as ($name), not under it"
                     $out = ($out | append (refusal missing $f.repo $f.home 0 $d.name $why))
                 }
             } else if not $at_old {
@@ -209,7 +221,7 @@ export def ownership [contract: record, landed: list<string>, decls: table]: not
         if ($placed | get -o (key-of $d.repo $d.file $d.kind $d.name)) != null { continue }
         let bin = ($contract.bin_dirs | any {|b| $b.repo == $d.repo and ($d.file | str starts-with $b.dir) })
         let verb = ($d.kind == 'def' and (($d.name == 'main') or ($d.name | str starts-with 'main ')))
-        if $bin and $verb { continue }
+        if $bin and ($verb or $d.kind == 'const') { continue }
         let module = ($contract.modules | where {|m| $m.repo == $d.repo and $m.file == $d.file } | get -o 0)
         if $module != null and $d.kind == 'const' {
             let ours = ($contract.consts | any {|k|
@@ -222,7 +234,8 @@ export def ownership [contract: record, landed: list<string>, decls: table]: not
             let homed = ($f.home != null and $f.group in $landed and ($d.file | str starts-with $f.home))
             $f.repo == $d.repo and ($f.at == $d.file or $homed)
         })
-        if ($owners | any {|f| $f.declarations | any {|x| $x.kind == $d.kind and $x.name == $d.name } }) { continue }
+        let named = {|x| $x.kind == $d.kind and ($x.name == $d.name or ($x | get -o to) == $d.name) }
+        if ($owners | any {|f| $f.declarations | any $named }) { continue }
         let why = $"a ($d.kind) the contract does not own"
         $out = ($out | append (refusal unowned $d.repo $d.file $d.line $d.name $why))
     }
@@ -370,7 +383,7 @@ export def bin-rules [contract: record, sources: table, decls: table]: nothing -
     mut out = []
     for s in ($sources | where kind == 'nu') {
         if not ($contract.bin_dirs | any {|b| $b.repo == $s.repo and ($s.file | str starts-with $b.dir) }) { continue }
-        let names = (imports lines-of $s.src | each {|i| import-name $i.target })
+        let names = (imports lines-of $s.src | each {|i| imports target-of $s.src $i } | compact | each {|t| import-name $t })
         let lines = ($s.src | lines)
         let here = ($decls | where {|d| $d.repo == $s.repo and $d.file == $s.file } | sort-by line)
         for e in ($here | enumerate) {

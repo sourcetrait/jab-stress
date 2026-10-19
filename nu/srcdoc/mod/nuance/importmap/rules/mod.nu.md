@@ -46,14 +46,23 @@ A file the contract owns whole keeps its declarations in its place until
 its group lands, then under its group's home, any file there. A
 declaration the contract marks `retired` by a group, a constant naming a
 monolith's path, which the group's direct imports replace, is gone from
-its place once that group lands, and refused as stale if it stays.
+its place once that group lands, and refused as stale if it stays. One
+marked `to` takes that name under the home once its group lands, a
+script's verb becoming its module's (`main show`, map's `show`). A row
+marked `added` by a group is a declaration the group makes, absent before
+it lands and refused as missing after if not under the home, or in the
+file itself for a file that does not move (the checker's own). A
+file whose home holds its own place, FierceTools' do.nu, the manifest's
+`do` until WorkspaceDrivers, keeps its place with no stale refusal.
 
 ## def ownership
 
 Every declaration of both trees is one the contract places: a monolith's
 def or constant, a module's def by its final name, a case or the
-orchestrator's, a bin's `main` verbs, a module's constant of its family,
-or an owned file's. Any other is refused at its line.
+orchestrator's, a bin's `main` verbs and its constants, which bind its
+imports' paths and hold no logic, a module's constant of its family, or an
+owned file's, by its name, its `to`, or its `added` row. Any other is
+refused at its line.
 
 ## def module-at
 
@@ -89,7 +98,8 @@ nothing else in the check reads it.
 ## def bin-rules
 
 A bin's verb is one call of one module function: each def's body counted,
-its own `def` keyword aside.
+its own `def` keyword aside, a module named by its import's path, bound
+through a constant or written out.
 
 ## def case-rules
 

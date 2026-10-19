@@ -1,6 +1,7 @@
 const LEAVES = ['std' 'rig/sourcetrait/emptwo/prototype/long']
 const FORM = '^\s*(?P<form>export use|overlay use|use|source)\s+(?P<rest>\S.*)$'
 const PATH_CONST = '^(?:export )?const (?P<n>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*["''](?P<v>[^"'']*)["'']\s*$'
+const SELF_CONST = '^(?:export )?const (?P<n>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*\(?path self (?P<v>[^\s\)]+)\)?\s*$'
 
 # A line's import: its form, the path it names, and the list after it.
 def import-of [line: string]: nothing -> oneof<record<form: string, target: string, list: list<string>>, nothing> {
@@ -39,7 +40,16 @@ export def lines-of [src: string]: nothing -> table<line: int, form: string, tar
 
 # A source's parse-time constants that name a path, each name to its text.
 def path-consts [src: string]: nothing -> record {
-    $src | lines | parse --regex $PATH_CONST | reduce --fold {} {|c, acc| $acc | upsert $c.n $c.v }
+    let ls = ($src | lines)
+    $ls | parse --regex $PATH_CONST | append ($ls | parse --regex $SELF_CONST)
+    | reduce --fold {} {|c, acc| $acc | upsert $c.n $c.v }
+}
+
+# The path an import names, a constant's text for a bound one, else null.
+export def target-of [src: string, imp: record]: nothing -> oneof<string, nothing> {
+    if ($imp.target | str starts-with '$') {
+        path-consts $src | get -o ($imp.target | str substring 1..)
+    } else { $imp.target }
 }
 
 # A refused import's resolution, with why.
@@ -64,9 +74,7 @@ export def resolve [roots: record, repo: string, file: string, kind: string, src
     nothing -> record<kind: string, repo: string, file: string, detail: string>
 ] {
     if $imp.form == 'overlay use' { return (refused 'overlay use') }
-    let target = (if ($imp.target | str starts-with '$') {
-        path-consts $src | get -o ($imp.target | str substring 1..)
-    } else { $imp.target })
+    let target = (target-of $src $imp)
     if $target == null { return (refused $"($imp.target), no parse-time constant of a path") }
     if ($target == 'std') or ($target | str starts-with 'std/') {
         return {kind: 'leaf', repo: '', file: 'std', detail: ''}
