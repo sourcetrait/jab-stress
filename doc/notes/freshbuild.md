@@ -56,3 +56,34 @@ kernel is built again with every program, so a kernel at one tuple is
 hashed several times, and a program's disk is built at each of its
 tuples; two different digests of either stop the run, since the build
 would not be reproducible.
+
+## Comparing two manifests
+
+```
+nu nu/bin/nuance.nu freshbuild compare <before manifest.nuon> <after out> <jab checkout>
+```
+
+holds a manifest taken after a move to one taken before it. The moves
+are `nu/nuon/nuance/freshbuild/moves.nuon`: the paths moved, a program
+under one read at its new place, and the programs renamed, their files
+named by the new name. Each row of the earlier manifest, read through the
+moves, is found in the later one by its exact build and role, and its
+bytes must be the same.
+
+Two rows of a renamed program may differ, and each is remade to show
+why rather than passed:
+
+- its ELF names its object after the program, `fps.o` before and
+  `fierce.o` after; the ELF is built again under the old name in a
+  worktree of the later commit, the checkout's toolchain linked in, and
+  must hash to the earlier row;
+- its disk takes the program's name as its volume's, and the map
+  compiler's `tile.nuon` names each material's source by its absolute
+  path; the tree is copied, its records' paths moved back to the old
+  place, the image made under the old name, and it must hash to the
+  earlier row.
+
+A row with no counterpart either way, a path that is not the move's, and
+any other difference are refused. `compare.nuon` beside the later
+manifest keeps every remade row with its cause and every refusal. The
+worktree is removed when the remake ends, whether or not it held.

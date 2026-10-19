@@ -7,6 +7,11 @@ def "main freshbuild manifest" [jab: path, out: path] {
     freshbuild manifest $jab $out
 }
 
+# A manifest taken after the moves held to one taken before, by role.
+def "main freshbuild compare" [before: path, after: path, jab: path] {
+    freshbuild compare $before $after $jab
+}
+
 # jab's and the workbench's trees held to the migration contract.
 def "main importmap check" [
     jab: path, stress: path, --landed: string = '', --contract: string = '', --out: string = ''

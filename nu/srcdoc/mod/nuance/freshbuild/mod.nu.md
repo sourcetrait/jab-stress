@@ -12,6 +12,12 @@ it, where the SDK's `target-root` puts the checkout's one target.
 The tuples the source builds, `nu/nuon/nuance/freshbuild/matrix.nuon`,
 its shape `nu/type/nuance/freshbuild/Matrix.nutype`.
 
+## const MOVES
+
+The moves a comparison reads an earlier manifest through,
+`nu/nuon/nuance/freshbuild/moves.nuon`, its shape
+`nu/type/nuance/freshbuild/Moves.nutype`.
+
 ## def tuple-of
 
 The SDK's own rule for a build's symbols (`--set`): each name screaming
@@ -73,3 +79,45 @@ two digests of one kernel stop the run as a build that is not
 reproducible, and so do two digests of one program's disk in one tree,
 its inputs the same at every tuple. A row taken twice stops it too.
 `manifest.nuon` records the commit, every build, and every row.
+
+## def key-of
+
+A row's exact build and role: the program, the tree, the sorted symbols,
+and the role, the key a manifest takes each row by.
+
+## def moved-program
+
+A path under a moved one takes the move's new prefix; a path the moves
+do not reach stays.
+
+## def moved-row
+
+The kernel's rows stay as written. A program's row takes its program's
+new place, and a renamed program's file, its stem the old name, the new
+name's.
+
+## def remade-elves
+
+`git worktree add --detach` of the later commit under the comparison's
+scratch, the checkout's `extern/riscv` link made there so the build takes
+the same toolchain, each renamed program's manifest given its old name
+back, then each tuple built into a fresh cache and its `<old>.elf` hashed.
+The worktree is removed with `--force` whatever the builds did, and an
+error of theirs is raised after.
+
+## def remade-disk
+
+The disk's tree copied, every NUON record of it naming the program's
+absolute directory rewritten to name the old one, the map compiler's
+`tile.nuon` the one that does, and genromfs run over the copy under the
+old name. A copied tree makes the same image as the original, since
+genromfs reads it in the same order.
+
+## def compare
+
+Each earlier row, read through the moves, found in the later manifest by
+its key: absent, at another path, or of other bytes is refused, but for a
+renamed program's ELF and disk, which are remade under the old name and
+place and must hash to the earlier row. A later row with no earlier one is
+refused too. A disk is remade once a tree and its proof shared by the
+tuples built at it.

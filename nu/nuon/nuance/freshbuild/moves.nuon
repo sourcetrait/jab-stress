@@ -1,0 +1,10 @@
+{
+ paths: [
+  [from,     to];
+  ["game/fps", "kit/fierce"]
+ ],
+ names: [
+  [program,      from, to];
+  ["kit/fierce", fps,  fierce]
+ ]
+}

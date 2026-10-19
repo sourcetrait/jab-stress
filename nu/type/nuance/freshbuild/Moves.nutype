@@ -1,0 +1,1 @@
+record<paths: table<from: string, to: string>, names: table<program: string, from: string, to: string>>

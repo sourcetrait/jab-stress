@@ -1,4 +1,5 @@
 const MATRIX = path self ../../../nuon/nuance/freshbuild/matrix.nuon
+const MOVES = path self ../../../nuon/nuance/freshbuild/moves.nuon
 
 # A tuple as the SDK keys a build: screaming snake, deduped, and sorted.
 def tuple-of [symbols: list<string>]: nothing -> list<string> {
@@ -170,4 +171,175 @@ export def manifest [jab: path, out: path]: nothing -> record<commit: string, bu
     }
     {commit: $commit, builds: $builds, rows: $rows} | to nuon --indent 1 | save ($out | path join 'manifest.nuon')
     {commit: $commit, builds: ($builds | length), rows: ($rows | length)}
+}
+
+# A row's key: its program, its tree, its symbols, and its role.
+def key-of [row: record]: nothing -> string {
+    $"($row.program) ($row.profile) [(tuple-text $row.symbols)] ($row.role)"
+}
+
+# A program's path after the moves: under a moved path, at its new place.
+def moved-program [moves: record, program: string]: nothing -> string {
+    let m = ($moves.paths | where {|p| $program == $p.from or ($program | str starts-with $"($p.from)/") } | get -o 0)
+    if $m == null { $program } else { $m.to + ($program | str substring ($m.from | str length)..) }
+}
+
+# A row after the moves: its program's new place and a renamed one's file name.
+def moved-row [moves: record, row: record]: nothing -> record {
+    if $row.program == 'kernel' { return $row }
+    let program = (moved-program $moves $row.program)
+    let renamed = ($moves.names | where program == $program | get -o 0)
+    let parsed = ($row.path | path basename | path parse)
+    let file = (if $renamed != null and $parsed.stem == $renamed.from {
+        $parsed | update stem $renamed.to | path join
+    } else { $row.path | path basename })
+    $row | update program $program | update path ([$program $file] | path join)
+}
+
+# A renamed program's ELFs built under its old name in a worktree of the commit.
+def remade-elves [jab: path, commit: string, names: table, rows: table, scratch: path]: [
+    nothing -> table<key: string, sha256: string>
+] {
+    let wt = ($scratch | path join 'worktree')
+    let cache = ($scratch | path join 'cache')
+    let added = (^git -C $jab worktree add --detach $wt $commit | complete)
+    if $added.exit_code != 0 { error make {msg: $"a worktree of ($commit): ($added.stderr)"} }
+    let made = (try {
+        let link = ($jab | path join 'extern' 'riscv')
+        if ($link | path type) == 'symlink' {
+            mkdir ($wt | path join 'extern')
+            ^ln -s ($link | path expand) ($wt | path join 'extern' 'riscv')
+        }
+        for n in ($names | where {|n| $n.program in ($rows | get program) }) {
+            let file = ($wt | path join $n.program 'program.jab.toml')
+            let raw = (open --raw $file | decode)
+            let named = ($raw | str replace $"name = '($n.to)'" $"name = '($n.from)'")
+            if $named == $raw { error make {msg: $"($file) names no ($n.to)"} }
+            $named | save -f $file
+        }
+        mkdir $cache
+        mut elves = []
+        for r in $rows {
+            let b = (build-at $wt $cache $r.program $r.symbols)
+            if $b.exit != 0 { error make {msg: $"remaking ($r.program) at [(tuple-text $r.symbols)]: ($b.stderr)"} }
+            let old = ($names | where program == $r.program | get 0.from)
+            let elf = (target-in $cache | path join $r.profile $r.program $"($old).elf")
+            $elves = ($elves | append {key: (key-of $r), sha256: (digest-of $elf).sha256})
+        }
+        {elves: $elves, error: null}
+    } catch {|e| {elves: [], error: $e.msg} })
+    let removed = (^git -C $jab worktree remove --force $wt | complete)
+    if $made.error != null { error make {msg: $made.error} }
+    if $removed.exit_code != 0 { error make {msg: $"removing the worktree ($wt): ($removed.stderr)"} }
+    $made.elves
+}
+
+# A renamed program's disk remade: its records' paths moved back, its old name.
+def remade-disk [jab: path, target: path, row: record, place: string, old: string, scratch: path]: [
+    nothing -> record<sha256: string, rewritten: list<string>>
+] {
+    let manifest = (open ($jab | path join $row.program 'program.jab.toml'))
+    let compiled = ($manifest | get -o target_assets | default '')
+    let dir = (if $compiled != '' {
+        $target | path join 'asset' $row.program $compiled
+    } else {
+        $jab | path join $row.program ($manifest | get -o assets | default '') | path expand
+    })
+    let copy = ($scratch | path join $"tree_($row.profile)")
+    cp -r $dir $copy
+    let from = (($jab | path expand | path join $row.program) + (char path_sep))
+    let to = (($jab | path expand | path join $place) + (char path_sep))
+    let records = (glob ($copy | path join '**' '*.nuon') | where {|f| open --raw $f | decode | str contains $from })
+    for f in $records { open --raw $f | decode | str replace --all $from $to | save -f $f }
+    let image = ($scratch | path join $"($row.profile)_($old).romfs")
+    let r = (^genromfs -d $copy -f $image -V $old | complete)
+    if $r.exit_code != 0 { error make {msg: $"genromfs over ($copy): ($r.stderr)"} }
+    {sha256: (digest-of $image).sha256, rewritten: ($records | each {|f| $f | path relative-to $copy })}
+}
+
+# A manifest after the moves held to one before, by role, differences named.
+export def compare [before: path, after: path, jab: path]: [
+    nothing -> record<ok: bool, rows: int, same: int, remade: int, refusals: int>
+] {
+    let moves = (open $MOVES)
+    let b = (open ($before | path expand))
+    let out = ($after | path expand)
+    let a = (open ($out | path join 'manifest.nuon'))
+    let target = (target-in ($out | path join 'cache'))
+    let scratch = ($out | path join 'compared')
+    if ($scratch | path exists) { error make {msg: $"($scratch) exists; a comparison is made once"} }
+    mkdir $scratch
+    let mapped = ($b.rows | each {|r| {before: $r, row: (moved-row $moves $r)} })
+    let later = ($a.rows | reduce --fold {} {|r, acc| $acc | insert (key-of $r) $r })
+    mut refusals = []
+    mut same = 0
+    mut owed = []
+    for m in $mapped {
+        let k = (key-of $m.row)
+        let x = ($later | get -o $k)
+        if $x == null {
+            $refusals = ($refusals | append {kind: 'missing', key: $k, detail: 'no row after the moves'})
+            continue
+        }
+        if $x.path != $m.row.path {
+            let detail = $"($m.row.path) before the moves, ($x.path) after"
+            $refusals = ($refusals | append {kind: 'path', key: $k, detail: $detail})
+            continue
+        }
+        if $x.sha256 == $m.row.sha256 { $same += 1; continue }
+        let renamed = ($moves.names | where program == $x.program | get -o 0)
+        if $renamed != null and $x.role in ['program_elf' 'romfs_disk'] {
+            $owed = ($owed | append {before: $m.before, after: $x, renamed: $renamed})
+            continue
+        }
+        let detail = $"($m.row.sha256) before, ($x.sha256) after"
+        $refusals = ($refusals | append {kind: 'differs', key: $k, detail: $detail})
+    }
+    let elves = ($owed | where {|o| $o.after.role == 'program_elf' } | get after)
+    let remade = (if ($elves | is-empty) { [] } else { remade-elves $jab $a.commit $moves.names $elves $scratch })
+    mut disks = {}
+    mut proofs = []
+    for o in $owed {
+        let k = (key-of $o.after)
+        let named = $"($o.renamed.from) before and ($o.renamed.to) after"
+        let proof = (if $o.after.role == 'program_elf' {
+            let sha = ($remade | where key == $k | get -o 0.sha256)
+            {sha256: $sha, cause: $"its object named after the program, ($named)"}
+        } else {
+            let dk = $"($o.after.program) ($o.after.profile)"
+            let d = (if ($disks | get -o $dk) != null { $disks | get $dk } else {
+                remade-disk $jab $target $o.after $o.before.program $o.renamed.from $scratch
+            })
+            let records = ($d.rewritten | str join ', ')
+            let cause = $"its volume named ($named); ($records) naming its sources at its place"
+            {sha256: $d.sha256, cause: $cause, disk: $d}
+        })
+        if $o.after.role == 'romfs_disk' {
+            $disks = ($disks | upsert $"($o.after.program) ($o.after.profile)" $proof.disk)
+        }
+        let held = ($proof.sha256 == $o.before.sha256)
+        $proofs = ($proofs | append {
+            key: $k, before: $o.before.sha256, after: $o.after.sha256, remade: $proof.sha256, held: $held,
+            cause: $proof.cause
+        })
+        if not $held {
+            let detail = $"remade under its old name and place to ($proof.sha256), where it was ($o.before.sha256)"
+            $refusals = ($refusals | append {kind: 'remade', key: $k, detail: $detail})
+        }
+    }
+    let earlier = ($mapped | each {|m| key-of $m.row })
+    for x in $a.rows {
+        let k = (key-of $x)
+        if $k not-in $earlier {
+            $refusals = ($refusals | append {kind: 'new', key: $k, detail: 'no row before the moves'})
+        }
+    }
+    {
+        before: {file: ($before | path expand), commit: $b.commit}, after: {file: $out, commit: $a.commit},
+        moves: $moves, rows: ($mapped | length), same: $same, remade: $proofs, refusals: $refusals
+    } | to nuon --indent 1 | save ($out | path join 'compare.nuon')
+    {
+        ok: ($refusals | is-empty), rows: ($mapped | length), same: $same, remade: ($proofs | length),
+        refusals: ($refusals | length)
+    }
 }

@@ -10,6 +10,14 @@ manifest of jab's HEAD into a new directory `out`, its fresh cache, the
 kernels' flat images, and `manifest.nuon` there. The record lands in
 jab-stress-data as a run of `runs/jab/justtonu/`.
 
+## def main freshbuild compare
+
+`nu nu/bin/nuance.nu freshbuild compare <before> <after> <jab>`: a
+manifest file taken before the moves held to the out directory of one
+taken after, the later's fresh cache read for the remakes, and
+`compare.nuon` written there. The pair lands in jab-stress-data as a run
+of `runs/jab/justtonu/`.
+
 ## def main importmap check
 
 `nu nu/bin/nuance.nu importmap check <jab> <stress> [--landed <groups>]
