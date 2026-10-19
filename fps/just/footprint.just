@@ -1,20 +1,21 @@
-# FootprintEstimate's recipes (FrameCeiling): an export's five debug
-# images, a pose set captured on them, the captures read, and a pose's
-# differing regions cut out, through footprint.nu.
+# FootprintEstimate's recipes (FrameCeiling), shims over the footprint
+# bin until JustRetired: an export's five debug images, a pose set
+# captured on them, the captures read, and a pose's differing regions cut
+# out.
 
 set shell := ["nu", "-c"]
 
-readers := justfile_directory() / "../readers"
+footprint := justfile_directory() / "../../nu/bin/nuance/fierce/footprint.nu"
 data := justfile_directory() / "../../../jab-stress-data"
 
 images export:
-    nu {{readers}}/footprint.nu images {{export}}
+    nu {{footprint}} images {{export}}
 
 capture export out only="" poses=(data / "assets" / "fierce" / "poses" / "footprint.nuon"):
-    nu {{readers}}/footprint.nu capture {{export}} {{poses}} {{out}} --only '{{only}}'
+    nu {{footprint}} capture {{export}} {{poses}} {{out}} --only '{{only}}'
 
 read out:
-    nu {{readers}}/footprint.nu read {{out}}
+    nu {{footprint}} read {{out}}
 
 crops out pose:
-    nu {{readers}}/footprint.nu crops {{out}} {{pose}}
+    nu {{footprint}} crops {{out}} {{pose}}

@@ -5,9 +5,12 @@ const FRESHBUILD = path self ../mod/nuance/freshbuild
 const IMPORTMAP = path self ../mod/nuance/importmap
 # The run records' module's path, bound at parse time
 const RECORD = path self ../mod/runner/record
+# The hot routines' probe's module's path, bound at parse time
+const HOT = path self ../mod/nuance/fierce/probe/hot
 use $FRESHBUILD
 use $IMPORTMAP
 use $RECORD
+use $HOT
 
 # A fresh build of jab's matrix from its HEAD, each artifact's digest in `out`.
 def "main freshbuild manifest" [jab: path, out: path] {
@@ -39,6 +42,11 @@ def "main runner record restored" [dir: path] {
 # A reader's required inputs a restoration lacks, none where all are there.
 def "main runner record required" [dir: path, reader: string] {
     record required $dir $reader
+}
+
+# The renderer's hot routines' places in an ELF, printed as NUON.
+def "main hot" [elf: string] {
+    hot $elf
 }
 
 def main [] { help main }

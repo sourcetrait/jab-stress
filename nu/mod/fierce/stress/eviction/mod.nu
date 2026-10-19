@@ -1,0 +1,22 @@
+use (path self ./cycle)
+use (path self ./held)
+use (path self ./reuse)
+
+# The eviction fixtures named, every one by default, each result kept
+export def main [kernel: path, image: path, disk: path, out: path, ...fixtures: string] {
+    let asked = (if ($fixtures | is-empty) { ["cycle" "rebuild" "held" "reuse"] } else { $fixtures })
+    mkdir $out
+    for f in $asked {
+        let s = (date now)
+        let result = (match $f {
+            "cycle" => (cycle eviction-cycle $kernel $image $disk $out)
+            "rebuild" => (cycle rebuild-bound $kernel $image $disk $out)
+            "held" => (held held-partial $kernel $image $disk $out)
+            "reuse" => (reuse slot-reuse $kernel $image $disk $out)
+            _ => (error make { msg: $"no fixture ($f)" })
+        })
+        let took = (((date now) - $s) / 1sec | math round --precision 1)
+        { fixture: $f, seconds: $took, result: $result } | to nuon --indent 1 | save -f ($out | path join $"($f).nuon")
+        print $"eviction ($f): ok in ($took) s"
+    }
+}

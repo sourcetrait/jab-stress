@@ -1,19 +1,19 @@
-# TileHandoff's recipes. `build` builds fps, debug unless given.
-# `handoff-set` runs the test's sets. `handoff`, `builder`, and
-# `builder-on` run one fixture alone. `oblique`, `identity`, `rows`,
-# `dueprobe`, and `litsteps` run the probes. `keys`, `litsteps-live`, and
-# `handoff-stats` run jab's tiles bin. `packetgauge`, `workergauge`, and
-# `reader` run the fps readers. `nucheck` checks a file as a module.
-# Run as `just -f fps/just/handoff.just <recipe>`. jab is the checkout
-# beside this repository, and its target is the SDK's own.
+# TileHandoff's recipes, shims over the workbench's bins until JustRetired.
+# `build` builds fierce, debug unless given. `handoff-set` runs the test's
+# sets. `handoff`, `builder`, and `builder-on` run one fixture alone.
+# `oblique`, `identity`, `rows`, `dueprobe`, and `litsteps` run the
+# probes. `keys`, `litsteps-live`, and `handoff-stats` run jab's tiles bin.
+# `packetgauge`, `workergauge`, and `reader` run the readers. `nucheck`
+# checks a file as a module. Run as `just -f fps/just/handoff.just
+# <recipe>`. jab is the checkout beside this repository, and its target is
+# the SDK's own.
 
 set shell := ["nu", "-c"]
 
 jab := justfile_directory() / "../../../jab"
-readers := justfile_directory() / "../readers"
-probe := justfile_directory() / "../probe"
+bin := justfile_directory() / "../../nu/bin/nuance/fierce"
 
-# fps built with the build symbols named, debug unless given
+# fierce built with the build symbols named, debug unless given
 build set="debug":
     nu {{jab}}/nu/bin/do.nu build {{jab}}/kit/fierce --set {{set}}
 
@@ -35,11 +35,11 @@ builder-on image out:
 
 # the oblique handoff's residual probe on a handoff map's romfs
 oblique spec disk out:
-    use {{jab}}/nu/mod/target; let t = (target root {{jab}} | path join debug); ^nu {{probe}}/handoff/oblique.nu ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) {{disk}} {{out}} "{{spec}}"
+    use {{jab}}/nu/mod/target; let t = (target root {{jab}} | path join debug); ^nu {{bin}}/probe/handoff/oblique.nu ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) {{disk}} {{out}} "{{spec}}"
 
 # the held-off pictures of two debug images held byte for byte
 identity base handoff_disk still_disk out:
-    use {{jab}}/nu/mod/target; let t = (target root {{jab}} | path join debug); ^nu {{probe}}/handoff/identity.nu ($t | path join kernel jab.elf) {{base}} ($t | path join kit fierce fierce.jab) {{handoff_disk}} {{still_disk}} {{out}}
+    use {{jab}}/nu/mod/target; let t = (target root {{jab}} | path join debug); ^nu {{bin}}/probe/handoff/identity.nu ($t | path join kernel jab.elf) {{base}} ($t | path join kit fierce fierce.jab) {{handoff_disk}} {{still_disk}} {{out}}
 
 # a capture's dumps keyed: each tile's header and its texels' SHA-256
 keys api out:
@@ -47,15 +47,15 @@ keys api out:
 
 # the pool's counters a frame, the last eight
 rows api:
-    nu {{probe}}/handoff/rows.nu {{api}}
+    nu {{bin}}/probe/handoff/rows.nu {{api}}
 
 # the launch's due order, events against a screen
 dueprobe:
-    nu {{probe}}/handoff/dueprobe.nu
+    nu {{bin}}/probe/handoff/due.nu
 
 # the lit loop's steps along a capture's rows
 litsteps capture rect ch:
-    nu {{probe}}/handoff/litsteps.nu {{capture}} "{{rect}}" {{ch}}
+    nu {{bin}}/probe/handoff/litsteps.nu {{capture}} "{{rect}}" {{ch}}
 
 litsteps-live capture rect ch out:
     nu {{jab}}/kit/fierce/nu/bin/nuance/tiles.nu lit-steps {{capture}} "{{rect}}" {{ch}} {{out}}
@@ -64,10 +64,10 @@ handoff-stats spec index out:
     nu {{jab}}/kit/fierce/nu/bin/nuance/tiles.nu handoff {{spec}} {{index}} {{out}}
 
 packetgauge mode base out *labels:
-    nu {{readers}}/packetgauge.nu {{mode}} {{base}} {{out}} {{labels}}
+    nu {{bin}}/packetgauge.nu {{mode}} {{base}} {{out}} {{labels}}
 
 workergauge mode base out *labels:
-    nu {{readers}}/workergauge.nu {{mode}} {{base}} {{out}} {{labels}}
+    nu {{bin}}/workergauge.nu {{mode}} {{base}} {{out}} {{labels}}
 
 reader script mode base out *labels:
     nu {{script}} {{mode}} {{base}} {{out}} {{labels}}

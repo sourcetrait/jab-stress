@@ -40,3 +40,8 @@ directory, its receipt and its tree, held to the run it was made from.
 
 `nu nu/bin/nuance.nu runner record required <dir> <reader>`: the inputs
 the consumer table names for `reader` that the restoration's tree lacks.
+
+## def main hot
+
+`nu nu/bin/nuance.nu hot <elf>`: the renderer's hot routines in a build's
+ELF, each with its start, end, and paged and ecall counts, as NUON.
