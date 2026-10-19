@@ -1,4 +1,5 @@
 use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge)
+use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge/report) [CEILING_US]
 
 # jab, checked out beside the workbench
 export const JAB = (path self ../../../../../../jab | path expand)
@@ -113,9 +114,9 @@ export def verdict-of [run: record]: nothing -> record {
     let problems = ([
         (if $run.standing != "valid" { $"it stands ($run.standing): ($run.reasons | str join '; ')" })
         ...$run.agreement
-        (if $under == false { $"its critical path's median, (ms $median) ms, is at or over the ($gauge.CEILING_US // 1000) ms ceiling" })
+        (if $under == false { $"its critical path's median, (ms $median) ms, is at or over the ($CEILING_US // 1000) ms ceiling" })
     ] | compact)
-    { pass: ($problems | is-empty), median_us: $median, ceiling_us: $gauge.CEILING_US, under: $under, over: ($run.measured | get -o over), frames: ($run.measured | get -o frames), problems: $problems }
+    { pass: ($problems | is-empty), median_us: $median, ceiling_us: $CEILING_US, under: $under, over: ($run.measured | get -o over), frames: ($run.measured | get -o frames), problems: $problems }
 }
 
 # A run named for reading
