@@ -19,7 +19,10 @@ record<
         record<part: string, build: oneof<string, nothing>, source: string, record: string>,
         record<
             part: string, build: oneof<string, nothing>, source: string, record: string,
-            export: record<name: string, commit: string, provenance: string>
+            export: record<
+                name: string, commit: string, provenance: string, symbols: list<string>,
+                image_sha256: string, kernel_sha256: oneof<string, nothing>
+            >
         >
     >>,
     kept: record<as: string, why: string>,

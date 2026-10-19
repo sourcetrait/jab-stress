@@ -33,13 +33,22 @@ its long launch, the result NUON on stdout; a failure on stderr, exit 1.
 
 `nu nu/bin/nuance.nu runner land <dir> <subject> <set> <stamp> <manifest>
 [--data <root>] [--source <producer>]`: a run's directory landed in the data
-checkout, each log a container, every original and object measured, and the
-record held by `runner record stored`.
+checkout, each original kept, archived, derived, or hashed by its
+manifest's retention, each kept log a container, every original and object
+measured, and the record held by `runner record stored`.
+
+## def main runner migrate
+
+`nu nu/bin/nuance.nu runner migrate <run> <manifest> <scratch> [--data
+<root>]`: a run committed at schema 1 moved to schema 2 with its further
+originals from the trees its manifest names, by retention, restored whole
+before it replaces the run, and its receipt written under `migration/`.
 
 ## def main runner restore
 
-`nu nu/bin/nuance.nu runner restore <run> <scratch>`: a landed run laid out
-under `<scratch>/tree/` as its runner wrote it, its receipt beside.
+`nu nu/bin/nuance.nu runner restore <run> <scratch> [--root <root>]`: a
+landed run laid out under `<scratch>/tree/` as its runner wrote it, its
+receipt beside, its archive's members among its originals.
 
 ## def main runner reread
 
@@ -60,9 +69,9 @@ UTF-8.
 
 ## def main runner record stored
 
-`nu nu/bin/nuance.nu runner record stored <run>`: a landed run's
-directory held whole by `runner record`, every problem listed, none where
-it holds.
+`nu nu/bin/nuance.nu runner record stored <run> [--root <root>]`: a landed
+run's directory held whole by `runner record`, every problem listed, none
+where it holds.
 
 ## def main runner record restored
 

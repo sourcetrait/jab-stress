@@ -17,9 +17,16 @@ storage, restoration, and log container models beside them.
 ## const ROLES
 
 The classes the landing's class table gives a run's file, read from the
-DataModels plan: a log, a stream, a record, and a picture, build, source,
-or fixture. A control file, such as a supervised launch's JSON wire files,
-never reaches a landing, so it has no role here.
+DataModels plan with EvidenceRetention's asset: a log, a stream, a record,
+and a picture, build, source, fixture, or asset. A control file, such as a
+supervised launch's JSON wire files, never reaches a landing, so it has no
+role here.
+
+## const EXPORT_FIELDS
+
+An export part's record of the export it ran: its name, its source commit,
+its provenance record's path, its symbols, its image's SHA-256, and the
+kernel's ELF it ran with, null where it ran none or none was recorded.
 
 ## const DISPOSITIONS
 
@@ -67,8 +74,30 @@ the run at the length and SHA-256 the storage names; a raw object holding
 itself, a container holding its one original at the original's name with
 `.nuonl` added, an archive holding at least one; every original it holds
 listed in the inventory; every kept or archived original carried by
-exactly one object; no hash-only original carried; and no file in the run
+exactly one object, an archived one by an archive and a kept one by a raw
+object or a container; no hash-only original carried; an archive listing
+exactly its originals' SHA-256s, one member each; and no file in the run
 that the storage does not name, the three control files aside.
+
+## def root-of
+
+The repository a run sits in, read from its path when it lies at
+`runs/<subject>/<set>/<stamp>`, unless one is given; a run laid out
+elsewhere, a migration's new run in its scratch, is given its root.
+
+## def original-of
+
+A stored original's bytes: a raw object read as it is, an archived one as
+its member, extracted to stdout by its SHA-256. A record lands raw, so a
+container never holds a provenance and is not read here.
+
+## def export-problems
+
+Each part that ran on an export held to its provenance record: the export
+names every field of EXPORT_FIELDS; the provenance is stored in the run,
+or is a file of the repository at that path when the export's own run
+holds it; it parses; and its commit, symbols, and image, a kernel export's
+ELF where it records no image, are the export's.
 
 ## def stored
 
@@ -77,7 +106,9 @@ before anything else. A run of schema 1 is held to its model and its
 meaning alone, since it has no inventory or storage. A run of schema 2 is
 held to its model, then its inventory and storage are bound to the
 manifest by their SHA-256, held to their models, and held against each
-other and against the files the run holds.
+other and against the files the run holds, and each export part against
+its provenance. `--root` names the repository for a provenance outside the
+run.
 
 ## def restored
 

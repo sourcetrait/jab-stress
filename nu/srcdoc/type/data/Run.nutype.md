@@ -10,9 +10,11 @@ storage.
   items a targeted run took; with `combined`, the joint counts of two runs
   that together took their set whole; or with both.
 - A part's `source` replaces schema 1's `checkout`: `checkout`, `export`,
-  or `synthetic`. A part that ran on an export carries `export`, the
-  export's name, its source commit, and the run-relative path of its
-  provenance record.
+  or `synthetic`. A part that ran on an export carries `export`: the
+  export's name, its source commit, the path of its provenance record,
+  in the run or from the repository's root where the export's own run
+  holds it, its symbols, its image's SHA-256, a kernel export's ELF's,
+  and the kernel's ELF the part ran with, or null.
 - `inventory` and `storage` are the SHA-256 of `inventory.nuon` and
   `storage.nuon` beside the manifest.
 

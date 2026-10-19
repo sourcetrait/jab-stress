@@ -50,14 +50,19 @@ def "main runner work" [harness: string, given: string] {
     runner work $harness $given
 }
 
-# A run's directory landed in the data checkout, its logs containers, checked.
+# A run's directory landed in the data checkout, retention's archive kept, checked.
 def "main runner land" [dir: path, subject: string, set: string, stamp: string, manifest: path, --data: string = "", --source: string = ""] {
     landing land $dir $subject $set $stamp $manifest --data $data --source $source
 }
 
+# A schema 1 run moved to schema 2 with its further originals, a receipt written.
+def "main runner migrate" [run: path, manifest: path, scratch: path, --data: string = ""] {
+    landing migrate $run $manifest $scratch --data $data
+}
+
 # A landed run laid out in `scratch` as its runner wrote it, with its receipt.
-def "main runner restore" [run: path, scratch: path] {
-    landing restore $run $scratch
+def "main runner restore" [run: path, scratch: path, --root: string = ""] {
+    landing restore $run $scratch --root $root
 }
 
 # A landed run reread by a reader's command over its restoration in `scratch`.
@@ -76,8 +81,8 @@ def "main runner log text" [container: path] {
 }
 
 # A landed run's problems, none where it holds.
-def "main runner record stored" [run: path] {
-    record stored $run
+def "main runner record stored" [run: path, --root: string = ""] {
+    record stored $run --root $root
 }
 
 # A restoration's problems against its run, none where it holds.

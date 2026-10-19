@@ -7,7 +7,7 @@ const CONSUMERS = path self ../../../nuon/runner/record/consumers.nuon
 # The consumer table's model
 const CONSUMER_TYPE = path self ../../../type/runner/record/Consumer.nutype
 # The classes a run's file takes, the landing's class table's
-const ROLES = [log stream record picture build source fixture]
+const ROLES = [log stream record picture build source fixture asset]
 # What becomes of an original artifact
 const DISPOSITIONS = [kept archived derived hash-only]
 # The dispositions whose originals a stored object carries
@@ -26,6 +26,8 @@ const KEPT = [current last checkpoint targeted]
 const SCOPES = [whole targeted]
 # The files a landed run holds beside its stored objects
 const CONTROL = [run.nuon inventory.nuon storage.nuon]
+# An export part's record of the export it ran
+const EXPORT_FIELDS = [name commit provenance symbols image_sha256 kernel_sha256]
 # A restoration's receipt, beside the tree it lays out
 const RECEIPT = "restoration.nuon"
 # The restored tree in a restoration's directory
@@ -110,13 +112,68 @@ def storage-problems [dir: path, storage: list<any>, inventory: list<any>]: noth
         if $n != 1 { $"inventory.nuon: ($r.path) is ($r.disposition) and ($n) stored objects carry it, where one does" }
     } | compact)
     let gone = ($inventory | where disposition == "hash-only" | where {|r| $carriers | any {|c| $c.path == $r.path } } | each {|r| $"inventory.nuon: ($r.path) is hash-only and a stored object carries it" })
+    let misheld = ($inventory | where {|r| $r.disposition in $HELD } | each {|r|
+        let c = ($storage | where {|s| $r.path in $s.holds })
+        if ($c | length) == 1 and (($r.disposition == "archived") != (($c | get 0.kind) == "archive")) { $"inventory.nuon: ($r.path) is ($r.disposition) and the ($c | get 0.kind) ($c | get 0.object) carries it" }
+    } | compact)
+    let members = ($storage | where kind == "archive" | each {|s|
+        let file = ($dir | path join $s.object)
+        if ($file | path type) == "file" {
+            let listed = (do { ^tar --list --xz --file $file } | complete)
+            let want = ($inventory | where {|r| $r.path in $s.holds } | get sha256 | uniq | sort)
+            if $listed.exit_code != 0 { $"storage.nuon: archive ($s.object) does not list: ($listed.stderr | str trim)" } else if ($listed.stdout | lines | sort) != $want { $"storage.nuon: archive ($s.object)'s members are not its originals' SHA-256s, one each" }
+        }
+    } | compact)
     let named = ($storage | get object)
     let unnamed = (files-under $dir | where {|f| $f not-in $CONTROL and $f not-in $named } | each {|f| $"the run holds ($f), which storage.nuon does not name" })
-    $twice ++ $kinds ++ $objects ++ $shapes ++ $strays ++ $held ++ $gone ++ $unnamed
+    $twice ++ $kinds ++ $objects ++ $shapes ++ $strays ++ $held ++ $gone ++ $misheld ++ $members ++ $unnamed
+}
+
+# The repository holding a run: the one given, else the run's own when it sits in runs/
+def root-of [dir: path, root: string]: nothing -> any {
+    if $root != "" { return ($root | path expand) }
+    let up = ($dir | path dirname | path dirname | path dirname)
+    if ($up | path basename) == "runs" { $up | path dirname } else { null }
+}
+
+# A stored original's bytes, raw or an archive's member, null for any other
+def original-of [dir: path, row: record, storage: list<any>]: nothing -> any {
+    let s = ($storage | where {|x| $row.path in $x.holds } | get -o 0)
+    if $s == null { return null }
+    let file = ($dir | path join $s.object)
+    match $s.kind {
+        "raw" => (open --raw $file | into binary),
+        "archive" => (^tar --extract --xz --to-stdout --file $file $row.sha256 | into binary),
+        _ => null,
+    }
+}
+
+# Each export part held to its provenance: present, its commit, symbols, and image
+def export-problems [dir: path, root: any, run: record, inventory: list<any>, storage: list<any>]: nothing -> list<string> {
+    $run.builds | where source == "export" | each {|b|
+        let e = ($b | get -o export | default {})
+        let lacking = ($EXPORT_FIELDS | where {|f| $f not-in ($e | columns) })
+        if ($lacking | is-not-empty) { return [$"run.nuon: part ($b.part)'s export names no ($lacking | str join ', ')"] }
+        let row = ($inventory | where path == $e.provenance | get -o 0)
+        let elsewhere = (if $root == null { null } else { $root | path join $e.provenance })
+        let bytes = (if $row != null and $row.disposition in $HELD { original-of $dir $row $storage } else if $elsewhere != null and ($elsewhere | path type) == "file" { open --raw $elsewhere | into binary } else { null })
+        if $bytes == null { return [$"run.nuon: part ($b.part)'s provenance ($e.provenance) is stored neither in the run nor in this repository"] }
+        let p = (try { $bytes | decode utf-8 | from nuon } catch { null })
+        if $p == null { return [$"run.nuon: part ($b.part)'s provenance ($e.provenance) does not parse"] }
+        let image = ($p | get -o image_sha256 | default ($p | get -o elf_sha256))
+        [
+            (if ($p | get -o commit) != $e.commit { $"run.nuon: part ($b.part)'s export commit ($e.commit) is not its provenance's, ($p | get -o commit | default 'none')" })
+            (if ($p | get -o symbols | default []) != $e.symbols { $"run.nuon: part ($b.part)'s export symbols ($e.symbols | to nuon) are not its provenance's, ($p | get -o symbols | to nuon)" })
+            (if $image != $e.image_sha256 { $"run.nuon: part ($b.part)'s export image ($e.image_sha256) is not its provenance's, ($image | default 'none')" })
+        ] | compact
+    } | flatten
 }
 
 # A landed run's problems, none where it holds: its record, inventory, storage, files
-export def stored [run: path]: nothing -> list<string> {
+#
+# `root` is the repository a provenance path outside the run is read from, by
+# default the one the run sits in.
+export def stored [run: path, --root: string = ""]: nothing -> list<string> {
     let dir = ($run | path expand)
     let record = (read-nuon ($dir | path join "run.nuon"))
     if $record == null { return [$"($dir) holds no run.nuon that parses"] }
@@ -141,7 +198,8 @@ export def stored [run: path]: nothing -> list<string> {
     let storage = (read-nuon ($dir | path join "storage.nuon"))
     let shapes = ((model-problems $inventory "Inventory.nutype" "inventory.nuon") ++ (model-problems $storage "Storage.nutype" "storage.nuon"))
     if ($shapes | is-not-empty) { return ($semantics ++ $shapes) }
-    $semantics ++ (inventory-problems $inventory) ++ (storage-problems $dir $storage $inventory)
+    let exports = (export-problems $dir (root-of $dir $root) $record $inventory $storage)
+    $semantics ++ (inventory-problems $inventory) ++ (storage-problems $dir $storage $inventory) ++ $exports
 }
 
 # A restoration's problems, none where it holds: its receipt against its run
