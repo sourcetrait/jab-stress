@@ -1,6 +1,7 @@
 use (path self ./cycle)
 use (path self ./held)
 use (path self ./reuse)
+use (path self ../../places)
 
 # The eviction fixtures named, every one by default, each result kept
 export def main [kernel: path, image: path, disk: path, out: path, ...fixtures: string] {
@@ -19,4 +20,10 @@ export def main [kernel: path, image: path, disk: path, out: path, ...fixtures: 
         { fixture: $f, seconds: $took, result: $result } | to nuon --indent 1 | save -f ($out | path join $"($f).nuon")
         print $"eviction ($f): ok in ($took) s"
     }
+}
+
+# The fixtures on jab's debug tree, or another image beside its kernel and disk
+export def on-debug [out: path, ...fixtures: string, --image: string = ""] {
+    let p = (places)
+    main $p.kernel (if $image == "" { $p.image } else { $image }) $p.disk $out ...$fixtures
 }

@@ -6,23 +6,22 @@
 
 set shell := ["nu", "-c"]
 
-jab := justfile_directory() / "../../../jab"
 bin := justfile_directory() / "../../nu/bin"
 
 build dir set:
-    nu {{jab}}/nu/bin/do.nu build {{dir}} --set {{set}}
+    nu {{bin}}/nuance.nu build {{dir}} --set {{set}}
 
 tilecensus base out *labels:
     nu {{bin}}/nuance/fierce/tilecensus.nu {{base}} {{out}} {{labels}}
 
 reader-holds tree serial:
-    use {{tree}}/kit/fierce/nu/mod/census [census-reader-holds]; census-reader-holds (open --raw {{serial}} | decode); print "reader-holds: ok"
+    nu {{bin}}/nuance.nu fierce census reader-holds {{tree}} {{serial}}
 
 gauge-load:
-    use {{jab}}/kit/fierce/nu/mod/gauge; print "loaded"
+    nu {{bin}}/nuance.nu fierce census gauge-load
 
 check file:
-    nu --ide-check 50 {{file}}
+    nu {{bin}}/nuance.nu check {{file}} --ide
 
 hot elf:
     nu {{bin}}/nuance.nu hot {{elf}}

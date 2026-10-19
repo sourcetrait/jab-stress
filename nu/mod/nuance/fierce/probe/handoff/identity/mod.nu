@@ -1,5 +1,6 @@
 use (path self ../../../../../../../../jab/nu/mod/launch)
 use (path self ../../../../../../../../jab/kit/fierce/nu/mod/pose)
+use (path self ../../../../../fierce/places)
 
 # The console's L frame with the gradient or the parity lighting
 def level-frame [bright: bool, held: bool, --parity, --gradient]: nothing -> binary {
@@ -39,4 +40,10 @@ export def main [kernel: path, base: path, new: path, handoff_disk: path, still_
     })
     $rows | to nuon | save -f ($out | path join "identity.nuon")
     print ($rows | to nuon)
+}
+
+# A base image's held-off views against jab's debug image, on its debug kernel
+export def on-debug [base: path, handoff_disk: path, still_disk: path, out: path] {
+    let p = (places)
+    main $p.kernel $base $p.image $handoff_disk $still_disk $out
 }

@@ -28,3 +28,9 @@ stamp, its partial tile's rows read apart.
 
 Its bin: `nu/bin/nuance/fierce/stress/eviction.nu <kernel> <image> <disk> <out>
 [fixture...]`, every fixture by default.
+
+## def on-debug
+
+- the kernel, fierce's image, and the still disk from jab's debug tree
+  (`places`), `--image` another image in fierce's place: the recipes
+  `eviction-debug` and `eviction`

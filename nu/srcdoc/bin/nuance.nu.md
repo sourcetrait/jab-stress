@@ -45,3 +45,48 @@ the consumer table names for `reader` that the restoration's tree lacks.
 
 `nu nu/bin/nuance.nu hot <elf>`: the renderer's hot routines in a build's
 ELF, each with its start, end, and paged and ecall counts, as NUON.
+
+## def main build
+
+`nu nu/bin/nuance.nu build <dir> [--set <symbols>]`: a directory, a
+candidate's export or a tree of jab's, built by the sibling checkout's
+`nu/bin/do.nu`, the recipes' `cand-build`, `cand-build-debug`,
+`cand-build-owner`, `cand-build-release`, and handoff's `build`.
+
+## def main test
+
+`nu nu/bin/nuance.nu test <dir> [--set <symbols>]`: the tests under a
+directory run by the sibling checkout's `nu/bin/do.nu`, handoff's
+`handoff-set`.
+
+## def main check
+
+`nu nu/bin/nuance.nu check <file> [--ide]`: a nu file checked as a module,
+printing `true` or `false`, or with `--ide` by nu's IDE check, the recipes'
+`nucheck` and `check`.
+
+## def main fierce tiles keys
+
+`nu nu/bin/nuance.nu fierce tiles keys <api> <out>`: jab's tiles bin's
+`keys` over a capture's API stream.
+
+## def main fierce tiles lit-steps
+
+`nu nu/bin/nuance.nu fierce tiles lit-steps <capture> <rect> <crosshair>
+<out>`: jab's tiles bin's `lit-steps`, handoff's `litsteps-live`.
+
+## def main fierce tiles handoff
+
+`nu nu/bin/nuance.nu fierce tiles handoff <spec> <index> <out>`: jab's tiles
+bin's `handoff`, handoff's `handoff-stats`.
+
+## def main fierce census reader-holds
+
+`nu nu/bin/nuance.nu fierce census reader-holds <tree> <serial>`: the census
+reader's holds of a jab tree over a serial log, `reader-holds: ok` once they
+hold.
+
+## def main fierce census gauge-load
+
+`nu nu/bin/nuance.nu fierce census gauge-load`: fierce's gauge module loaded
+alone, `loaded` printed.

@@ -7,3 +7,8 @@ use $HOLD
 def main [kernel: path, image: path, disk: path, out: path, --name: string = "hold", --no-hold, --seconds: int = 8, --no-capture] {
     hold $kernel $image $disk $out --name $name --no-hold=$no_hold --seconds $seconds --no-capture=$no_capture
 }
+
+# The hold on jab's debug tree, or on another image beside its kernel and disk
+def "main on-debug" [out: path, --image: string = "", --name: string = "hold", --no-hold, --seconds: int = 8, --no-capture] {
+    hold on-debug $out --image $image --name $name --no-hold=$no_hold --seconds $seconds --no-capture=$no_capture
+}

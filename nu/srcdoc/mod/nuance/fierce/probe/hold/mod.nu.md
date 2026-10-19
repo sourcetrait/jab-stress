@@ -19,3 +19,9 @@ hart in byte 13, and the hold in byte 14.
 
 - with --no-capture no screen ends the run: it ends at the guest's exit
   or the bound, so a late exit's status comes back
+
+## def on-debug
+
+- the kernel, fierce's image, and the still disk from jab's debug tree
+  (`places`), `--image` another image in fierce's place: the recipes `hold`
+  and `hold-on`

@@ -11,39 +11,40 @@
 set shell := ["nu", "-c"]
 
 jab := justfile_directory() / "../../../jab"
+nuance := justfile_directory() / "../../nu/bin/nuance.nu"
 bin := justfile_directory() / "../../nu/bin/nuance/fierce"
 
 # fierce built with the build symbols named, debug unless given
 build set="debug":
-    nu {{jab}}/nu/bin/do.nu build {{jab}}/kit/fierce --set {{set}}
+    nu {{nuance}} build {{jab}}/kit/fierce --set {{set}}
 
 # the test's sets, the handoff fixtures alone by default
 handoff-set set="handoff":
-    nu {{jab}}/nu/bin/do.nu test {{jab}}/kit/fierce --set {{set}}
+    nu {{nuance}} test {{jab}}/kit/fierce --set {{set}}
 
 # handoff-holds alone on the debug build, its reading saved beside out
 handoff out:
-    use {{jab}}/nu/mod/target; use {{jab}}/kit/fierce/nu/mod/suite/tiles [handoff-holds]; let t = (target root {{jab}} | path join debug); let game = '{{jab}}/kit/fierce'; let s = (date now); let r = (handoff-holds ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) {{out}} DEBUG,COUNT (open ($game | path join content map render_1.nuon)) $game); $r | to nuon --indent 1 | save -f {{out}}/handoff_read.nuon; print $'took ((date now) - $s)'
+    nu {{bin}}/probe/handoff.nu holds {{out}}
 
 # builder-holds alone on the debug build
 builder out:
-    use {{jab}}/nu/mod/target; use {{jab}}/kit/fierce/nu/mod/suite/tiles [builder-holds]; let t = (target root {{jab}} | path join debug); let game = '{{jab}}/kit/fierce'; let r = (builder-holds ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) {{out}} DEBUG (open ($game | path join content map render_1.nuon)) $game); $r | to nuon --indent 1 | save -f {{out}}/builder.nuon; print ($r | reject by_level | to nuon)
+    nu {{bin}}/probe/handoff.nu builder {{out}}
 
 # builder-holds alone on another image
 builder-on image out:
-    use {{jab}}/nu/mod/target; use {{jab}}/kit/fierce/nu/mod/suite/tiles [builder-holds]; let t = (target root {{jab}} | path join debug); let game = '{{jab}}/kit/fierce'; let r = (builder-holds ($t | path join kernel jab.elf) {{image}} {{out}} DEBUG (open ($game | path join content map render_1.nuon)) $game); print ($r | reject by_level | to nuon)
+    nu {{bin}}/probe/handoff.nu builder-on {{image}} {{out}}
 
 # the oblique handoff's residual probe on a handoff map's romfs
 oblique spec disk out:
-    use {{jab}}/nu/mod/target; let t = (target root {{jab}} | path join debug); ^nu {{bin}}/probe/handoff/oblique.nu ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) {{disk}} {{out}} "{{spec}}"
+    nu {{bin}}/probe/handoff/oblique.nu on-debug "{{spec}}" {{disk}} {{out}}
 
 # the held-off pictures of two debug images held byte for byte
 identity base handoff_disk still_disk out:
-    use {{jab}}/nu/mod/target; let t = (target root {{jab}} | path join debug); ^nu {{bin}}/probe/handoff/identity.nu ($t | path join kernel jab.elf) {{base}} ($t | path join kit fierce fierce.jab) {{handoff_disk}} {{still_disk}} {{out}}
+    nu {{bin}}/probe/handoff/identity.nu on-debug {{base}} {{handoff_disk}} {{still_disk}} {{out}}
 
 # a capture's dumps keyed: each tile's header and its texels' SHA-256
 keys api out:
-    nu {{jab}}/kit/fierce/nu/bin/nuance/tiles.nu keys {{api}} {{out}}
+    nu {{nuance}} fierce tiles keys {{api}} {{out}}
 
 # the pool's counters a frame, the last eight
 rows api:
@@ -58,10 +59,10 @@ litsteps capture rect ch:
     nu {{bin}}/probe/handoff/litsteps.nu {{capture}} "{{rect}}" {{ch}}
 
 litsteps-live capture rect ch out:
-    nu {{jab}}/kit/fierce/nu/bin/nuance/tiles.nu lit-steps {{capture}} "{{rect}}" {{ch}} {{out}}
+    nu {{nuance}} fierce tiles lit-steps {{capture}} "{{rect}}" {{ch}} {{out}}
 
 handoff-stats spec index out:
-    nu {{jab}}/kit/fierce/nu/bin/nuance/tiles.nu handoff {{spec}} {{index}} {{out}}
+    nu {{nuance}} fierce tiles handoff {{spec}} {{index}} {{out}}
 
 packetgauge mode base out *labels:
     nu {{bin}}/packetgauge.nu {{mode}} {{base}} {{out}} {{labels}}
@@ -73,4 +74,4 @@ reader script mode base out *labels:
     nu {{script}} {{mode}} {{base}} {{out}} {{labels}}
 
 nucheck file:
-    nu-check --as-module {{file}}
+    nu {{nuance}} check {{file}}

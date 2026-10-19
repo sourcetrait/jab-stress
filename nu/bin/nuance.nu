@@ -7,10 +7,22 @@ const IMPORTMAP = path self ../mod/nuance/importmap
 const RECORD = path self ../mod/runner/record
 # The hot routines' probe's module's path, bound at parse time
 const HOT = path self ../mod/nuance/fierce/probe/hot
+# jab's drivers' module's path, bound at parse time
+const JAB = path self ../mod/nuance/jab
+# The file check's module's path, bound at parse time
+const CHECK = path self ../mod/nuance/check
+# jab's tiles bin's module's path, bound at parse time
+const TILES = path self ../mod/nuance/fierce/tiles
+# The census's module's path, bound at parse time
+const CENSUS = path self ../mod/nuance/fierce/census
 use $FRESHBUILD
 use $IMPORTMAP
 use $RECORD
 use $HOT
+use $JAB
+use $CHECK
+use $TILES
+use $CENSUS
 
 # A fresh build of jab's matrix from its HEAD, each artifact's digest in `out`.
 def "main freshbuild manifest" [jab: path, out: path] {
@@ -47,6 +59,46 @@ def "main runner record required" [dir: path, reader: string] {
 # The renderer's hot routines' places in an ELF, printed as NUON.
 def "main hot" [elf: string] {
     hot $elf
+}
+
+# A directory built by jab's driver with the build symbols named.
+def "main build" [dir: path, --set: string = ""] {
+    jab build $dir --set $set
+}
+
+# A directory's tests run by jab's driver with the build symbols named.
+def "main test" [dir: path, --set: string = ""] {
+    jab test $dir --set $set
+}
+
+# A file checked as a module, or by nu's IDE check with --ide.
+def "main check" [file: path, --ide] {
+    check $file --ide=$ide
+}
+
+# A capture's dumps keyed by tile header and texels' SHA-256, by jab's bin.
+def "main fierce tiles keys" [api: path, out: path] {
+    tiles keys $api $out
+}
+
+# The lit loop's most step between side-by-side pixels, by jab's bin.
+def "main fierce tiles lit-steps" [capture: path, rect: string, crosshair: int, out: path] {
+    tiles lit-steps $capture $rect $crosshair $out
+}
+
+# The handoff pair at `index` compared, by jab's bin.
+def "main fierce tiles handoff" [spec: path, index: int, out: path] {
+    tiles handoff $spec $index $out
+}
+
+# The census reader's holds over a serial log by a jab tree's census module.
+def "main fierce census reader-holds" [tree: path, serial: path] {
+    census reader-holds $tree $serial
+}
+
+# fierce's gauge module loaded alone in a nu of its own.
+def "main fierce census gauge-load" [] {
+    census gauge-load
 }
 
 def main [] { help main }

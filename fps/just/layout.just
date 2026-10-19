@@ -4,14 +4,13 @@
 
 set shell := ["nu", "-c"]
 
-jab := justfile_directory() / "../../../jab"
 bin := justfile_directory() / "../../nu/bin"
 
 layout-cands cands commit *names:
     nu {{bin}}/nuance/fierce/probe/layout.nu {{cands}} {{commit}} {{names}}
 
 cand-build dir set:
-    nu {{jab}}/nu/bin/do.nu build {{dir}} --set {{set}}
+    nu {{bin}}/nuance.nu build {{dir}} --set {{set}}
 
 hot elf:
     nu {{bin}}/nuance.nu hot {{elf}}

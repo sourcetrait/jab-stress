@@ -5,13 +5,12 @@
 
 set shell := ["nu", "-c"]
 
-jab := justfile_directory() / "../../../jab"
 eviction := justfile_directory() / "../../nu/bin/nuance/fierce/stress/eviction.nu"
 
 # the tile eviction fixtures on a debug image, all or those named
 eviction image out *fixtures:
-    use {{jab}}/nu/mod/target; let t = (target root {{jab}} | path join debug); ^nu {{eviction}} ($t | path join kernel jab.elf) {{image}} ($t | path join kit fierce still.romfs) {{out}} {{fixtures}}
+    nu {{eviction}} on-debug {{out}} {{fixtures}} --image {{image}}
 
 # the same on the checkout's own debug build
 eviction-debug out *fixtures:
-    use {{jab}}/nu/mod/target; let t = (target root {{jab}} | path join debug); ^nu {{eviction}} ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) ($t | path join kit fierce still.romfs) {{out}} {{fixtures}}
+    nu {{eviction}} on-debug {{out}} {{fixtures}}

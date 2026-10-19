@@ -1,10 +1,10 @@
-# The smoke runner's `jf` (runners/smoke.nuon): the development smoke at
-# the jab root. Reconstructed: the original recipe's file is gone, and
-# the argument order here is the runner's, unverified against `just do`.
+# The smoke runner's `jf` (runners/smoke.nuon), a shim until JustRetired:
+# the development smoke, fierce's own `nuance.nu smoke <seeds> <seconds>`
+# in the checkout beside this one.
 
 set shell := ["nu", "-c"]
 
 jab := justfile_directory() / "../../../jab"
 
 smoke seeds seconds:
-    cd {{jab}}; ^just do smoke {{seeds}} {{seconds}}
+    nu {{jab}}/kit/fierce/nu/bin/nuance.nu smoke {{seeds}} {{seconds}}

@@ -4,15 +4,15 @@
 
 set shell := ["nu", "-c"]
 
-jab := justfile_directory() / "../../../jab"
+nuance := justfile_directory() / "../../nu/bin/nuance.nu"
 bin := justfile_directory() / "../../nu/bin/nuance/fierce"
 
 # a candidate built debug, or debug with OWNER, in its own tree
 cand-build-debug dir:
-    nu {{jab}}/nu/bin/do.nu build {{dir}} --set debug
+    nu {{nuance}} build {{dir}} --set debug
 
 cand-build-owner dir:
-    nu {{jab}}/nu/bin/do.nu build {{dir}} --set debug,owner
+    nu {{nuance}} build {{dir}} --set debug,owner
 
 parity kernel image out *flags:
     nu {{bin}}/workerparity.nu {{kernel}} {{image}} {{out}} {{flags}}

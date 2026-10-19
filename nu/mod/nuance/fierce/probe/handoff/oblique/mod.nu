@@ -2,6 +2,7 @@ use (path self ../../../../../../../../jab/nu/mod/launch)
 use (path self ../../../../../../../../jab/kit/fierce/nu/mod/pose)
 use (path self ../../../../../../../../jab/kit/fierce/nu/mod/console)
 use (path self ../../../../../../../../jab/kit/fierce/nu/mod/gauge)
+use (path self ../../../../../fierce/places)
 
 # The O frame's lift of the quota and the allowance
 const POOL_LIFTED = 1
@@ -62,4 +63,10 @@ export def main [kernel: path, image: path, disk: path, out: path, spec: string]
     })
     $rows | to nuon | save -f ($out | path join "oblique.nuon")
     print ($rows | each {|r| { level: $r.level, partial: ($r.runs | where kind == "partial" | get 0 | reject screen) } } | to nuon)
+}
+
+# The oblique probe on jab's debug kernel and image over a handoff map's disk
+export def on-debug [spec: string, disk: path, out: path] {
+    let p = (places)
+    main $p.kernel $p.image $disk $out $spec
 }

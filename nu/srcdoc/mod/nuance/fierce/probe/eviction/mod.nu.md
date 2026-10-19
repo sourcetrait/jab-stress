@@ -26,3 +26,9 @@ every dump's tile headers with a signature of their texels
   32 tiles from that partial, 32 tiles and 8 rows from the next
 - the dumps alternate plain and asked, in the order sent; a pair sent
   at one moment can still fall to two frames
+
+## def on-debug
+
+- the kernel, fierce's image, and the still disk from jab's debug tree
+  (`places`), `--image` another image in fierce's place: the recipes `probe`,
+  `probe-on`, and `pair` (`on-debug pair <out> <slots> --image <image>`)

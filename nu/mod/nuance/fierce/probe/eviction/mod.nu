@@ -1,6 +1,7 @@
 use (path self ../../../../../../../jab/nu/mod/launch)
 use (path self ../../../../../../../jab/kit/fierce/nu/mod/pose)
 use (path self ../../../../../../../jab/kit/fierce/nu/mod/gauge)
+use (path self ../../../../fierce/places)
 
 # jab's tiles bin, run in a nu of its own for a capture's keys
 const TILES = path self ../../../../../../../jab/kit/fierce/nu/bin/nuance/tiles.nu
@@ -175,4 +176,10 @@ export def main [kernel: path, image: path, disk: path, out: path, mode: string,
     let ds = (if $mode == "views" { dump-headers $api --bare } else { dump-headers $api })
     { mode: $mode, slots: $slots, view: $view, modes: $modes, complete: $m.complete, valid: $m.valid, invalid: ($m.invalid | first 3), qemu: (open --raw $run.qemu_log), rows: $rows, dumps: $ds } | to nuon | save -f ($out | path join $"($name).nuon")
     print { mode: $mode, complete: $m.complete, valid: $m.valid, dumps: ($ds | each {|d| { tiles: ($d | length), frame: ($d | get -o 0.frame) } }) }
+}
+
+# The probe on jab's debug tree, or on another image beside its kernel and disk
+export def on-debug [mode: string, out: path, slots: int = 0, --image: string = "", --view: string = "bay", --cycles: int = 2, --modes: int = 0, --tag: string = ""] {
+    let p = (places)
+    main $p.kernel (if $image == "" { $p.image } else { $image }) $p.disk $out $mode $slots --view $view --cycles $cycles --modes $modes --tag $tag
 }

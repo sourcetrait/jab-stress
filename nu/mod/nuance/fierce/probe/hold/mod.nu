@@ -2,6 +2,7 @@ use (path self ../../../../../../../jab/nu/mod/launch)
 use (path self ../../../../../../../jab/kit/fierce/nu/mod/pose)
 use (path self ../../../../../../../jab/kit/fierce/nu/mod/console)
 use (path self ../../../../../../../jab/kit/fierce/nu/mod/gauge)
+use (path self ../../../../fierce/places)
 
 # When the W and the J are sent
 const SET_AT = 1300ms
@@ -37,4 +38,10 @@ export def main [kernel: path, image: path, disk: path, out: path, --name: strin
     }
     $summary | to nuon | save -f ($out | path join $"($name).nuon")
     print ($summary | to nuon)
+}
+
+# The hold on jab's debug tree, or on another image beside its kernel and disk
+export def on-debug [out: path, --image: string = "", --name: string = "hold", --no-hold, --seconds: int = 8, --no-capture] {
+    let p = (places)
+    main $p.kernel (if $image == "" { $p.image } else { $image }) $p.disk $out --name $name --no-hold=$no_hold --seconds $seconds --no-capture=$no_capture
 }

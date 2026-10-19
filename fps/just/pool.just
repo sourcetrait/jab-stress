@@ -7,12 +7,11 @@
 
 set shell := ["nu", "-c"]
 
-jab := justfile_directory() / "../../../jab"
 bin := justfile_directory() / "../../nu/bin"
 
 # release with any symbols beside it, comma separated
 cand-build-release dir set="":
-    nu {{jab}}/nu/bin/do.nu build {{dir}} --set release{{ if set == "" { "" } else { "," + set } }}
+    nu {{bin}}/nuance.nu build {{dir}} --set release{{ if set == "" { "" } else { "," + set } }}
 
 export repo commit cands jf expected="" set="":
     nu {{bin}}/nuance/fierce/freeze.nu {{repo}} {{commit}} {{cands}} '{{expected}}' --set '{{set}}'

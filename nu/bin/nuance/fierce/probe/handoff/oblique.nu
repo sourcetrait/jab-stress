@@ -7,3 +7,8 @@ use $OBLIQUE
 def main [kernel: path, image: path, disk: path, out: path, spec: string] {
     oblique $kernel $image $disk $out $spec
 }
+
+# The oblique probe on jab's debug kernel and image over a handoff map's disk
+def "main on-debug" [spec: string, disk: path, out: path] {
+    oblique on-debug $spec $disk $out
+}

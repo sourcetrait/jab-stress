@@ -1,7 +1,16 @@
 # identity.nu
 
-The identity module's command line, each verb one call of the module, standalone so its closures run in a nu that loads no other module.
+The identity module's command line, each verb one call of the module, standalone
+so its closures run in a nu that loads no other module.
 
 ## def main
 
-`nu/bin/nuance/fierce/probe/handoff/identity.nu`, its parameters `kernel: path, base: path, new: path, handoff_disk: path, still_disk: path, out: path`: the held-off views drawn by two images and held byte for byte.
+`nu/bin/nuance/fierce/probe/handoff/identity.nu`, its parameters `kernel: path,
+base: path, new: path, handoff_disk: path, still_disk: path, out: path`: The
+held-off views drawn by two images and held byte for byte.
+
+## def main on-debug
+
+`nu/bin/nuance/fierce/probe/handoff/identity.nu on-debug`, its parameters `base:
+path, handoff_disk: path, still_disk: path, out: path`: A base image's held-off
+views against jab's debug image, on its debug kernel.
