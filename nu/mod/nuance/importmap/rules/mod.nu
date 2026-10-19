@@ -221,11 +221,14 @@ export def ownership [contract: record, landed: list<string>, decls: table]: not
     $out
 }
 
-# The module a file of the contract holds, by its file or a leaf's old file.
-def module-at [contract: record, key: string]: nothing -> oneof<record, nothing> {
+# The module a file of the contract holds, by its file or a leaf's old file
+# where the landed groups have moved it.
+def module-at [contract: record, landed: list<string>, key: string]: nothing -> oneof<record, nothing> {
     let m = ($contract.modules | where {|m| (key-of $m.repo $m.file '' '') == $key } | get -o 0)
     if $m != null { return $m }
-    $contract.modules | where {|m| $m.old_file != null and (key-of $m.repo $m.old_file '' '') == $key } | get -o 0
+    $contract.modules | where {|m|
+        $m.old_file != null and (key-of $m.repo (mapped $contract $landed $m.repo $m.old_file) '' '') == $key
+    } | get -o 0
 }
 
 # Every import resolved, every module edge the contract's, and no cycle.
@@ -240,7 +243,7 @@ export def import-rules [contract: record, landed: list<string>, roots: record, 
     mut edges = []
     for s in $sources {
         let from = (key-of $s.repo $s.file '' '')
-        let m = (module-at $contract $from)
+        let m = (module-at $contract $landed $from)
         let is_module = ($m != null and ($contract.modules | any {|x| (key-of $x.repo $x.file '' '') == $from }))
         for imp in (imports lines-of $s.src) {
             let r = (imports resolve $roots $s.repo $s.file $s.kind $s.src $imp $placed)
@@ -252,7 +255,7 @@ export def import-rules [contract: record, landed: list<string>, roots: record, 
             let to = (key-of $r.repo $r.file '' '')
             if $s.kind == 'nu' { $edges = ($edges | append {from: $from, to: $to}) }
             if (not $is_module) or ($to in $monoliths) { continue }
-            let target = (module-at $contract $to)
+            let target = (module-at $contract $landed $to)
             if $target == null {
                 let why = $"($m.module) imports no module's file"
                 $out = ($out | append (refusal edge $s.repo $s.file $imp.line $r.file $why))

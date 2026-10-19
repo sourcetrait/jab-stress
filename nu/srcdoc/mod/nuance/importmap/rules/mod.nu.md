@@ -52,6 +52,14 @@ def or constant, a module's def by its final name, a case or the
 orchestrator's, a bin's `main` verbs, a module's constant of its family,
 or an owned file's. Any other is refused at its line.
 
+## def module-at
+
+The module a file holds: the module's own file, or a leaf's old file
+where the landed groups have moved it, `kit/fierce/nu/map.nu` for map's
+`game/fps/nu/map.nu` with KitFierce landed. Read at the old name, a
+fierce module's import of a leaf still at its old place reads as an
+import of no module's file.
+
 ## def import-rules
 
 Every import resolved; a module's import of another module an edge of the
