@@ -13,6 +13,7 @@
 # document for TheUser, a section a target. Run under the real nu: `nu
 # qualification.nu <command> ...` (`fps/just/qualification.just`).
 use ../../../jab/sdk/nu/jab.nu
+use ../../../jab/nu/mod/spec
 use ../../../jab/kit/fierce/test/gauge.nu
 use ./observer.nu
 
@@ -434,7 +435,7 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
     if not ($listed_file | path exists) { error make { msg: $"($bench) holds no bench.nuon, so it is no bench run's directory" } }
     let listed = (open $listed_file)
     let cand = (open --raw $candidate | decode utf-8 | from nuon)
-    let spec = (jab spec-row $JAB $target)
+    let spec = (spec row $JAB $target)
     let defined = (jab-file $cand.jab $"kit/fierce/bench/qual_($target).nuon"
         | default (jab-file $cand.jab $"game/fps/bench/qual_($target).nuon"))
     let definition = (if $defined == null { null } else { $defined | from nuon })
@@ -521,7 +522,7 @@ export def check-of [r: any]: nothing -> list<string> {
     let schema = (schema-problems $r)
     if not ($schema | is-empty) { return $schema }
     let cand = $r.candidate
-    let spec = (try { jab spec-row $JAB $r.target } catch { null })
+    let spec = (try { spec row $JAB $r.target } catch { null })
     if $r.target not-in $TARGETS or $spec == null { return [$"the record's target, ($r.target), is no target of the qualification's matrix"] }
     let tag = (if $cand.tag == null { ["the candidate is untagged, so no qualification stands on it"] } else { [] })
     let bench = ($r.bench.problems | each {|p| $"the bench: ($p)" })

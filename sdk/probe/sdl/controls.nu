@@ -43,6 +43,7 @@
 # reader, naming no executable, or naming one deleted at the capture is a
 # discrepancy.
 use ../../../../jab/sdk/nu/jab.nu
+use ../../../../jab/nu/mod/sdl
 
 const HERE = (path self | path dirname)
 const JAB = (path self | path dirname | path join .. .. .. .. jab | path expand)
@@ -314,7 +315,7 @@ def reread-one [recorded: record, fields: list<string>, task: closure]: nothing 
 # now.
 def stripped-target [log: path]: nothing -> record<problem: string, path: string, gone: bool> {
     if ($log | path type) == null { return { problem: "the record holds no stripped.sdl.log", path: "", gone: false } }
-    let read = (try { { objects: (jab sdl-log $log).objects, error: null } } catch {|e| { objects: [], error: $e.msg } })
+    let read = (try { { objects: (sdl log $log).objects, error: null } } catch {|e| { objects: [], error: $e.msg } })
     if $read.error != null { return { problem: $"the reader refuses the stripped log: ($read.error)", path: "", gone: false } }
     let entry = ($read.objects | where index == 0 | get -o 0)
     let which = (if $entry == null {
