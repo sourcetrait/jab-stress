@@ -11,15 +11,16 @@ engine a runner's body imports, `rig/sourcetrait/emptwo/prototype/long`.
 ## def lines-of
 
 `use`, `export use`, `source`, and `overlay use` at the start of a line or
-of a statement after a `;` on it, the path quoted or bare, and the list in
-brackets that follows it: a recipe's one-line body, `use <jab.nu>; use
-<test.nu> [...]; let ...`, holds two imports, and its first path would
-otherwise carry the `;`.
+of a statement after a `;` on it, the path quoted, bare, or named through
+`(path self <path>)`, the nu trees' form, which is read as that path since
+`path self` resolves it against the file's directory as a bare one is, and
+the list in brackets that follows it: a recipe's one-line body, `use
+<jab.nu>; use <test.nu> [...]; let ...`, holds two imports, and its first
+path would otherwise carry the `;`.
 
 ## def path-consts
 
-A source's `const NAME = "path"`, the form four readers import gauge.nu
-through, `use $GAUGE [...]`.
+A source's `const NAME = "path"`, read for a `use $NAME [...]`.
 
 ## def resolve
 

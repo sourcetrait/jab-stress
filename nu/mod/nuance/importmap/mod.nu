@@ -1,5 +1,5 @@
-use ./live
-use ./rules
+use (path self ./live)
+use (path self ./rules)
 
 const CONTRACT = path self ../../../../../jab-stress-data/assets/jab/importmap/contract.nuon
 

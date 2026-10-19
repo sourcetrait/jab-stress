@@ -8,8 +8,11 @@ def import-of [line: string]: nothing -> oneof<record<form: string, target: stri
     if ($m | is-empty) { return null }
     let x = ($m | first)
     let rest = ($x.rest | str trim)
+    let selfpath = ($rest | parse --regex '^\(path self (?P<t>[^\s\)]+)\)(?P<tail>.*)$')
     let quoted = ($rest | parse --regex '^(?P<q>["''])(?P<t>[^"'']*)["''](?P<tail>.*)$')
-    let split = (if ($quoted | is-not-empty) {
+    let split = (if ($selfpath | is-not-empty) {
+        {target: ($selfpath | first | get t), tail: ($selfpath | first | get tail)}
+    } else if ($quoted | is-not-empty) {
         {target: ($quoted | first | get t), tail: ($quoted | first | get tail)}
     } else {
         let w = ($rest | parse --regex '^(?P<t>\S+)(?P<tail>.*)$' | first)

@@ -1,5 +1,5 @@
-use ../live
-use ../imports
+use (path self ../live)
+use (path self ../imports)
 
 # A refusal: what kind, where, the item, and why.
 def refusal [kind: string, repo: string, file: string, line: int, item: string, detail: string]: [
