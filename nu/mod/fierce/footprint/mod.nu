@@ -249,6 +249,7 @@ def blocks-of [rows: path]: nothing -> record {
         levels_differ: ($read | where differ | length),
         shared_sharper: ($read | where {|b| $b.today == "sharper" and $b.candidate == "sharper" } | length),
         own_sharper: ($read | where {|b| $b.candidate == "sharper" and $b.today != "sharper" } | length),
+        new_off: ($read | where {|b| $b.today == "agree" and $b.candidate != "agree" } | length),
         today_own_sharper: ($read | where {|b| $b.today == "sharper" and $b.candidate != "sharper" } | length),
         along_today: (do $along today),
         along_candidate: (do $along candidate),
@@ -263,6 +264,14 @@ def verdict-of [today: record, cand: record, prefix: string]: nothing -> record 
     { today: $today_off, candidate: $cand_off, candidate_sharper: (do $field $cand sharper), holds: ($cand_off <= $today_off and (do $field $cand sharper) == 0) }
 }
 
+# The revised criterion as SecantCriterion states it, printed with every reading
+const REVISION = "The criterion is revised after the first measurement (SecantCriterion): it now tests whether the candidate's row estimate gives the level a block's footprint asks when the along term is the engine's own step, the secant over the block's true length, and the down term the analytic derivative at the block's start on the mapping the engine uses there; it does not test whether the engine's along stepping matches the analytic derivative (AlongSpanFootprint). The declared criteria's result stands as recorded."
+
+# A view's no-new-departure check against the declared reference, by its blocks
+def departure-of [b: record]: nothing -> record<new_off: int, own_sharper: int, holds: bool> {
+    { new_off: $b.new_off, own_sharper: $b.own_sharper, holds: ($b.new_off == 0 and $b.own_sharper == 0) }
+}
+
 # Every captured pose judged, reading.nuon written
 export def read [out: path] {
     let captured = (glob ($out | path join "*" "pose.nuon") | sort | each {|f| open $f })
@@ -271,25 +280,31 @@ export def read [out: path] {
     let views = ($captured | where {|c| $c.problems | is-empty } | each {|c|
         let today = ($c.reference.captures | get 0)
         let cand = ($c.reference.captures | get 1)
+        let blocks = (blocks-of ($out | path join $c.pose.name "rows.nuon"))
         {
             pose: $c.pose.name, map: $c.pose.map, judged: $today.judged, sensitive: $today.sensitive, clamped: $today.clamped,
             declared: (verdict-of $today $cand ""), secant: (verdict-of $today $cand "secant_"),
-            blocks: (blocks-of ($out | path join $c.pose.name "rows.nuon")),
+            departure: (departure-of $blocks),
+            blocks: $blocks,
             today_levels: $today.levels, candidate_levels: $cand.levels,
             pictures: { pixels: $c.pictures.pixels, regions: ($c.pictures.regions | length), largest: ($c.pictures.regions | get -o largest | default [] | append 0 | math max) },
         }
     })
     let declared = (($views | length) > 0 and ($refused | is-empty) and ($views | all {|v| $v.declared.holds }))
     let secant = (($views | length) > 0 and ($refused | is-empty) and ($views | all {|v| $v.secant.holds }))
+    let departures = (($views | length) > 0 and ($refused | is-empty) and ($views | all {|v| $v.departure.holds }))
+    let revised = ($secant and $departures)
     let own = ($views | get blocks.own_sharper | math sum)
     for v in $views {
         let b = $v.blocks
         print $"($v.pose): ($v.judged) judged, ($v.sensitive) in a band, ($v.clamped) clamped; declared today ($v.declared.today) off, the candidate ($v.declared.candidate) with ($v.declared.candidate_sharper) sharper, (if $v.declared.holds { 'holds' } else { 'fails' }); secant today ($v.secant.today), the candidate ($v.secant.candidate) with ($v.secant.candidate_sharper) sharper, (if $v.secant.holds { 'holds' } else { 'fails' }); the pictures ($v.pictures.pixels) pixels in ($v.pictures.regions) regions, at most ($v.pictures.largest) apart"
         print $"  blocks: levels differing in ($b.levels_differ); sharper for both ($b.shared_sharper), the candidate's own ($b.own_sharper), today's own ($b.today_own_sharper); the along step's, today ($b.along_today.blocks) and the candidate ($b.along_candidate.blocks), the along term deciding in ($b.along_candidate.along_decides) of the candidate's, its step over the start's derivative ($b.along_candidate.ratio | default [] | each {|x| $x | math round --precision 3 } | str join ' to ')"
+        print $"  no new departure from the declared reference: ($v.departure.new_off) blocks off it where today's agrees, ($v.departure.own_sharper) sharper where today's is not, (if $v.departure.holds { 'holds' } else { 'fails' })"
     }
     for r in $refused { print $"($r.pose): refused, ($r.problems | str join '; ')" }
-    { views: $views, refused: $refused, declared_holds: $declared, secant_holds: $secant, own_sharper: $own } | to nuon --indent 2 | save --raw -f ($out | path join "reading.nuon")
-    print $"footprint read: ($views | length) views, ($refused | length) refused; the declared criteria (if $declared { 'hold' } else { 'fail' }), the secant's (if $secant { 'hold' } else { 'fail' }); the candidate's own sharper blocks by the declared reference ($own)"
+    { views: $views, refused: $refused, declared_holds: $declared, secant_holds: $secant, departures_hold: $departures, revised_holds: $revised, revision: $REVISION, own_sharper: $own } | to nuon --indent 2 | save --raw -f ($out | path join "reading.nuon")
+    print $"footprint read: ($views | length) views, ($refused | length) refused; the declared criteria (if $declared { 'hold' } else { 'fail' }), as recorded; the revised criterion (if $revised { 'holds' } else { 'fails' }), the secant's verdicts (if $secant { 'holding' } else { 'failing' }) and no new departure (if $departures { 'holding' } else { 'failing' }); the candidate's own sharper blocks by the declared reference ($own)"
+    print $REVISION
 }
 
 # Each region where a pose's pictures differ cut out of both as PNGs

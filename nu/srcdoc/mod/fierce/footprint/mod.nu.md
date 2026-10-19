@@ -118,7 +118,8 @@ those both are; and each estimator's blocks the declared reference
 judges off and the secant reference passes, the along-span step's,
 since the two references differ in that term alone, with how many of
 them the along term decides and the block's step over the start's
-derivative there.
+derivative there; and the candidate's blocks off the declared reference
+where today's agrees with it (`new_off`), its no-new-departure count.
 
 ## def verdict-of
 
@@ -131,9 +132,27 @@ sharper and coarser, at most today's, and none sharper.
 Every pose captured into `out` judged: each view's tallies, today's and
 the candidate's, by the declared reference and by the secant reference,
 each view's verdict by the criteria (verdict-of), its blocks read one by
-one (blocks-of), and the pictures' differing pixels and regions; a pose
-refused at capture listed apart. reading.nuon holds it, and both
-criteria's whole verdicts.
+one (blocks-of), its no-new-departure check (departure-of), and the
+pictures' differing pixels and regions; a pose refused at capture listed
+apart. reading.nuon holds it, the declared criteria's whole verdict as
+recorded, the revised criterion's (SecantCriterion), the secant's
+verdicts and no new departure on every view together, and the statement
+of the revision, which the reading prints too.
+
+## const REVISION
+
+The revised criterion's statement, SecantCriterion's: the property it now
+tests, the along term the engine's own step and the down term the
+analytic derivative at the block's start on the engine's mapping, what it
+leaves to AlongSpanFootprint, and the declared result standing as
+recorded.
+
+## def departure-of
+
+A view's no-new-departure check by its blocks: the candidate never off
+the declared reference where today's agrees with it, and never sharper by
+it where today's is not; a departure both share before the change counts
+for neither.
 
 ## def crops
 
