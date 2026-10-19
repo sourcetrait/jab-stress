@@ -2,7 +2,7 @@
 # seen from `eye` (x, y, yaw) under partial residency on `slots` slots at
 # each level of `levels`, under `lighting`, each run's last count line,
 # its window's rows, and its screen, with the tiled and held references.
-use ../../../../jab/sdk/nu/jab.nu
+use ../../../../jab/nu/mod/launch
 use ../../../../jab/kit/fierce/test/pose.nu
 use ../../../../jab/kit/fierce/test/gauge.nu
 
@@ -44,7 +44,7 @@ def main [kernel: path, image: path, disk: path, out: path, spec: string] {
             })
             let all = ($sends | append [{ at: 1500ms, bytes: $placed }, { at: 2300ms, bytes: $placed }, { at: 3800ms, bytes: $ended }] | sort-by at)
             let dir = ($out | path join $"($s.lighting)_($l)_($kind)")
-            let run = (jab launch --kernel $kernel --image $image --out $dir --set "DEBUG,COUNT" --sound --api --disk $disk --serial "fps" --send $all --screen 3500ms --seconds 5)
+            let run = (launch --kernel $kernel --image $image --out $dir --set "DEBUG,COUNT" --sound --api --disk $disk --serial "fps" --send $all --screen 3500ms --seconds 5)
             let m = (gauge measure $run.api $legs)
             let window = ($m.rows | where leg == "second")
             let counts = ($run.serial | lines | where {|x| $x starts-with "fps: count" } | last)

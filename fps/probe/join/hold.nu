@@ -7,7 +7,7 @@
 # slowest worker against every worker's busy time: a held round's
 # slowest is about the whole of it, since the held worker's band waits
 # on the other's join, where an unheld round's is about half.
-use ../../../../jab/sdk/nu/jab.nu
+use ../../../../jab/nu/mod/launch
 use ../../../../jab/kit/fierce/test/pose.nu
 use ../../../../jab/kit/fierce/test/gauge.nu
 
@@ -30,7 +30,7 @@ def main [kernel: path, image: path, disk: path, out: path, --name: string = "ho
     # with --no-capture no screen ends the run: it ends at the guest's exit
     # or the bound, so a late exit's status comes back
     let capture = (if $no_capture { 0sec } else { $END_AT + 500ms })
-    let run = (jab launch --kernel $kernel --image $image --out ($out | path join $name) --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --capture $capture --seconds $seconds)
+    let run = (launch --kernel $kernel --image $image --out ($out | path join $name) --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --capture $capture --seconds $seconds)
     let lines = ($run.serial | lines | where {|l| $l starts-with 'fps: ' })
     let said = ($lines | where {|l| ($l =~ 'never released') or ($l =~ 'before the round joined') or ($l =~ 'unjoined') or ($l =~ 'lost bands') })
     let packets = (try { (gauge stream $run.api).packets } catch { [] })

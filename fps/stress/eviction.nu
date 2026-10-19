@@ -27,7 +27,7 @@
 # Run as `nu eviction.nu <kernel> <image> <disk> <out> [fixture...]`,
 # through `stress.just`'s `eviction image out`; every fixture by default.
 use std/assert
-use ../../../jab/sdk/nu/jab.nu
+use ../../../jab/nu/mod/launch
 use ../../../jab/kit/fierce/test/pose.nu
 use ../../../jab/kit/fierce/test/gauge.nu
 use ../../../jab/kit/fierce/test/test.nu [stamp-of ppm-head raise-frame rows-differ STAMP_BITS STAMP_CELL STAMP_ONE STAMP_ZERO CLOCK_SCHEMA]
@@ -346,7 +346,7 @@ def cycle-launch [kernel: path, image: path, disk: path, out: path, label: strin
     let ended = (do $at $end_at (pose command-frame "E"))
     let sends = ([(do $at $STAMP_AT (raise-frame 0 --stamp)) (do $at $CYCLE_CAP_AT (do $o))] ++ $leg_sends ++ [$ended] | sort-by at)
     let dir = ($out | path join $name)
-    let run = (jab launch --kernel $kernel --image $image --out $dir --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen (($dump_at + $CYCLE_SCREEN) * 1ms) --seconds ((($end_at + 4000) / 1000) | math ceil))
+    let run = (launch --kernel $kernel --image $image --out $dir --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen (($dump_at + $CYCLE_SCREEN) * 1ms) --seconds ((($end_at + 4000) / 1000) | math ceil))
     assert equal (open --raw $run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)"
     assert ($run.screen != "") $"($label)'s screen was taken at its last spawn"
     let m = (gauge measure $run.api $LEGS)
@@ -373,7 +373,7 @@ def sight-launch [kernel: path, image: path, disk: path, out: path, label: strin
         { at: $SIGHT_AT, bytes: (pool-frame --cold) }
         $ended
     ]
-    let run = (jab launch --kernel $kernel --image $image --out $out --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen $SIGHT_SCREEN_AT --seconds $SIGHT_SECONDS)
+    let run = (launch --kernel $kernel --image $image --out $out --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen $SIGHT_SCREEN_AT --seconds $SIGHT_SECONDS)
     assert equal (open --raw $run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)"
     let m = (gauge measure $run.api $LEGS)
     let e_index = ($sends | enumerate | where {|x| $x.item.at == $ended.at and $x.item.bytes == $ended.bytes } | get 0.index)
@@ -616,7 +616,7 @@ export def held-partial [kernel: path, image: path, disk: path, out: path]: noth
         $ended
     ]
     let dir = ($out | path join "held")
-    let run = (jab launch --kernel $kernel --image $image --out $dir --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen ($HELD_SCREEN_AT * 1ms) --seconds $HELD_SECONDS)
+    let run = (launch --kernel $kernel --image $image --out $dir --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen ($HELD_SCREEN_AT * 1ms) --seconds $HELD_SECONDS)
     assert equal (open --raw $run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)"
     let m = (gauge measure $run.api $LEGS)
     assert ($m.complete and $m.valid and $m.schema == $CLOCK_SCHEMA) $"($label) complete and valid at schema ($CLOCK_SCHEMA): ($m.problems | str join '; ') ($m.invalid | str join '; ')"
@@ -702,7 +702,7 @@ export def slot-reuse [kernel: path, image: path, disk: path, out: path]: nothin
         $ended
     ] | sort-by at)
     let dir = ($out | path join "reuse")
-    let run = (jab launch --kernel $kernel --image $image --out $dir --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen ($REUSE_SCREEN * 1ms) --seconds $REUSE_SECONDS)
+    let run = (launch --kernel $kernel --image $image --out $dir --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen ($REUSE_SCREEN * 1ms) --seconds $REUSE_SECONDS)
     # 0, the exits, read by the line: the kernel's exit lands seconds after
     # it, and a screen taken first ends the machine with status 0
     let said = ($run.serial | lines)
@@ -713,7 +713,7 @@ export def slot-reuse [kernel: path, image: path, disk: path, out: path]: nothin
     # the reference, the bright spawn view held off its tiles
     let ref_ended = (do $at $REUSE_HELD_END (pose command-frame "E"))
     let ref_sends = ((do $knobs true) ++ [(do $at $REUSE_HELD_AT (pose pose-frame $SPAWN)) $ref_ended] | sort-by at)
-    let ref_run = (jab launch --kernel $kernel --image $image --out ($out | path join "reuse_held") --set DEBUG --sound --api --disk $disk --serial "fps" --send $ref_sends --screen ($REUSE_HELD_SCREEN * 1ms) --seconds $REUSE_HELD_SECONDS)
+    let ref_run = (launch --kernel $kernel --image $image --out ($out | path join "reuse_held") --set DEBUG --sound --api --disk $disk --serial "fps" --send $ref_sends --screen ($REUSE_HELD_SCREEN * 1ms) --seconds $REUSE_HELD_SECONDS)
     assert equal (open --raw $ref_run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)'s reference"
     assert ($ref_run.screen != "") $"($label)'s reference's screen taken"
 

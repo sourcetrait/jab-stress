@@ -5,7 +5,7 @@
 # building dumps the spawn view's settle after a cold start under the
 # ordinary budget in pairs, a plain D and one with byte 8 at the same
 # moment, read by tiles.nu's keys in a nu of its own.
-use ../../../../jab/sdk/nu/jab.nu
+use ../../../../jab/nu/mod/launch
 use ../../../../jab/kit/fierce/test/pose.nu
 use ../../../../jab/kit/fierce/test/gauge.nu
 
@@ -129,7 +129,7 @@ def main [kernel: path, image: path, disk: path, out: path, mode: string, slots:
     let last = ($phases | get at | math max)
     let sends = ($phases | append { at: ($last + 400ms), bytes: (pose command-frame "E") } | sort-by at)
     let name = (if $tag == "" { $mode } else { $"($mode)_($tag)" })
-    let run = (jab launch --kernel $kernel --image $image --out ($out | path join $name) --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --capture ($last + 800ms) --seconds (($last + 3sec) / 1sec | math ceil))
+    let run = (launch --kernel $kernel --image $image --out ($out | path join $name) --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --capture ($last + 800ms) --seconds (($last + 3sec) / 1sec | math ceil))
     let api = $run.api
     let m = (gauge measure $api [{ name: "start", places: [], pad: [] }])
     let cold = ((gauge stream $api).configs | last | get from)

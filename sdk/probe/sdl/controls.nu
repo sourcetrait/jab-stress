@@ -42,7 +42,6 @@
 # gone since the capture. A log missing from the record, refused by the
 # reader, naming no executable, or naming one deleted at the capture is a
 # discrepancy.
-use ../../../../jab/sdk/nu/jab.nu
 use ../../../../jab/nu/mod/sdl
 use ../../../../jab/nu/mod/build
 
@@ -349,13 +348,13 @@ def "main reread" [record: path] {
     let mono = (if not $saved.monolithic.ran { $unran } else {
         reread-one $saved.monolithic [ok traced read flush_windows flips checks] {||
             let log = ($dir | path join "walk.sdl.log")
-            monolithic-of $log ($dir | path join "walk.trace.log") (jab sdl-report $log)
+            monolithic-of $log ($dir | path join "walk.trace.log") (sdl report $log)
         }
     })
     let modu = (if not $saved.modular.ran { $unran } else {
         reread-one $saved.modular [ok read corroborated flips checks] {||
             let log = ($dir | path join "bounce.sdl.log")
-            modular-of $log (jab sdl-report $log)
+            modular-of $log (sdl report $log)
         }
     })
     let stripped_log = ($dir | path join "stripped.sdl.log")
@@ -367,7 +366,7 @@ def "main reread" [record: path] {
             { reread: false, why: $"the stripped copy its log names is gone: ($target.path)" }
         } else {
             reread-one $saved.stripped [ok checks] {||
-                let reading = (try { { report: (jab sdl-report $stripped_log), refusal: "" } } catch {|e| { report: null, refusal: $e.msg } })
+                let reading = (try { { report: (sdl report $stripped_log), refusal: "" } } catch {|e| { report: null, refusal: $e.msg } })
                 let checks = (stripped-checks ($reading.report == null) ($reading.report != null) $reading.refusal)
                 { ok: ($checks | values | all {|v| $v }), refusal: $reading.refusal, checks: $checks }
             }

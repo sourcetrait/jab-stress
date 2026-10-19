@@ -4,7 +4,7 @@
 # stamp's cells skipped, the frame lines' counts compared; with --cancel
 # every round cancelled through the J frame; `fault` a worker's fault on
 # the highest active hart at each count
-use ../../../jab/sdk/nu/jab.nu
+use ../../../jab/nu/mod/launch
 use ../../../jab/kit/fierce/test/pose.nu
 use ../../../jab/kit/fierce/test/gauge.nu
 use ../../../jab/kit/fierce/test/test.nu [variant-tree raise-frame stamp-of unstamped-differ]
@@ -170,7 +170,7 @@ def main [kernel: path, image: path, out: path, --set: string = "debug", --poses
     for p in $poses {
         for m in $modes {
             let label = $"($p.name)_w($m.workers)_g($m.grain)"
-            let run = (jab launch --kernel $kernel --image $image --out ($out | path join $label) --set $set --sound --api --disk $disk.disk --serial "fps" --send (sends-of $p $m $cancel $SCREEN_AT) --screen $SCREEN_AT --seconds $SECONDS --harts $harts --bootargs $bootargs)
+            let run = (launch --kernel $kernel --image $image --out ($out | path join $label) --set $set --sound --api --disk $disk.disk --serial "fps" --send (sends-of $p $m $cancel $SCREEN_AT) --screen $SCREEN_AT --seconds $SECONDS --harts $harts --bootargs $bootargs)
             let row = (row-of $run $p $m $cancel)
             $rows = ($rows | append $row)
             let b = $row.binding
@@ -258,7 +258,7 @@ def "main fault" [kernel: path, image: path, out: path, --set: string = "debug",
             { at: 2000ms, bytes: (pose pose-frame $p) }
             { at: 3000ms, bytes: (jobs-frame false $hart) }
         ]
-        let run = (jab launch --kernel $kernel --image $image --out ($out | path join $label) --set $set --sound --api --disk $disk.disk --serial "fps" --send $sends --seconds 9 --harts $harts --bootargs $bootargs)
+        let run = (launch --kernel $kernel --image $image --out ($out | path join $label) --set $set --sound --api --disk $disk.disk --serial "fps" --send $sends --seconds 9 --harts $harts --bootargs $bootargs)
         let lines = ($run.serial | lines)
         let faults = ($lines | where {|l| $l starts-with "jab: worker fault: " })
         let named = (($faults | length) == 1 and ($faults | get 0 | str starts-with $"jab: worker fault: hart=($hart) "))

@@ -13,6 +13,7 @@
 # failure is raised with its name. Alone on the box, about two minutes.
 use ../../../jab/sdk/nu/jab.nu
 use ../../../jab/nu/mod/target
+use ../../../jab/nu/mod/launch
 use cadence.nu
 
 const HZ = 10000000
@@ -102,7 +103,7 @@ def main [
         let bytes = (exit-bytes $e.frame)
         let sends = (if ($bytes | bytes length) == 0 { [] } else { [{ at: 200ms, bytes: $bytes }] })
         let dir = ($builds | path join $e.build)
-        let r = (jab launch --kernel ($dir | path join "jab.elf") --image ($dir | path join "walk.jab") --out ($runs | path join $e.name) --disk ($dir | path join "walk.romfs") --serial "walk" --api --send $sends --seconds 60)
+        let r = (launch --kernel ($dir | path join "jab.elf") --image ($dir | path join "walk.jab") --out ($runs | path join $e.name) --disk ($dir | path join "walk.romfs") --serial "walk" --api --send $sends --seconds 60)
         if $r.status != $e.status { fail $e.name $"status ($r.status), not ($e.status): ($r.serial | str trim)" }
         if ($r.serial | str trim) != $e.line { fail $e.name $"the UART says ($r.serial | str trim | to nuon)" }
         if $r.wall_seconds < $REPLAY_WAIT_S or $r.wall_seconds > ($REPLAY_WAIT_S + $reach + 1) { fail $e.name $"($r.wall_seconds) s of wall time, the wait ($REPLAY_WAIT_S) s past reaching it within ($reach) s" }

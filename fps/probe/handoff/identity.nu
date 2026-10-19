@@ -3,7 +3,7 @@
 # and the parity, and of the still copy's spawn view and its two view
 # yaws under the room's light, each drawn by two debug images and held
 # byte for byte, unstamped.
-use ../../../../jab/sdk/nu/jab.nu
+use ../../../../jab/nu/mod/launch
 use ../../../../jab/kit/fierce/test/pose.nu
 
 def level-frame [bright: bool, held: bool, --parity, --gradient]: nothing -> binary {
@@ -32,7 +32,7 @@ def main [kernel: path, base: path, new: path, handoff_disk: path, still_disk: p
         let shots = ([[image tag]; [$base base] [$new new]] | each {|i|
             let placed = (pose pose-frame $c.pose)
             let all = ($c.sends | append [{ at: 1500ms, bytes: $placed }, { at: 2300ms, bytes: $placed }] | sort-by at)
-            let run = (jab launch --kernel $kernel --image $i.image --out ($out | path join $"($c.name)_($i.tag)") --set DEBUG --sound --api --disk $c.disk --serial "fps" --send $all --capture 3500ms --seconds 5)
+            let run = (launch --kernel $kernel --image $i.image --out ($out | path join $"($c.name)_($i.tag)") --set DEBUG --sound --api --disk $c.disk --serial "fps" --send $all --capture 3500ms --seconds 5)
             { screen: $run.screen, frames: ($run.serial | lines | where {|l| $l starts-with "fps: frame in" } | length) }
         })
         let a = (if ($shots.0.screen == "") { 0x[] } else { open --raw $shots.0.screen | into binary })

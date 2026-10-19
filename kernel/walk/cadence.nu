@@ -27,8 +27,8 @@
 # uploads is not read yet, the reading saying so. `replay-of <run dir>
 # <stream>` writes a replay stream from a run's own records, its dt values
 # the ones the run integrated.
-use ../../../jab/sdk/nu/jab.nu
 use ../../../jab/nu/mod/present
+use ../../../jab/nu/mod/sdl
 
 const HEADER = 80
 const FRAME = 80
@@ -387,7 +387,7 @@ def show [record: record]: nothing -> nothing {
 def main [probe: path, out: path, --eps: int = 10000] {
     let dir = ($probe | path expand)
     let bundle = ($dir | path join "bundle")
-    let checked = (jab sdl-bundle-check $bundle --guest {|api| header-nonce (open --raw $api | into binary) })
+    let checked = (sdl bundle-check $bundle --guest {|api| header-nonce (open --raw $api | into binary) })
     let identity = (open --raw ($bundle | path join "identity.nuon") | into binary | decode | from nuon)
     let guest = (guest-reading (open --raw ($bundle | path join "api.out") | into binary) $identity --eps $eps)
     let record = ($guest | merge { mode: "paired", guest_only: false, capture: ($checked | reject events), pairing: null, pending: "the pairing with the host's uploads is not read yet" })

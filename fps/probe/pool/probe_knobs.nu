@@ -1,5 +1,5 @@
-use ../../../../jab/sdk/nu/jab.nu
 use ../../../../jab/nu/mod/target
+use ../../../../jab/nu/mod/launch
 use ../../../../jab/kit/fierce/test/pose.nu
 use ../../../../jab/kit/fierce/test/gauge.nu
 
@@ -55,7 +55,7 @@ def main [mode: string, out: path, --seconds: int = 10] {
             { at: 1500ms, bytes: (pose pose-frame $SPAWN_POSE) }
         ]
     })
-    let run = (jab launch --kernel $kernel --image $image --out $out --set "DEBUG" --sound --api --disk $disk --serial "fps" --send $sends --capture 3000ms --seconds $seconds)
+    let run = (launch --kernel $kernel --image $image --out $out --set "DEBUG" --sound --api --disk $disk --serial "fps" --send $sends --capture 3000ms --seconds $seconds)
     let reference = ($dbg | path join kit fierce spawn_held screen.ppm)
     let differ = (if $mode == "stale" and ($run.screen != "") {
         let a = (open --raw $run.screen | into binary)

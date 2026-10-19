@@ -14,9 +14,9 @@
 # by the declared criteria, with the secant reference beside them, and
 # lists the pictures' regions; `crops` cuts each region out of both
 # pictures side by side for reading.
-use ../../../jab/sdk/nu/jab.nu
 use ../../../jab/nu/mod/target
 use ../../../jab/nu/mod/build
+use ../../../jab/nu/mod/launch
 use ../../../jab/kit/fierce/test/pose.nu
 use ../../../jab/kit/fierce/test/gauge.nu
 use ../../../jab/kit/fierce/test/test.nu [raise-frame stamp-of]
@@ -227,7 +227,7 @@ def "main capture" [export: path, poses: path, out: path, --only: string = ""] {
         if ($dir | path join "pose.nuon" | path exists) { error make { msg: $"($dir) holds a capture; a pose is captured once into an out" } }
         let disk = (disk-for $p.map $out)
         let rows = ($made.images | each {|i|
-            let run = (jab launch --kernel $i.kernel --image $i.image --out ($dir | path join $i.label) --set $i.set --sound --api --disk $disk.disk --serial "fps" --send (sends-of $p) --screen $SCREEN_AT --seconds $SECONDS)
+            let run = (launch --kernel $i.kernel --image $i.image --out ($dir | path join $i.label) --set $i.set --sound --api --disk $disk.disk --serial "fps" --send (sends-of $p) --screen $SCREEN_AT --seconds $SECONDS)
             row-of $run $i $p
         })
         let problems = ($rows | each {|r|
