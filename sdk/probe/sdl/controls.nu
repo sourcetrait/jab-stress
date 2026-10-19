@@ -187,7 +187,7 @@ def monolithic [out: path]: nothing -> record {
 # then the same log read a second time by symbols alone.
 def modular-of [log: path, report: record]: nothing -> record {
     let read = (made-of (jab sdl-classify $log).events)
-    let named = (jab sdl-resolve $log --every)
+    let named = (sdl resolve $log --every)
     let modules = ($named.objects | where {|o| $o.file | str starts-with "hw-display-virtio-gpu" } | get index)
     let gates = (made-of $named.events | each {|m|
         let caller = ($m.frames | get -o 0)
