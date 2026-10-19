@@ -14,6 +14,19 @@ through jab launch with frames of their own. A case's failure is raised with its
 name. Alone on the box, about two minutes. Its bin:
 `nu/bin/nuance/kernel/walk/launches.nu <jab_dir> <scratch> [--only <cases>]`.
 
+The checkout `jab_dir` is reached through its own bins alone, never by
+importing its modules, whose paths a parse fixes to one checkout: its builds
+through `nu/bin/do.nu`, their target through `nu/bin/nuance/plan.nu`, the runs
+through walk's wrapper, and the exits through `nu/bin/nuance/launch.nu`, its
+record read back as NUON.
+
+## const NONCE_FRAME
+
+The capture nonce 77's WNON frame as the protocol defines it, the magic
+`WNON`, four zero bytes, and the nonce's eight bytes little endian, written
+here rather than taken from the SDK, so an exit's bytes stand apart from the
+code under test.
+
 ## const EXITS
 
 the exits and the frames each sends (exit-bytes): none, a nonce cut to
@@ -40,11 +53,13 @@ bytes, its magic, schema 1, and 16 frames then zeros.
 
 ## def build-variant
 
-A variant built in the checkout and its outputs copied out: the image,
-its flags, its romfs, its demand record, its home, and the kernel built
-with its symbols, whose loaded bytes (objcopy's flat image, with the
-tool prefix the kernel's flags stamp ends with) are hashed; the ELF
-differs build to build by the symbols its table carries.
+A variant built by the checkout's driver and its outputs copied out from
+the target its planner names (`plan.nu`'s `target`, its machine planned
+under the variant's `plan/`): the image, its flags, its romfs, its demand
+record, its home, and the kernel built with its symbols, whose loaded
+bytes (objcopy's flat image, with the tool prefix the kernel's flags
+stamp ends with) are hashed; the ELF differs build to build by the
+symbols its table carries.
 
 ## def wrapped
 

@@ -1,0 +1,27 @@
+{
+ nonce: "6udeEi69pqu",
+ title: "Maps' poses captured and held to a base's captures",
+ args_type: "record<stress: string, nuance: string, kernel: string, root: string, sets: table<name: string, image: string>, maps: table<map: string, poses: string>, label: string, mcp_nom: string, base: string>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = $args
+let bin = ($a.stress | path join nu bin nuance.nu)
+let given = ($a | to nuon)
+let ready = (^$bin runner ready captures_compare $given | complete)
+if $ready.exit_code != 0 { error make { msg: $\"captures_compare is not ready: ($ready.stderr | str trim)\" } }
+let r = ($ready.stdout | from nuon)
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 60sec,
+    max_quiet: 20min,
+    check: {|state| { shots: (glob ($a.root | path join \"new1_*\" \"**\" \"screen.ppm\") | length) } },
+    teardown: null,
+    work: {
+        let w = (^$bin runner work captures_compare $given | complete)
+        if $w.exit_code != 0 { error make { msg: $\"captures_compare: ($w.stderr | str trim)\" } }
+        $w.stdout | from nuon
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}

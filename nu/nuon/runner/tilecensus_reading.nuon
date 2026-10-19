@@ -1,0 +1,27 @@
+{
+ nonce: "cnceorJbGgC",
+ title: "The tile census read over a battery's batches",
+ args_type: "record<stress: string, nuance: string, base: string, labels: list<string>, label: string, mcp_nom: string>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = $args
+let bin = ($a.stress | path join nu bin nuance.nu)
+let given = ($a | to nuon)
+let ready = (^$bin runner ready tilecensus_reading $given | complete)
+if $ready.exit_code != 0 { error make { msg: $\"tilecensus_reading is not ready: ($ready.stderr | str trim)\" } }
+let r = ($ready.stdout | from nuon)
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 60sec,
+    max_quiet: 40min,
+    check: {|state| { written: ($a.base | path join \"census.nuon\" | path exists) } },
+    teardown: null,
+    work: {
+        let w = (^$bin runner work tilecensus_reading $given | complete)
+        if $w.exit_code != 0 { error make { msg: $\"tilecensus_reading: ($w.stderr | str trim)\" } }
+        $w.stdout | from nuon
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}

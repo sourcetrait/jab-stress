@@ -1,7 +1,7 @@
-use (path self ../../../../../../jab/nu/mod/target)
-use (path self ../../../../../../jab/nu/mod/launch)
-use (path self ../../../../../../jab/nu/mod/probe)
 use (path self ..)
+
+# The capture nonce 77's WNON frame, the protocol's bytes
+const NONCE_FRAME = 0x[57 4e 4f 4e 00 00 00 00 4d 00 00 00 00 00 00 00]
 
 # The clock's ticks a second
 const HZ = 10000000
@@ -111,7 +111,9 @@ export def main [jab_dir: path, scratch: path, --only: string = ""] {
         let bytes = (exit-bytes $e.frame)
         let sends = (if ($bytes | bytes length) == 0 { [] } else { [{ at: 200ms, bytes: $bytes }] })
         let dir = ($builds | path join $e.build)
-        let r = (launch --kernel ($dir | path join "jab.elf") --image ($dir | path join "walk.jab") --out ($runs | path join $e.name) --disk ($dir | path join "walk.romfs") --serial "walk" --api --send $sends --seconds 60)
+        let ran = (^nu ($ws | path join "nu" "bin" "nuance" "launch.nu") --kernel ($dir | path join "jab.elf") --image ($dir | path join "walk.jab") --out ($runs | path join $e.name) --disk ($dir | path join "walk.romfs") --serial "walk" --api --send ($sends | to nuon) --seconds 60 | complete)
+        if $ran.exit_code != 0 { fail $e.name $"the launch exited ($ran.exit_code): ($ran.stdout + $ran.stderr | str trim)" }
+        let r = ($ran.stdout | from nuon)
         if $r.status != $e.status { fail $e.name $"status ($r.status), not ($e.status): ($r.serial | str trim)" }
         if ($r.serial | str trim) != $e.line { fail $e.name $"the UART says ($r.serial | str trim | to nuon)" }
         if $r.wall_seconds < $REPLAY_WAIT_S or $r.wall_seconds > ($REPLAY_WAIT_S + $reach + 1) { fail $e.name $"($r.wall_seconds) s of wall time, the wait ($REPLAY_WAIT_S) s past reaching it within ($reach) s" }
@@ -127,7 +129,7 @@ def fail [name: string, why: string] {
 
 # An exit case's frame: none, the nonce cut or whole, a replay cut
 def exit-bytes [frame: string]: nothing -> binary {
-    let nonce = (probe wnon-frame 77)
+    let nonce = $NONCE_FRAME
     let word = {|v: int| $v | into binary --endian little | bytes at 0..<4 }
     let cut = ([(do $word 0x4c505257) (do $word 1) (do $word 16)] | bytes collect) ++ (0..<20 | each { 0x[00] } | bytes collect)
     match $frame {
@@ -139,11 +141,13 @@ def exit-bytes [frame: string]: nothing -> binary {
     }
 }
 
-# A variant built in the checkout and its outputs copied out
+# A variant built by the checkout's driver, its target from its planner, copied
 def build-variant [ws: path, set: string, dest: path]: nothing -> record<image: string, kernel: string, kernel_loaded_sha256: string> {
-    let r = (do { cd $ws; ^just build example/walk --set $set } | complete)
+    let r = (do { cd $ws; ^nu ($ws | path join "nu" "bin" "do.nu") build example/walk --set $set } | complete)
     if $r.exit_code != 0 { fail $"the build of ($set)" ($r.stdout + $r.stderr | str trim) }
-    let target = (target root $ws)
+    let p = (^nu ($ws | path join "nu" "bin" "nuance" "plan.nu") ($ws | path join "example" "walk") --set $set --out ($dest | path join "plan") | complete)
+    if $p.exit_code != 0 { fail $"the plan of ($set)" ($p.stdout + $p.stderr | str trim) }
+    let target = ($p.stdout | from json | get target)
     let out = ($target | path join "release" "example" "walk")
     mkdir $dest
     for f in $KEPT { cp ($out | path join $f) ($dest | path join $f) }

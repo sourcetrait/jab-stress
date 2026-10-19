@@ -1,0 +1,27 @@
+{
+ nonce: "49AGzVbsa3Y",
+ title: "Sets' captures of maps' poses held pixel for pixel to a base set's",
+ args_type: "record<stress: string, nuance: string, kernel: string, root: string, sets: table<name: string, image: string>, maps: table<map: string, poses: string>, base: string, label: string, mcp_nom: string>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = $args
+let bin = ($a.stress | path join nu bin nuance.nu)
+let given = ($a | to nuon)
+let ready = (^$bin runner ready pixel_identity $given | complete)
+if $ready.exit_code != 0 { error make { msg: $\"pixel_identity is not ready: ($ready.stderr | str trim)\" } }
+let r = ($ready.stdout | from nuon)
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 60sec,
+    max_quiet: 20min,
+    check: {|state| { shots: (glob ($a.root | path join captures \"**\" \"screen.ppm\") | length) } },
+    teardown: null,
+    work: {
+        let w = (^$bin runner work pixel_identity $given | complete)
+        if $w.exit_code != 0 { error make { msg: $\"pixel_identity: ($w.stderr | str trim)\" } }
+        $w.stdout | from nuon
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}

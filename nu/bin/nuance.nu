@@ -1,8 +1,6 @@
 #!/usr/bin/env nu
 # The fresh build's module's path, bound at parse time
 const FRESHBUILD = path self ../mod/nuance/freshbuild
-# The import map's module's path, bound at parse time
-const IMPORTMAP = path self ../mod/nuance/importmap
 # The run records' module's path, bound at parse time
 const RECORD = path self ../mod/runner/record
 # The hot routines' probe's module's path, bound at parse time
@@ -15,14 +13,16 @@ const CHECK = path self ../mod/nuance/check
 const TILES = path self ../mod/nuance/fierce/tiles
 # The census's module's path, bound at parse time
 const CENSUS = path self ../mod/nuance/fierce/census
+# The runners' dispatcher's path, bound at parse time
+const RUNNER = path self ../mod/runner
 use $FRESHBUILD
-use $IMPORTMAP
 use $RECORD
 use $HOT
 use $JAB
 use $CHECK
 use $TILES
 use $CENSUS
+use $RUNNER
 
 # A fresh build of jab's matrix from its HEAD, each artifact's digest in `out`.
 def "main freshbuild manifest" [jab: path, out: path] {
@@ -34,11 +34,14 @@ def "main freshbuild compare" [before: path, after: path, jab: path] {
     freshbuild compare $before $after $jab
 }
 
-# jab's and the workbench's trees held to the migration contract.
-def "main importmap check" [
-    jab: path, stress: path, --landed: string = '', --contract: string = '', --out: string = ''
-] {
-    importmap check $jab $stress --landed $landed --contract $contract --out $out
+# A harness's checks before its long launch, its NUON arguments in and out.
+def "main runner ready" [harness: string, given: string] {
+    runner ready $harness $given
+}
+
+# A harness's work inside its long launch, NUON arguments in, its result out.
+def "main runner work" [harness: string, given: string] {
+    runner work $harness $given
 }
 
 # A landed run's problems, none where it holds.

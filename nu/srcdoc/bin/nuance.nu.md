@@ -18,12 +18,16 @@ taken after, the later's fresh cache read for the remakes, and
 `compare.nuon` written there. The pair lands in jab-stress-data as a run
 of `runs/jab/justtonu/`.
 
-## def main importmap check
+## def main runner ready
 
-`nu nu/bin/nuance.nu importmap check <jab> <stress> [--landed <groups>]
-[--contract <file>] [--out <dir>]`: the import-map checker over both live
-trees, the groups landed as one comma-separated string, since a script's
-command line carries no list.
+`nu nu/bin/nuance.nu runner ready <harness> <args>`: a harness's checks
+before its long launch, its arguments NUON text, its answer NUON, the
+values its progress check reads; a refusal on stderr, exit 1.
+
+## def main runner work
+
+`nu nu/bin/nuance.nu runner work <harness> <args>`: a harness's work inside
+its long launch, the result NUON on stdout; a failure on stderr, exit 1.
 
 ## def main runner record stored
 
