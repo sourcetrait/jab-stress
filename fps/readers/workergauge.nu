@@ -16,11 +16,11 @@
 # their range, and every build's difference from the first build named.
 # The busy time is summed elapsed job time, never CPU. The CPU: each
 # run's harts' shares of a core over the second an older `--threads` held,
-# and from runs with `--cpu` the windows the report holds (gauge.nu's
-# cpu-windows), per build each hart's CPU seconds and utilization per
+# and from runs with `--cpu` the windows the report holds (`gauge cpu
+# windows`), per build each hart's CPU seconds and utilization per
 # window with the runs' least and greatest, host-time windows never
 # divided by frames. Each run's selection and request are its own
-# identity's, read through gauge.nu's run-request, its source and
+# identity's, read through `gauge identity request`, its source and
 # corrections named, never the report's summary unless that is the
 # identity's fallback. A batch's selection is its runs' agreement, and a
 # batch whose runs mix the automatic and forced selections is refused even
@@ -34,7 +34,7 @@
 # less its trailing _<n> under one selection, so an automatic build is
 # never merged with a forced one of the same counts. Each batch and build
 # names the grants and the active masks its runs' frames held, schema 6's
-# harts records, gauge.nu's validity their judge. Run under the real nu
+# harts records, gauge/measure's validity their judge. Run under the real nu
 # from a scratch justfile: `nu workergauge.nu <settled|play> <base>
 # <out.nuon> <label>...`.
 
@@ -116,7 +116,7 @@ def harts-of [ran: record]: nothing -> list<any> {
     } | sort-by hart
 }
 
-# Each CPU window over a build's runs (gauge.nu's cpu-windows): by window,
+# Each CPU window over a build's runs (`gauge cpu windows`): by window,
 # the runs holding it and those missing it, the actual interval's least
 # and greatest, and for each hart's thread its utilization and CPU seconds
 # least and greatest over the runs; none without readings.

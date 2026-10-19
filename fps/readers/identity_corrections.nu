@@ -8,7 +8,7 @@
 # no debug-only symbol; then a sidecar binds to the identity file's
 # SHA-256 and the image's, holds build.flags (the debug line to the
 # release tree's) and build.elf_sha256 (null to the ELF's), and records
-# the evidence; then each is read back through gauge.nu's correction-of.
+# the evidence; then each is read back through `gauge identity corrected`.
 # The identities stay as written. Run under the real nu from a scratch
 # justfile: `nu identity_corrections.nu <base> <release flags file> <nm>
 # <out.nuon> <battery>...`.

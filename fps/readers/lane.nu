@@ -1,7 +1,7 @@
 # The cadence lane's summary: every run of each cadence pooled, per
 # cadence and leg, from the gauge.nuon files a battery wrote under one
 # base directory, each run under the cadence its own identity asked,
-# read through gauge.nu's run-request, never the report's summary unless
+# read through `gauge identity request`, never the report's summary unless
 # that is the identity's fallback; distributions by nearest rank,
 # untrimmed. Run from a scratch justfile under the real nu: `nu lane.nu
 # <base> <out.nuon> <label>...`, or `use` it and call `analyse`.

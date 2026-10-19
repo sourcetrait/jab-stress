@@ -73,7 +73,7 @@ def sends-of [p: record]: nothing -> list<any> {
     ] | sort-by at
 }
 
-# A run's screen bound to the frame it shows (gauge.nu's screen-frame):
+# A run's screen bound to the frame it shows (`gauge measure screen-frame`):
 # its window opening at the frame that answered the second placement, N
 # at the pose sent, roll included, and drawn by the serial backend; with
 # `levels` N drawn from one packet besides, since a flush restarts the

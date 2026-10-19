@@ -49,7 +49,7 @@ contract is met. The outcome is one of `ineligible`, `insufficient`,
 
 ## What it does not read yet
 
-The real readers do not yet write the readings record. gauge.nu's
+The real readers do not yet write the readings record. The gauge's
 reports do not yet carry K's violations or the late wakes, which come
 with JointTiming's comparison. Until then the selector has no readings
 record to read.

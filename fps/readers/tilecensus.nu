@@ -3,9 +3,9 @@
 # gauge.nuon and each run's serial.log, the census's lines read by jab's
 # `test/census.nu`. A run is refused before its census is read unless its
 # capture is complete and valid (GaugeStanding) and its directory is the one
-# whose identity file binds to the run's recorded SHA-256, through gauge.nu's
-# identity-of, the identity's seed the run's (CensusRunBinding), resolved in
-# a nu of its own (tilecensus_resolve.nu) since gauge.nu loaded here would
+# whose identity file binds to the run's recorded SHA-256, through `gauge
+# identity of`, the identity's seed the run's (CensusRunBinding), resolved in
+# a nu of its own (tilecensus_resolve.nu) since the gauge loaded here would
 # slow the census's parse about eightfold; and after,
 # when a census frame's mapped pixels at side 32, eligible plus straddling,
 # pass its row's lit pixels, the two files then not one run's. A refused

@@ -151,7 +151,7 @@ const REUSE_HELD_SECONDS = 7
 const BOUNDARY_UNJOINED = "fps: tile boundary before the round joined"
 const HOLD_EXPIRED = "fps: held job never released"
 
-# The console's O frame, a debug build's (test.nu's pool-frame): byte 4
+# The console's O frame, a debug build's (`console pool`): byte 4
 # the modes, byte 6 a cold start, then words from byte 8: the slots, a
 # tier's requests, an open ring's entries, the merge's share, and the
 # quota, each 0 for the build's own.
@@ -166,7 +166,7 @@ def dump-frame [--building]: nothing -> binary {
     [("D" | into binary), 0x[00 00 00], 0x[ff ff ff ff], (if $building { 0x[01] } else { 0x[00] }), (0..<55 | each {|i| 0x[00] } | bytes collect)] | bytes collect
 }
 
-# The console's L frame (test.nu's level-frame): every tile forgotten at
+# The console's L frame (`console level`): every tile forgotten at
 # the next boundary, every lumel full bright first when `bright`,
 # construction frozen when `held`, else the quota and the allowance
 # lifted.
@@ -175,7 +175,7 @@ def level-frame [bright: bool, held: bool]: nothing -> binary {
     [("L" | into binary), 0x[00 00 00], (do $flag $bright), (do $flag $held), 0x[00], 0x[00], (0..<56 | each {|i| 0x[00] } | bytes collect)] | bytes collect
 }
 
-# The console's J frame, a debug build's (test.nu's jobs-frame): the
+# The console's J frame, a debug build's (`console jobs`): the
 # delayed worker's hart in byte 4, its delay in microseconds from byte 8,
 # the cancel in byte 12, the faulting worker's hart in byte 13, and in
 # byte 14 (`--hold`) the delayed worker held in fixed bands until the

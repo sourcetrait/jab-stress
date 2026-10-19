@@ -2,7 +2,7 @@
 # measures of the runs it was preloaded in (ProbeRuns.md's Observer
 # controls). Two arms of runs, the shim preloaded in one and the one
 # difference; each run's statistic of each measure read from its whole-run
-# summary (gauge.nu's leg-summary); an arm's statistic the median of its
+# summary (gauge/measure's leg-summary); an arm's statistic the median of its
 # runs' by nearest rank; the effect the probed arm's less the plain arm's;
 # the noise half the larger of the two arms' ranges, an arm's range its
 # greatest run's statistic less its least's; a measure within its noise

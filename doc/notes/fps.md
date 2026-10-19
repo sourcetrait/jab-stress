@@ -46,7 +46,7 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
     `kit/fierce/bench/qual_<target>.nuon`; `check record` prints every
     problem the check names and fails on any; `report +paths` writes the
     report from records, the last path its file, `--compared <file>`
-    rendering a `gauge.nu compare` output as the comparison with the
+    rendering a `nuance.nu gauge compare` output as the comparison with the
     first baseline.
   - `poses.just` captures a map's poses on an image.
   - `scaling.just` builds the debug and owner candidates a parity reads,
@@ -101,7 +101,7 @@ session's scratch directory or `$XDGX_TMP_HOME/jab-stress/`.
   stamp unreadable; the stamp naming no frame after the phase's last
   build and before the end marker; a frame from the one after that build
   through the displayed one unsettled; and either time missing, or E not
-  after the screen. The stamp's helpers are jab's test.nu's, imported.
+  after the screen. The stamp's helpers are fierce's picture module's, imported.
   In `held` a live picture is refused as unsettled alone.
 - A run goes on past its E to the launch's bound, so its records hold
   frames after the end marker; a cut meant to drop the marker cuts at

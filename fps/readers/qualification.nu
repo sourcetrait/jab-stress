@@ -2,7 +2,7 @@
 # against actual play on both targets (FrameCeiling/Qualification.md).
 # `candidate` builds the release tree and writes the candidate's record at
 # its freeze. `record` reads one target's bench run, a run of the game's
-# bench/qual_<target>.nuon, through gauge.nu's bench-doc and every run
+# bench/qual_<target>.nuon, through `gauge bench doc` and every run
 # through run-request, into the target's qualification record: the
 # candidate, the bench against the candidate's bench file, every run with
 # its standing, its identity, and that identity's agreement with the
@@ -48,7 +48,7 @@ const CASES = [
 
 # The diagnostics read from the normal play runs' own frames (the matrix's
 # diagnostic rows): each its route legs, every leg a run holds where it
-# names none, and the fields of a leg's summary (gauge.nu's leg-summary).
+# names none, and the fields of a leg's summary (gauge/measure's leg-summary).
 const DIAGNOSTICS = [
     [case, legs, fields];
     ["first sight", [start], [frames over critical draw preparation raster tiles tiles_built building_frames tiled_pixels fallback_pixels]]
@@ -106,8 +106,8 @@ def short [commit: any]: nothing -> string {
 # names there, null for none, and never refused; the game's release image,
 # its ELF, and the kernel built with it, each by its SHA-256, the image's
 # flags free of DEBUG; the toolchain those flags name, each tool the file
-# its prefix resolves to with that file's SHA-256 (gauge.nu's
-# resolved-file); and Render Zero's asset tree by gauge.nu's digest, the
+# its prefix resolves to with that file's SHA-256 (`gauge identity
+# resolved-file`); and Render Zero's asset tree by gauge/identity's digest, the
 # tree every run plays.
 export def candidate-of [tag: string]: nothing -> record {
     let repos = [[repo, dir]; [jab $JAB] [stress $STRESS]]
@@ -163,7 +163,7 @@ def flag-of [words: list<string>, flag: string]: nothing -> any {
     if $at == null { null } else { $words | get -o ($at + 1) }
 }
 
-# The runs a step's words ask for, gauge.nu's defaults where they name
+# The runs a step's words ask for, the gauge's defaults where they name
 # none: `run` its `--runs`, 3 unless given, each run n played at its n of
 # `--seeds`, else n; `play` one run at its `--seed`, else 1.
 export def expected-of [words: list<string>]: nothing -> record<kind: string, runs: list<any>> {
@@ -242,7 +242,7 @@ export def agreement-of [id: record, candidate: record, target: string, spec: re
 # An acceptance run's verdict (Qualification.md's acceptance): it passes
 # when it stands valid, its identity agrees with the candidate and the
 # target, and its critical path's median over its play frames is under
-# the ceiling by gauge.nu's under-ceiling, the one rule; every problem
+# the ceiling by `gauge report under-ceiling`, the one rule; every problem
 # named; the median and the tail beside it.
 export def verdict-of [run: record]: nothing -> record {
     let whole = ($run.measured | get -o whole)
@@ -717,8 +717,8 @@ def target-section [r: record]: nothing -> list<string> {
 
 # The report for TheUser over the targets' records (Qualification.md's
 # reports), public-production writing: the candidate, then a section a
-# target in the records' order; with `compared` a comparison gauge.nu's
-# compare wrote, its table rendered as the comparison with the first
+# target in the records' order; with `compared` a comparison `gauge
+# compare` wrote, its table rendered as the comparison with the first
 # baseline.
 export def report-text [records: list<record>, compared: any]: nothing -> string {
     let cand = ($records | first | get candidate)

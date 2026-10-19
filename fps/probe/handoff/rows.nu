@@ -1,4 +1,4 @@
-# The rows gauge.nu's stream reads from a run's API capture, the pool's
+# The rows `gauge stream` reads from a run's API capture, the pool's
 # counters a frame, for a probe of a handoff run.
 use ../../../../jab/kit/fierce/nu/mod/gauge
 

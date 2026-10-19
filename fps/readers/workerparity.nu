@@ -94,7 +94,7 @@ def modes-of [modes: string]: nothing -> list<any> {
 }
 
 # A map's still copy, its androids dropped so nothing in the scene moves
-# with elapsed time (test.nu's variant-tree, as the suite's copy of Render
+# with elapsed time (`tree variant`, as the suite's copy of Render
 # Zero is), compiled from the checkout's source into `out`, and its romfs
 # disk beside it: the copy's name, its tree, the disk, and the disk's
 # digest.
@@ -122,7 +122,7 @@ def sends-of [p: record, m: record, cancel: bool, end: duration]: nothing -> lis
     ] | sort-by at
 }
 
-# A run's screen bound to the frame it shows (gauge.nu's screen-frame):
+# A run's screen bound to the frame it shows (`gauge measure screen-frame`):
 # its window opening at the frame that answered the second placement, N
 # at the pose sent and drawn by the mode's workers at its grain, and with
 # `cancel` N's witness by the mode's rule, the serial backend's for W 0.

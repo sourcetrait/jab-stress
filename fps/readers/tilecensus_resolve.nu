@@ -1,11 +1,11 @@
 # TileCensus's run binding (GaugeStanding, CensusRunBinding) in a nu of its
-# own, called by tilecensus.nu: gauge.nu loaded beside census.nu's parse
+# own, called by tilecensus.nu: the gauge loaded beside census.nu's parse
 # slows every command that takes a closure in proportion to the code loaded
-# (41 s against 5.4 s on one run's log), so the census is read where gauge.nu
+# (41 s against 5.4 s on one run's log), so the census is read where the gauge
 # is not. For each request, a report and a run number in it: the run
 # refused unless its capture is complete and valid; else its directory the
 # one whose identity file binds to the run's recorded SHA-256, through
-# gauge.nu's identity-of over the report's run-dirs, the identity's seed
+# `gauge identity of` over the report's run-dirs, the identity's seed
 # the run's; else refused. `nu tilecensus_resolve.nu <requests as NUON>`
 # prints the answers as NUON.
 

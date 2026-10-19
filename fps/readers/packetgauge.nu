@@ -9,7 +9,7 @@
 # the counter (a schema 2 run records neither), per build the mean of its
 # batches' medians with half their range, and every build's difference
 # from the first build named. Each run's cadence and identity are its
-# own, read through gauge.nu's run-request, never the report's summary
+# own, read through `gauge identity request`, never the report's summary
 # unless that is the identity's fallback. Checked first: each run
 # complete, valid, seeded, and at the cadence it asked, and the runs'
 # identities' kernel, assets, route, toolchain, cadence, and machine alike
