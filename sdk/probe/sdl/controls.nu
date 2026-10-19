@@ -1,5 +1,5 @@
-# The sdl probe's controls: `just do probe sdl` run three ways in the Jab
-# checkout beside this one, each held to an oracle the probe does not
+# The sdl probe's controls: `nu/bin/nuance/probe.nu sdl` run three ways in
+# the Jab checkout beside this one, each held to an oracle the probe does not
 # make, and one NUON record printed. Every file of the run is written
 # under `out`, a directory not yet there, which is the run's record; the
 # stripped QEMU goes under `work`.
@@ -56,12 +56,12 @@ const SYSTEM_PREFIX = "/usr"
 const MODULE_DIRS = ["/usr/lib64/qemu" "/usr/lib/qemu" "/usr/lib/x86_64-linux-gnu/qemu"]
 const CONSOLE_UPDATES = ["qemu_console_update" "qemu_console_update_full" "dpy_gfx_update" "dpy_gfx_update_full"]
 
-# One probe run, `just do probe sdl <program>` for SECONDS with
+# One probe run, `nu/bin/nuance/probe.nu sdl <program>` for SECONDS with
 # `qemu_args` in JAB_QEMU_ARGS: its exit, its record where it printed one,
 # its stderr, and its shim log, each kept under `out` by `name`.
 def probe-run [name: string, program: string, out: path, qemu_args: string]: nothing -> record<exit: int, record: oneof<record, nothing>, stderr: string, log: string> {
     let tool = ($JAB | path join "nu" "bin" "nuance" "probe.nu")
-    let ran = (with-env { JAB_QEMU_ARGS: $qemu_args } { ^$nu.current-exe $tool $JAB sdl $program --seconds ($SECONDS | into string) | complete })
+    let ran = (with-env { JAB_QEMU_ARGS: $qemu_args } { ^$nu.current-exe $tool sdl $program --seconds ($SECONDS | into string) | complete })
     $ran.stdout | save -f ($out | path join $"($name).stdout")
     $ran.stderr | save -f ($out | path join $"($name).stderr")
     let log = (build program-out ($JAB | path join $program) "release" | path join "probe" "sdl.log")
