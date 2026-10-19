@@ -24,9 +24,12 @@ refusals, and what it read, in about 20 seconds here.
 - a definition or constant the contract does not own, at its file and
   line;
 - a definition in neither its old place nor its new one, in both at once,
-  or in its old place after its group has landed;
+  or in its old place after its group has landed; a definition or constant
+  its group retires, still there once the group has landed;
 - an import in a form it does not resolve, a module's import outside the
-  contract's edges, and any cycle of imports;
+  contract's edges, and any cycle of imports; a bin's import bound through a
+  constant resolves, `path self <path>` or, for a bin a link runs, the
+  directory it resolves first joined with the path;
 - a caller outside a family of modules calling one of its internal or
   private definitions;
 - a bin's command making more than one call;

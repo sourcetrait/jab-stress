@@ -2,6 +2,8 @@ const LEAVES = ['std' 'rig/sourcetrait/emptwo/prototype/long']
 const FORM = '^\s*(?P<form>export use|overlay use|use|source)\s+(?P<rest>\S.*)$'
 const PATH_CONST = '^(?:export )?const (?P<n>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*["''](?P<v>[^"'']*)["'']\s*$'
 const SELF_CONST = '^(?:export )?const (?P<n>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*\(?path self (?P<v>[^\s\)]+)\)?\s*$'
+const HERE_CONST = '^(?:export )?const (?P<n>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*\(path self \| path expand \| path dirname\)\s*$'
+const JOIN_CONST = '^(?:export )?const (?P<n>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*\(\$(?P<h>[A-Za-z_][A-Za-z0-9_]*) \| path join (?P<v>\S+) \| path expand\)\s*$'
 
 # A line's import: its form, the path it names, and the list after it.
 def import-of [line: string]: nothing -> oneof<record<form: string, target: string, list: list<string>>, nothing> {
@@ -41,7 +43,9 @@ export def lines-of [src: string]: nothing -> table<line: int, form: string, tar
 # A source's parse-time constants that name a path, each name to its text.
 def path-consts [src: string]: nothing -> record {
     let ls = ($src | lines)
-    $ls | parse --regex $PATH_CONST | append ($ls | parse --regex $SELF_CONST)
+    let here = ($ls | parse --regex $HERE_CONST | get n)
+    let joined = ($ls | parse --regex $JOIN_CONST | where {|c| $c.h in $here } | select n v)
+    $ls | parse --regex $PATH_CONST | append ($ls | parse --regex $SELF_CONST) | append $joined
     | reduce --fold {} {|c, acc| $acc | upsert $c.n $c.v }
 }
 

@@ -24,7 +24,12 @@ A source's `const NAME = "path"` and `const NAME = path self <path>`, read
 for a `use $NAME [...]`. A bin binds its imports so, nushell keeping one
 module per path as joined: a bin's bare `use ../mod/map` beside a module's
 `use (path self ..)` of the same map loads it twice, `path self` normalizing
-the one and not the other.
+the one and not the other. A bin a link runs, jab's root `do`, binds its own
+directory first, `const HERE = (path self | path expand | path dirname)`,
+since `path self` names the link and not the file, then each import
+`const NAME = ($HERE | path join <path> | path expand)`, read as `<path>`
+from the file's directory, as `path self <path>` is, when `HERE` is so
+defined in the same source.
 
 ## def target-of
 

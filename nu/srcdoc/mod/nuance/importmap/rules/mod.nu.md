@@ -38,7 +38,10 @@ where the plan changes a signature (`do-clean` merged into `build clean`).
 
 A monolith's constant in its old place, or in its module, or under its
 family's modules when the plan names none; a constant may live in several
-modules, a child duplicating its parent's few lines.
+modules, a child duplicating its parent's few lines. One the contract marks
+`retired` by a group, the SDK's last `self`, which WorkspaceDrivers retires
+with jab.nu, is gone once that group lands, and refused as stale if it
+stays.
 
 ## def files
 

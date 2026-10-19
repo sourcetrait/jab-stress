@@ -123,6 +123,13 @@ export def constants [contract: record, landed: list<string>, decls: table]: not
     for k in $contract.consts {
         let old = (mapped $contract $landed $k.repo $k.file)
         let at_old = (($live | get -o (key-of $k.repo $old const $k.const)) != null)
+        let retired = ($k | get -o retired)
+        if $retired != null and $retired in $landed {
+            if $at_old {
+                $out = ($out | append (refusal stale $k.repo $old 0 $k.const $"retired by ($retired), yet here"))
+            }
+            continue
+        }
         let home = (if $k.family == 'sdk' { 'nu/mod/' } else { 'kit/fierce/nu/mod/' })
         let at_new = (if $k.module != null {
             let file = (module-file $contract $k.family $k.module)
