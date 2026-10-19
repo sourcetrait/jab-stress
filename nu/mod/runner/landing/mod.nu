@@ -78,7 +78,11 @@ export def land [dir: path, subject: string, set: string, stamp: string, manifes
     let dest = ($root | path join runs $subject $set $stamp)
     if ($dest | path exists) { error make { msg: $"($dest) exists; a run lands once" } }
     let given = (open --raw $manifest | decode utf-8 | from nuon)
-    let classed = (files-under $src | each {|f| { path: $f } | merge (class-of ($src | path join $f)) })
+    let entries = (files-under $src | each {|f| { path: $f, type: ($src | path join $f | path type) } })
+    let links = ($entries | where type == symlink | get path)
+    if ($links | is-not-empty) { error make { msg: $"the landing refuses ($links | str join ', '), a link where a run's record holds files" } }
+    let wires = ($entries | where {|e| $e.type not-in [file symlink] } | get path)
+    let classed = ($entries | where type == file | each {|e| { path: $e.path } | merge (class-of ($src | path join $e.path)) })
     let refused = ($classed | where lands == refused | each {|c| if $c.role == control { $"($c.path), a control file, its launch's cleanup incomplete" } else { $"($c.path), of no class the landing knows" } })
     if ($refused | is-not-empty) { error make { msg: $"the landing refuses ($refused | str join '; ')" } }
     let objects = ($classed | each {|c| if $c.lands == container { $"($c.path).nuonl" } else { $c.path } })
@@ -97,7 +101,7 @@ export def land [dir: path, subject: string, set: string, stamp: string, manifes
         $run | to nuon --indent 1 | save -f ($dest | path join run.nuon)
         let problems = (record stored $dest)
         if ($problems | is-not-empty) { error make { msg: $"the landed run breaks its record: ($problems | str join '; ')" } }
-        { run: $dest, originals: ($rows.inventory | length), containers: ($classed | where lands == container | length) }
+        { run: $dest, originals: ($rows.inventory | length), containers: ($classed | where lands == container | length), wires: $wires }
     } catch {|e|
         rm -r $dest
         error make { msg: $e.msg }

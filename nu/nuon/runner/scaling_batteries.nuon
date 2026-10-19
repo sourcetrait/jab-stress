@@ -1,5 +1,5 @@
 {
- nonce: "cnPbYB4L8Qt",
+ nonce: "eQoPuBrQ9jH",
  title: "GfxScaling's selections on three, four, and eight harts, settled and factory",
  args_type: "record<stress: string, gauge: string, fps: string, new: string, base62: string, settled: string, label: string, mcp_nom: string>",
  result_type: "record<label: string, nonce: string, batteries: table<name: string, batches: int>>",

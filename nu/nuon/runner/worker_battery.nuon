@@ -1,5 +1,5 @@
 {
- nonce: "dejKUeGaBDY",
+ nonce: "7UlCF7Dv6pR",
  title: "Gauge batches at each one's workers and grain, compared by field",
  args_type: "record<stress: string, base: string, fps: string, batches: table<label: string, image: string, workers: int, grain: int>, runs: int, cadence: int, route: string, cpu: bool, fields: list<string>, log_glob: string, label: string, mcp_nom: string>",
  result_type: "record<label: string, nonce: string>",

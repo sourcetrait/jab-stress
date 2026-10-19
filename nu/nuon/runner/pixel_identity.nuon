@@ -1,5 +1,5 @@
 {
- nonce: "49AGzVbsa3Y",
+ nonce: "8jVw9OcBOF2",
  title: "Sets' captures of maps' poses held pixel for pixel to a base set's",
  args_type: "record<stress: string, nuance: string, kernel: string, root: string, sets: table<name: string, image: string>, maps: table<map: string, poses: string>, base: string, label: string, mcp_nom: string>",
  result_type: "record<label: string, nonce: string>",

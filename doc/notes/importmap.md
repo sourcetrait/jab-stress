@@ -10,14 +10,21 @@ runs and lists every place they disagree with the contract.
 ## Running it
 
 ```
-nu nu/bin/nuance.nu importmap check <jab checkout> <this checkout> [--landed <groups>] [--out <dir>]
+nu nu/bin/nuance/importmap.nu check <jab checkout> <this checkout> [--landed <groups>] [--out <dir>]
 ```
 
 `--landed` names the groups of moves that have landed, comma separated,
 such as `KitFierce,SdkModules/1`. With `--out`, the report goes to
 `<dir>/report.nuon`; it lands in the data checkout as a run of
 `runs/jab/importmap/`. The run prints whether the trees hold, the count of
-refusals, and what it read, in about 20 seconds here.
+refusals, and what it read, in under a minute here. The checker is a bin of
+its own, since its closures copy every module a bin has loaded each time
+they run: under `nuance.nu`'s imports it took 86 seconds where alone it
+takes 47.
+
+The checker parses each source in its own engine, so a call it reads can
+resolve to a command its own bin imports under the same words; it counts
+such a call the same as one left unresolved.
 
 ## What it refuses
 

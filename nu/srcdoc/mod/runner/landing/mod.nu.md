@@ -31,6 +31,10 @@ otherwise the run's own, its set unless `--source` names it.
 
 `land <dir> <subject> <set> <stamp> <manifest>`: the layout's landing made
 class-aware, into `runs/<subject>/<set>/<stamp>/`, which must not exist.
+Regular files land. A pipe or a socket is a live wire holding no bytes at
+rest, a plain launch's monitor, API, and pad pipes among them, and is left
+out, named in the result's `wires`; reading one would wait on a writer that
+has gone. A link refuses the landing by name.
 `manifest` is a NUON file of the record's own fields, `task`, `scope`,
 `builds` at schema 2 (each part's `source` and, for an export, its
 provenance), and `kept`. Each log is wrapped and given back by the

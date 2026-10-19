@@ -1,5 +1,5 @@
 {
- nonce: "5xxvnEklzjA",
+ nonce: "iRchi3so9mB",
  title: "Worker parity and fault steps on one kernel, each step's verdict read",
  args_type: "record<stress: string, base: string, nuance: string, kernel: string, steps: table<name: string, recipe: string, image: string, flags: list<string>>, label: string, mcp_nom: string>",
  result_type: "record<label: string, nonce: string>",

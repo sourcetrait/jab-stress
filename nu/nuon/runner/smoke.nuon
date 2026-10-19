@@ -1,5 +1,5 @@
 {
- nonce: "goxxz3sFsiB",
+ nonce: "gR3wbjWhASv",
  title: "fierce's development smoke by its bin",
  args_type: "record<stress: string, nuance: string, smoke_dir: string, log: string, seeds: string, seconds: int, mcp_nom: string, label: string>",
  result_type: "record<label: string, nonce: string>",
