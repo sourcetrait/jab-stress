@@ -75,13 +75,18 @@ nothing but this comparison. Met once every expected run is there,
 valid, and the candidate's (control-problems), with its CPU windows
 read, each problem named.
 
-## def bundles-reading
+## def presentation-reading
 
-The presentation's reading from the probed runs: each run's bundle; the
-shown, superseded, and repeated frames are ProbeRuns' reader's over
-those bundles, admissible as the shim control finds; read once every
-expected run is there, the candidate's, probed, and bundled, each
-problem named.
+The presentation's reading from the probed runs, ProbeRuns' reader joined
+by each run's directory (`proberuns analyse-runs`): each run's bundle;
+each run's reading, its capture, bundle, flips, and pairing in turn, with
+its shown, superseded, and repeated frames pooled whole and per leg; the
+pools per cadence; the runs left unread, each at its stage with its
+refusals; and the pairing's limits. Admissible as the shim control finds.
+Read once every expected run is there, valid, the candidate's, probed,
+bundled, and read whole, each problem named once: a run the control's
+rules or its missing bundle already name is not named again for the stage
+that leaves it unread.
 
 ## def diagnostic-reading
 
@@ -97,8 +102,8 @@ a report states on every target, the RAM past the window held apart.
 
 ## def watch-of
 
-The watch's record of a bench run, `nu/bin/nuance.nu watch bench`'s watch.nuon in its
-directory, null where the bench ran unwatched.
+The watch's record of a bench run, `nu/bin/nuance.nu watch bench`'s
+watch.nuon in its directory, null where the bench ran unwatched.
 
 ## def record-of
 

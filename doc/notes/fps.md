@@ -147,7 +147,11 @@ repositories, under the session's scratch directory or
   route legs and the summary fields it reads. The bench is held to the
   candidate's bench file read from jab's git at the candidate's commit,
   so a record can be made from a bench run copied off another host. The
-  readers that wrote a record are its provenance, never a refusal.
+  readers that wrote a record are its provenance, never a refusal. Its
+  presentation row is `proberuns analyse-runs` over the probed runs, each
+  by the directory the record found for it: every run's bundle checked,
+  its pairing established, and its shown, superseded, and repeated frames
+  pooled; a run left unread names its stage and refusals.
 - `proberuns` is ProbeRuns' reader, `nu/bin/nuance/fierce/proberuns.nu
   <base> <out.nuon> <label>...`: each probed run's capture, bundle,
   flips, and pairing read in turn, a run failing one left unread with its
@@ -155,6 +159,8 @@ repositories, under the session's scratch directory or
   repeated, and unshown, and the presented, upload, render, and shown
   intervals, pooled per cadence and leg. A stall on an outer bound is no
   stall. Its `observer` verb reads the observer sets through `observer`.
+  `analyse-runs` reads and pools any list of runs, each a label, a run,
+  and its directory, which the qualification's record takes.
   Its consumer rows let `runner reread` hold a restoration to it, the base
   `{tree}/..` and the label `tree` for a run landed as one battery.
 - `observer` is ProbeRuns' observer control as a function: two arms of

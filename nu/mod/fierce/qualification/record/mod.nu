@@ -2,6 +2,7 @@ use (path self ../../../../../../jab/nu/mod/spec)
 use (path self ../../../../../../jab/nu/mod/identity)
 use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge)
 use (path self ../../observer)
+use (path self ../../proberuns)
 use (path self ../check)
 use (path self ../matrix)
 use (path self ../matrix) [CASES DIAGNOSTICS JAB LIMITS RECORD STRESS TARGETS]
@@ -130,15 +131,21 @@ def scaling-reading [runs: list<any>, missing: list<any>, target: string]: nothi
     { met: ($problems | is-empty), legs: $by_leg, harts: $harts, problems: $problems }
 }
 
-# The presentation's reading from the probed runs' bundles
-def bundles-reading [runs: list<any>, missing: list<any>, target: string]: nothing -> record {
-    let unbundled = ($runs | where {|r| $r.bundle == null or (not $r.probed) } | each {|r| $"(matrix run-name $r) holds no bundle of the sdl shim's" })
-    let problems = ((control-problems $runs $missing $target) ++ $unbundled)
+# The presentation's reading: ProbeRuns' reader over the probed runs by directory
+def presentation-reading [runs: list<any>, missing: list<any>, target: string]: nothing -> record {
+    let unbundled = ($runs | where {|r| $r.bundle == null or (not $r.probed) })
+    let named = ($runs | where {|r| $r.standing != "valid" or (not ($r.agreement | is-empty)) } | append $unbundled | each {|r| matrix run-name $r })
+    let reading = (proberuns analyse-runs ($runs | each {|r| { label: $r.step, run: $r.run, dir: $r.dir } }))
+    let unread = ($reading.unread | where {|u| $"($u.label) run ($u.run)" not-in $named } | each {|u| $"($u.label) run ($u.run) is unread at its ($u.stage): ($u.refusals | str join '; ')" })
+    let problems = ((control-problems $runs $missing $target) ++ ($unbundled | each {|r| $"(matrix run-name $r) holds no bundle of the sdl shim's" }) ++ $unread)
     {
         read: ($problems | is-empty),
         bundles: ($runs | each {|r| { name: (matrix run-name $r), probed: $r.probed, bundle: $r.bundle } }),
+        runs: $reading.runs,
+        cadences: $reading.cadences,
+        unread: $reading.unread,
+        limits: $reading.limits,
         problems: $problems,
-        selections: "the shown, superseded, and repeated frames are ProbeRuns' reader's over these bundles",
     }
 }
 
@@ -196,7 +203,7 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
         let e = (expected-runs $labels $listed $definition $these)
         let reading = (match $c.reading {
             "verdicts" => ({ passed: ($these | where {|r| $r.verdict.pass } | length), runs: ($these | length) })
-            "bundles" => (bundles-reading $these $e.missing $target)
+            "presentation" => (presentation-reading $these $e.missing $target)
             "shim" => (shim-reading $these $e.missing $target)
             "scaling" => (scaling-reading $these $e.missing $target)
         })

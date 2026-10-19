@@ -14,9 +14,9 @@ flips`), recorded at schema 8 and derived at schema 7; and its pairing
 unread. Distributions are the gauge's statistics (`gauge measure stats`),
 by nearest rank and untrimmed, every time in microseconds. Its bin:
 `nu/bin/nuance/fierce/proberuns.nu <base> <out.nuon> <label>...`, and its
-`observer` verb for the observer sets. `run-reading` is exported for the
-qualification's presentation row, which joins a probed run's reading by its
-directory.
+`observer` verb for the observer sets. `analyse-runs` is exported for the
+qualification's presentation row, which joins each probed run's reading
+by its directory, and `run-reading` beside it.
 
 ## const HZ
 
@@ -71,7 +71,9 @@ interval since the upload before, the renders selecting it, shown,
 superseded, or unshown at the end, its repeats, its age at the first render
 that shows it, the interval since the shown frame before, and its renders'
 gaps. The load's presents come back apart from the frames, with the count
-of renders.
+of renders. A paired present finds its flip by its ordinal and its frame's
+row by its number through indexes built once, so the join stays linear in
+the frames: a per-frame scan cost 36 s of a 3,305-frame run's reading.
 
 ## def pooled
 
@@ -96,16 +98,22 @@ bracket, shifts, window, fit, stalls by bound, limits), K's violations over
 its presented frames' acceptance stamps at the period of its cap, its
 renders' count, the load's presents, and its frames.
 
-## def analyse
+## def analyse-runs
 
-Every run of the batches under `base`, each label a battery's directory
-holding its gauge.nuon, each run's directory found beside its report
-(`gauge identity dirs`), read by `run-reading`, the read ones pooled per
+Runs, each a label, a run, and its directory, read by `run-reading`, a
+run with no directory unread at its `run` stage, the read ones pooled per
 cadence and leg. Returned: the runs, each without its frames and with its
 whole and per-leg pools; the cadences, each with its runs, their verdicts,
 and its whole and per-leg pools, a pool's longest superseded run the
 longest any one run holds; the unread runs with their stages and refusals;
-and the pairing's limits.
+and the pairing's limits. The qualification's presentation row reads its
+probed runs through it, each by the directory its record found.
+
+## def analyse
+
+Every run of the batches under `base`, each label a battery's directory
+holding its gauge.nuon, each run's directory found beside its report
+(`gauge identity dirs`), read and pooled by `analyse-runs`.
 
 ## def observed
 

@@ -61,10 +61,11 @@ def stalls-of [stalls: list<any>, flips: list<any>]: nothing -> record<calls: li
 # The window's presents read against the renders that select them
 def frames-of [rows: list<any>, flips: list<any>, pairs: list<any>, events: list<any>]: nothing -> record<frames: list<any>, load: list<any>, renders: int> {
     let chosen = (selection $events $pairs)
-    let presented = ($flips | where status == 0)
+    let presented = ($flips | where status == 0 | group-by {|f| $f.ordinal | into string })
+    let framed = ($rows | group-by {|r| $r.frame | into string })
     let read = ($chosen.frames | each {|s|
-        let flip = ($presented | where ordinal == $s.ordinal | first)
-        let row = (if $flip.frame == null { null } else { $rows | where frame == $flip.frame | get -o 0 })
+        let flip = ($presented | get ($s.ordinal | into string) | first)
+        let row = (if $flip.frame == null { null } else { $framed | get -o ($flip.frame | into string) | get -o 0 })
         {
             present: $flip.present, frame: $flip.frame, ordinal: $s.ordinal, bound: $flip.bound,
             leg: ($row | get -o leg), cadence: ($row | get -o cadence),
@@ -145,19 +146,13 @@ export def run-reading [dir: path, --eps: int = 10000]: nothing -> record {
     $after | merge { stage: null, refusals: [], renders: $read.renders, load: $read.load, frames: $read.frames }
 }
 
-# Every run of the probed batches under `base` read, pooled per cadence and leg
-export def analyse [base: string, labels: list<string>, --eps: int = 10000]: nothing -> record {
-    let base = ($base | path expand)
-    let runs = ($labels | each {|l|
-        let file = ($base | path join $l "gauge.nuon")
-        let g = (open $file)
-        $g.runs | each {|r|
-            let dir = (gauge identity dirs $file $r | where {|d| ($d | path type) == "dir" } | get -o 0)
-            if $dir == null { { label: $l, run: $r.run, dir: null, stage: "run", refusals: ["its run's directory is not beside its report"] } } else {
-                { label: $l, run: $r.run } | merge (run-reading $dir --eps $eps)
-            }
+# Runs, each a label, a run, and its directory, read and pooled per cadence and leg
+export def analyse-runs [runs: list<any>, --eps: int = 10000]: nothing -> record {
+    let runs = ($runs | each {|r|
+        if $r.dir == null { { label: $r.label, run: $r.run, dir: null, stage: "run", refusals: ["its run's directory is not beside its report"] } } else {
+            { label: $r.label, run: $r.run } | merge (run-reading $r.dir --eps $eps)
         }
-    } | flatten)
+    })
     let read = ($runs | where stage == null | each {|r| $r | merge (run-legs $r.frames) })
     let cadences = ($read | each {|r| $r.cadence } | uniq | sort)
     {
@@ -183,6 +178,16 @@ export def analyse [base: string, labels: list<string>, --eps: int = 10000]: not
         unread: ($runs | where stage != null | each {|r| { label: $r.label, run: $r.run, stage: $r.stage, refusals: $r.refusals } }),
         limits: ($read | get -o 0.pairing.limits),
     }
+}
+
+# Every run of the probed batches under `base` read, pooled per cadence and leg
+export def analyse [base: string, labels: list<string>, --eps: int = 10000]: nothing -> record {
+    let base = ($base | path expand)
+    let runs = ($labels | each {|l|
+        let file = ($base | path join $l "gauge.nuon")
+        (open $file).runs | each {|r| { label: $l, run: $r.run, dir: (gauge identity dirs $file $r | where {|d| ($d | path type) == "dir" } | get -o 0) } }
+    } | flatten)
+    analyse-runs $runs --eps $eps
 }
 
 # A run's capture measured for the observer control, its standing named

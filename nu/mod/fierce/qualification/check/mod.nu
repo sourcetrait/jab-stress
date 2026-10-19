@@ -19,7 +19,11 @@ def schema-problems [r: any]: nothing -> list<string> {
     } | flatten)
     let cases = ($r.cases | enumerate | each {|e| lacking $e.item [case kind steps runs expected missing problems reading] $"case ($e.index)" } | flatten)
     let named = ($CASES | where {|c| $c.case not-in ($r.cases | get -o case | default []) } | each {|c| $"the record holds no case ($c.case)" })
-    $cand ++ $runs ++ $verdicts ++ $cases ++ $named
+    let presented = ($CASES | where reading == "presentation" | get case)
+    let readings = ($r.cases | where {|c| ($c | describe | str starts-with "record") and ($c | get -o case) in $presented } | each {|c|
+        lacking ($c | get -o reading) [read bundles runs cadences unread problems] $"($c.case)'s reading"
+    } | flatten)
+    $cand ++ $runs ++ $verdicts ++ $cases ++ $named ++ $readings
 }
 
 # A record held to the schema and the acceptance, every problem named

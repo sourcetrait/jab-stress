@@ -33,7 +33,12 @@ One target's section of the report (report-text), public-production
 writing for TheUser: the verdict, every acceptance run's, the route by
 leg, the tails, the presentation and its shim control, the CPU beside
 the guest's waits, the tile pool, the host, the worker scaling control,
-the problems the check names, and the limits.
+the problems the check names, and the limits. The presentation states
+the bundles, then a row for each probed run read whole, its pairing's
+verdict, its frames shown with their share, superseded with the longest
+run of them, the repeats, and the age's and the presented interval's
+medians, then a sentence for each cadence's pool and the count of runs
+left unread, whose reasons are among the problems.
 
 ## def report-text
 

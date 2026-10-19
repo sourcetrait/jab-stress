@@ -21,7 +21,7 @@ export const CASES = [
     [case, kind, reading, steps];
     ["normal play", acceptance, verdicts, {"1ka1": [auto_1 auto_2], "1kb1": [auto_1 auto_2]}]
     ["free play", acceptance, verdicts, {"1ka1": [free], "1kb1": [free]}]
-    ["presentation", diagnostic, bundles, {"1ka1": [probed_1 probed_2], "1kb1": [probed_1 probed_2]}]
+    ["presentation", diagnostic, presentation, {"1ka1": [probed_1 probed_2], "1kb1": [probed_1 probed_2]}]
     ["presentation's shim control", control, shim, {"1ka1": [probed_1 auto_3 auto_4 probed_2], "1kb1": [probed_1 auto_3 auto_4 probed_2]}]
     ["worker scaling", control, scaling, {"1ka1": [forced1_1 auto_5 auto_6 forced1_2], "1kb1": [forced2_1 auto_5 auto_6 forced2_2]}]
 ]

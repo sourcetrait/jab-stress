@@ -13,7 +13,10 @@ The fields a value lacks of those named, each named where it sits.
 ## def schema-problems
 
 A record's schema: the record's fields, each run's, each acceptance
-run's verdict, and each case's; every field it lacks named.
+run's verdict, each case's, and the presentation's reading, ProbeRuns'
+reader's runs, cadences, and unread runs beside the bundles, so a record
+written before that reader joined is named as lacking them; every field it
+lacks named.
 
 ## def check-of
 

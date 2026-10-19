@@ -61,6 +61,22 @@ def target-section [r: record]: nothing -> list<string> {
     }))
     let shim = ($r.cases | where case == "presentation's shim control" | get 0.reading)
     let presentation = ($r.cases | where case == "presentation" | get 0.reading)
+    let bundles = ($presentation | get -o bundles | default [])
+    let probed = ($presentation | get -o runs | default [])
+    let read_runs = ($probed | where {|x| ($x | get -o stage) == null })
+    let at = {|v: any| if $v == null { "-" } else { $"(matrix ms $v) ms" } }
+    let share = {|v: any| if $v == null { "-" } else { $"($v * 100 | math round --precision 1) percent" } }
+    let presentation_table = (md-table ["Run" "Pairing" "Frames" "Shown" "Superseded" "Repeats" "Age" "Presented interval"] ($read_runs | each {|x|
+        let w = $x.whole
+        [$"($x.label) run ($x.run)" $x.pairing.verdict $"($w.frames)" $"($w.shown), (do $share $w.share_shown)" $"($w.superseded), at most ($w.longest_superseded) in a row" $"($w.repeated)" (do $at $w.age.median) (do $at $w.presented_interval.median)]
+    }))
+    let cadence_lines = ($presentation | get -o cadences | default [] | each {|c|
+        let w = $c.whole
+        let repeats = (if $w.repeated == 0 { "No render showed a frame a second time." } else { $"($w.repeated) renders showed a frame again. No frame was shown again more than ($w.longest_repeat) times." })
+        $"At cadence ($c.cadence), over ($c.runs | length) runs, ($w.shown) of ($w.frames) frames were shown, which is (do $share $w.share_shown). ($w.superseded) frames were superseded, at most ($w.longest_superseded) in a row. ($repeats) A shown frame reached the window (do $at $w.age.median) after its upload at the median."
+    })
+    let unread_count = (($probed | length) - ($read_runs | length))
+    let unread_line = (if $unread_count == 0 { [] } else { [$"($unread_count) of the ($probed | length) probed runs could not be read whole. The problems below say why."] })
     let us = {|v: any| if $v == null { "-" } else { $"($v | math round)" } }
     let shim_table = (md-table ["Measure" "Probed (us)" "Plain (us)" "Effect (us)" "Noise (us)" "Within"] ($shim.measures | each {|m|
         [$m.measure (do $us $m.probed) (do $us $m.plain) (do $us $m.effect) (do $us $m.noise) (if $m.within { "yes" } else { "no" })]
@@ -111,7 +127,10 @@ def target-section [r: record]: nothing -> list<string> {
         ""
         "### Presentation"
         ""
-        $"The probed runs carry ($presentation.bundles | where {|b| $b.bundle != null } | length) of ($presentation.bundles | length) bundles. Their shown, superseded, and repeated frames come from the probe's own reader."
+        $"The probed runs carry ($bundles | where {|b| $b.bundle != null } | length) of ($bundles | length) bundles. ProbeRuns' reader pairs each run's uploads with the guest's presents and reads which frames the window drew. A frame is shown when a render draws it. It is superseded when a later frame replaces it before any render draws it. A frame's age is the time from its upload to the first render that shows it."
+        ""
+    ] ++ $presentation_table ++ [""] ++ $cadence_lines ++ $unread_line ++ [
+        ""
         (if $shim.admissible { "The shim control finds every effect within its noise, so the probed readings stand for the unprobed program." } else { "The shim control does not find every effect within its noise, so the probed readings describe the instrumented runs only." })
         ""
     ] ++ $shim_table ++ [

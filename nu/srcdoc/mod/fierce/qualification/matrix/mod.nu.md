@@ -28,11 +28,11 @@ the record's file in its directory
 
 The matrix's cases a bench run holds: each its kind, acceptance,
 diagnostic, or control; the reading it takes, every run's verdict, the
-probed runs' bundles, the shim control (observer.nu), or the scaling
-control; and each target's steps. The matrix's other rows join with the
-machinery they run on: the service-active case and the unavailable
-feature with SceneOwnership's synthetic service, the audio with
-RegressionSuite's service-holds.
+presentation (ProbeRuns' reader over the probed runs), the shim control
+(observer.nu), or the scaling control; and each target's steps. The
+matrix's other rows join with the machinery they run on: the
+service-active case and the unavailable feature with SceneOwnership's
+synthetic service, the audio with RegressionSuite's service-holds.
 
 ## const DIAGNOSTICS
 
