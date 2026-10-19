@@ -15,6 +15,10 @@ const TILES = path self ../mod/nuance/fierce/tiles
 const CENSUS = path self ../mod/nuance/fierce/census
 # The runners' dispatcher's path, bound at parse time
 const RUNNER = path self ../mod/runner
+# The run landing's module's path, bound at parse time
+const LANDING = path self ../mod/runner/landing
+# The log container's module's path, bound at parse time
+const LOG = path self ../mod/runner/log
 use $FRESHBUILD
 use $RECORD
 use $HOT
@@ -23,6 +27,8 @@ use $CHECK
 use $TILES
 use $CENSUS
 use $RUNNER
+use $LANDING
+use $LOG
 
 # A fresh build of jab's matrix from its HEAD, each artifact's digest in `out`.
 def "main freshbuild manifest" [jab: path, out: path] {
@@ -42,6 +48,31 @@ def "main runner ready" [harness: string, given: string] {
 # A harness's work inside its long launch, NUON arguments in, its result out.
 def "main runner work" [harness: string, given: string] {
     runner work $harness $given
+}
+
+# A run's directory landed in the data checkout, its logs containers, checked.
+def "main runner land" [dir: path, subject: string, set: string, stamp: string, manifest: path, --data: string = "", --source: string = ""] {
+    landing land $dir $subject $set $stamp $manifest --data $data --source $source
+}
+
+# A landed run laid out in `scratch` as its runner wrote it, with its receipt.
+def "main runner restore" [run: path, scratch: path] {
+    landing restore $run $scratch
+}
+
+# A landed run reread by a reader's command over its restoration in `scratch`.
+def "main runner reread" [run: path, scratch: path, reader: string, bin: path, ...words: string] {
+    landing reread $run $scratch $reader $bin ...$words
+}
+
+# A log container's original bytes, refused unless whole.
+def "main runner log bytes" [container: path] {
+    log original $container
+}
+
+# A log container's original as text, refused unless whole.
+def "main runner log text" [container: path] {
+    log text $container
 }
 
 # A landed run's problems, none where it holds.

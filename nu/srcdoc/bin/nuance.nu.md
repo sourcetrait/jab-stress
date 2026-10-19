@@ -29,6 +29,35 @@ values its progress check reads; a refusal on stderr, exit 1.
 `nu nu/bin/nuance.nu runner work <harness> <args>`: a harness's work inside
 its long launch, the result NUON on stdout; a failure on stderr, exit 1.
 
+## def main runner land
+
+`nu nu/bin/nuance.nu runner land <dir> <subject> <set> <stamp> <manifest>
+[--data <root>] [--source <producer>]`: a run's directory landed in the data
+checkout, each log a container, every original and object measured, and the
+record held by `runner record stored`.
+
+## def main runner restore
+
+`nu nu/bin/nuance.nu runner restore <run> <scratch>`: a landed run laid out
+under `<scratch>/tree/` as its runner wrote it, its receipt beside.
+
+## def main runner reread
+
+`nu nu/bin/nuance.nu runner reread <run> <scratch> <reader> <bin>
+<words>`: a landed run reread by a reader's command over its restoration,
+`{tree}` and `{out}` in a word the restored tree and the reread's own
+directory.
+
+## def main runner log bytes
+
+`nu nu/bin/nuance.nu runner log bytes <container>`: a log container's
+original bytes, refused unless whole.
+
+## def main runner log text
+
+`nu nu/bin/nuance.nu runner log text <container>`: the same decoded as
+UTF-8.
+
 ## def main runner record stored
 
 `nu nu/bin/nuance.nu runner record stored <run>`: a landed run's

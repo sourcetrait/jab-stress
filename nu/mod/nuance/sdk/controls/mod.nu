@@ -295,20 +295,21 @@ export def reread [record: path] {
     let dir = ($record | path expand)
     let saved = (open --raw ($dir | path join "controls.nuon") | into binary | decode | from nuon)
     let unran = { reread: false, why: "the control did not run" }
-    let mono = (if not $saved.monolithic.ran { $unran } else {
+    let unread = {|c: record| { reread: false, why: $"the control failed before a reading: ($c.why)" } }
+    let mono = (if not $saved.monolithic.ran { $unran } else if ($saved.monolithic | get -o why) != null { do $unread $saved.monolithic } else {
         reread-one $saved.monolithic [ok traced read flush_windows flips checks] {||
             let log = ($dir | path join "walk.sdl.log")
             monolithic-of $log ($dir | path join "walk.trace.log") (sdl report $log)
         }
     })
-    let modu = (if not $saved.modular.ran { $unran } else {
+    let modu = (if not $saved.modular.ran { $unran } else if ($saved.modular | get -o why) != null { do $unread $saved.modular } else {
         reread-one $saved.modular [ok read corroborated flips checks] {||
             let log = ($dir | path join "bounce.sdl.log")
             modular-of $log (sdl report $log)
         }
     })
     let stripped_log = ($dir | path join "stripped.sdl.log")
-    let strip = (if not $saved.stripped.ran { $unran } else {
+    let strip = (if not $saved.stripped.ran { $unran } else if ($saved.stripped | get -o why) != null { do $unread $saved.stripped } else {
         let target = (stripped-target $stripped_log)
         if $target.problem != "" {
             { reread: true, ok: false, discrepancies: [$target.problem] }

@@ -133,6 +133,10 @@ probe's record recomputed by sdl-report from its saved log, nothing run
 and nothing written. Every check and count is held to the record's own
 controls.nuon, one NUON record is printed naming the capture's revisions
 apart from the checkouts doing the reread, and any discrepancy exits
-non-zero. The stripped control is marked not reread in one case alone, a
-log the reader accepts naming an executable that is gone
-(stripped-target); every other failure to read its log is a discrepancy.
+non-zero. A control the record holds as failed before a reading, its `why`
+given and no reading beside it, has no checks or counts to hold and is
+marked not reread, its recorded reason kept: a control refused before its
+QEMU started keeps no shim log. The stripped control is marked not reread
+in one case more, a log the reader accepts naming an executable that is
+gone (stripped-target); every other failure to read its log is a
+discrepancy.

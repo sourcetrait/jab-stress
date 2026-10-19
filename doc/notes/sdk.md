@@ -70,7 +70,11 @@ capture, as `controls.nuon` gives them, apart from the revisions of the
 checkouts doing the reread. Each control lists its discrepancies, empty
 when it reads as recorded.
 
-- The stripped control is left unread in one case only: its shim log
+- A control the record holds as failed before a reading, its `why` given
+  and no reading beside it, is marked not reread with its recorded reason:
+  there are no checks or counts to hold, and a control refused before its
+  QEMU started keeps no shim log.
+- The stripped control is left unread in one case more: its shim log
   passes the probe's own reader, `sdl log`, and the stripped QEMU
   that the log names has gone since the capture. The control is then
   marked as not reread, and the rest of the record still counts. Every
