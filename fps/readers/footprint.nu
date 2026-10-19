@@ -15,6 +15,7 @@
 # lists the pictures' regions; `crops` cuts each region out of both
 # pictures side by side for reading.
 use ../../../jab/sdk/nu/jab.nu
+use ../../../jab/nu/mod/target
 use ../../../jab/kit/fierce/test/pose.nu
 use ../../../jab/kit/fierce/test/gauge.nu
 use ../../../jab/kit/fierce/test/test.nu [raise-frame stamp-of]
@@ -350,7 +351,7 @@ def "main crops" [out: path, pose: string, --pad: int = 16] {
     let c = (open ($out | path join $pose "pose.nuon"))
     if $c.pictures == null { error make { msg: $"($pose) was refused at capture: ($c.problems | str join '; ')" } }
     let crops = ($out | path join $pose "crops")
-    if ($crops | path exists) { jab retire $crops (jab target-root ($GAME | path join .. ..)) }
+    if ($crops | path exists) { target retire $crops (target root ($GAME | path join .. ..)) }
     mkdir $crops
     let screen = {|label: string| $c.rows | where label == $label | first | get screen }
     for r in ($c.pictures.regions | enumerate) {

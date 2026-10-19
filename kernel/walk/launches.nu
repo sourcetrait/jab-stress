@@ -12,6 +12,7 @@
 # four exits go through jab launch with frames of their own. A case's
 # failure is raised with its name. Alone on the box, about two minutes.
 use ../../../jab/sdk/nu/jab.nu
+use ../../../jab/nu/mod/target
 use cadence.nu
 
 const HZ = 10000000
@@ -138,7 +139,7 @@ def exit-bytes [frame: string]: nothing -> binary {
 def build-variant [ws: path, set: string, dest: path]: nothing -> record<image: string, kernel: string, kernel_loaded_sha256: string> {
     let r = (do { cd $ws; ^just build example/walk --set $set } | complete)
     if $r.exit_code != 0 { fail $"the build of ($set)" ($r.stdout + $r.stderr | str trim) }
-    let target = (jab target-root $ws)
+    let target = (target root $ws)
     let out = ($target | path join "release" "example" "walk")
     mkdir $dest
     for f in $KEPT { cp ($out | path join $f) ($dest | path join $f) }

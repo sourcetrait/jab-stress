@@ -28,6 +28,7 @@
 # <stream>` writes a replay stream from a run's own records, its dt values
 # the ones the run integrated.
 use ../../../jab/sdk/nu/jab.nu
+use ../../../jab/nu/mod/present
 
 const HEADER = 80
 const FRAME = 80
@@ -242,7 +243,7 @@ export def receipt-faults [frames: list<record>, origin: int, timing: bool]: not
         let before = (if $r.index == 0 { 1 } else { $frames | get ($r.index - 1) | get ordinal })
         { presented: ($f.issued == 1 and ($f.status == 0 or ($f.status == 3 and $f.ordinal == $before + 1))), ordinal: $f.ordinal }
     })
-    let violations = (jab ordinal-violations 1 $presents)
+    let violations = (present ordinal-violations 1 $presents)
     let ordinals = ($violations | group-by rule | items {|rule, rows| fault $"the present sequence: ($rule)" ($rows | length) ($rows | each {|v| $"frame ($v.index) at ($v.ordinal), ($v.wanted) wanted" }) } | default [])
     let accepted = ($frames | where {|f| $f.issued == 1 and $f.status == 0 } | where {|f|
         let low = ($origin + (if $timing { $f.call_start } else { $f.start }))
@@ -286,7 +287,7 @@ export def guest-side [stream: record, eps: int]: nothing -> record {
     } else { { work: null, wait: null, call: null } })
     let accepted = ($frames | where {|f| $f.issued == 1 and $f.status == 0 } | get s)
     let presented = ($accepted | window 2 | each {|p| $p.1 - $p.0 })
-    let k = (jab k-violations $accepted $PERIOD $eps)
+    let k = (present k-violations $accepted $PERIOD $eps)
     let window_s = (($frames | last | get call_end) / $HZ)
     {
         frames: ($frames | length),

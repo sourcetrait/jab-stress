@@ -1,4 +1,5 @@
 use ../../../../jab/sdk/nu/jab.nu
+use ../../../../jab/nu/mod/target
 use ../../../../jab/kit/fierce/test/pose.nu
 use ../../../../jab/kit/fierce/test/gauge.nu
 
@@ -29,7 +30,7 @@ def pool-trace [serial: string]: nothing -> table<frame: int, requesting: list<i
 }
 
 def main [mode: string, out: path, --seconds: int = 10] {
-    let dbg = (jab target-root ($env.FILE_PWD | path join ../../../../jab | path expand) | path join debug)
+    let dbg = (target root ($env.FILE_PWD | path join ../../../../jab | path expand) | path join debug)
     let kernel = ($dbg | path join kernel jab.elf)
     let image = ($dbg | path join kit fierce fierce.jab)
     let disk = ($dbg | path join kit fierce still.romfs)
