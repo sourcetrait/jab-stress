@@ -1,5 +1,5 @@
 # The gauge schemas whose pool records the reading takes
-const SCHEMAS = [5 6 7]
+const SCHEMAS = [5 6 7 8]
 
 # A list's sum with its nulls dropped, 0 for an empty one
 def total-of [values: list<any>]: nothing -> any {
