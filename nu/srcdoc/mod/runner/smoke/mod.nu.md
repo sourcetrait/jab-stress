@@ -5,7 +5,8 @@ The smoke runner's code, reached by its descriptor through the workbench bin's
 
 ## def ready
 
-Before the launch: makes nothing.
+Before the launch: makes the log's directory, so the smoke's output is saved
+when it ends.
 
 ## def main
 

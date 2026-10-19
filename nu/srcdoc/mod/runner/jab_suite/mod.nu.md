@@ -5,7 +5,8 @@ bin's `runner` verbs, or run whole by `do.nu bench jab_suite <args>`.
 
 ## def ready
 
-Before the launch: makes nothing.
+Before the launch: makes the log's directory, so the suite's output is saved
+when it ends.
 
 ## def main
 

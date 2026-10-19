@@ -1,5 +1,6 @@
-# Nothing to make before the launch
+# The log's directory made
 export def ready [a: record]: nothing -> record {
+    mkdir ($a.log | path dirname)
     {}
 }
 

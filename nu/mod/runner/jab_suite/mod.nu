@@ -1,5 +1,6 @@
-# Nothing to make: the log's directory exists before the suite ends
+# The log's directory made
 export def ready [a: record]: nothing -> record {
+    mkdir ($a.log | path dirname)
     {}
 }
 

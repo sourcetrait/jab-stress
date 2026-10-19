@@ -49,7 +49,7 @@ the data checkout beside this repository, `../jab-stress-data`, under
 | Descriptor | What it runs |
 |---|---|
 | `fps_suite.nuon` | fierce's tests through jab's driver, `--set <set>` when `set` names any symbols, its log saved and its gauge lines returned |
-| `jab_suite.nuon` | jab's whole suite through its driver, its table and failures returned; the `log` path's directory must exist before the suite ends. Its nonce reads `none` until its body first runs, which is the campaign's one cutover pass of the suite |
+| `jab_suite.nuon` | jab's whole suite through its driver, its table and failures returned, the `log` path's directory made first. Its nonce reads `none` until its body first runs, which is the campaign's one cutover pass of the suite |
 | `jab_programs.nuon` | several programs' tests through jab's driver in turn |
 | `smoke.nuon` | fierce's development smoke |
 
