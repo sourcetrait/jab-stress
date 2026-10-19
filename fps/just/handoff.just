@@ -19,7 +19,7 @@ build set="debug":
 
 # the test's sets, the handoff fixtures alone by default
 handoff-set set="handoff":
-    nu {{jab}}/sdk/nu/jab.nu test {{jab}}/kit/fierce --set {{set}}
+    nu {{jab}}/nu/bin/do.nu test {{jab}}/kit/fierce --set {{set}}
 
 # handoff-holds alone on the debug build, its reading saved beside out
 handoff out:
