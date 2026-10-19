@@ -99,6 +99,9 @@ const STRETCH_US = 25000
 # The least presented flips a slow stretch holds
 const STRETCH_FLIPS = 5
 
+# A measure's least rise over the run's steady median, a quarter period in ticks
+const RISE = 41666
+
 # The guest's phases a stretch is located by
 const PHASES = [work wait call]
 
@@ -561,10 +564,11 @@ def against-steady [name: string, stretch: list<any>, steady: list<any>]: nothin
     let mine = ($stretch | get $name | compact)
     let base = ($steady | get $name | compact)
     let median = (rank $mine 0.5)
-    let p95 = (rank $base 0.95)
+    let middle = (rank $base 0.5)
+    let rise = (if $median == null or $middle == null { null } else { $median - $middle })
     {
-        name: $name, median_ms: (ms $median), steady_median_ms: (ms (rank $base 0.5)), steady_p95_ms: (ms $p95),
-        risen: ($median != null and $p95 != null and $median > $p95),
+        name: $name, median_ms: (ms $median), steady_median_ms: (ms $middle), steady_p95_ms: (ms (rank $base 0.95)),
+        rise_ms: (ms $rise), risen: ($rise != null and $rise >= $RISE),
     }
 }
 
@@ -586,8 +590,12 @@ def stretches-of [rows: list<any>, timing: bool]: nothing -> list<any> {
     let steady = ($rows | enumerate | where {|r| $r.index not-in $inside } | get item)
     $runs | each {|run|
         let mine = ($run | each {|i| $rows | get $i })
+        let frame = (against-steady frame_interval $mine $steady)
         let phases = (if $timing { $PHASES | each {|k| against-steady $k $mine $steady } } else { null })
         let risen = (if $timing { $phases | where risen | get name } else { [] })
+        let located = (if not $timing { null } else if not ($risen | is-empty) {
+            $risen | each {|p| { work: "the work", wait: "the wait", call: "the flip call" } | get $p }
+        } else if not $frame.risen { ["delivery past the guest"] } else { ["the frame, its rise spread across its phases"] })
         {
             first: { frame: ($mine | first | get frame), ordinal: ($mine | first | get ordinal) },
             last: { frame: ($mine | last | get frame), ordinal: ($mine | last | get ordinal) },
@@ -595,9 +603,9 @@ def stretches-of [rows: list<any>, timing: bool]: nothing -> list<any> {
             at_s: (($mine | first | get start) / $HZ),
             host_interval: (spread-us ($mine | get upload_interval_us | compact)),
             presented_interval: (spread ($mine | get presented_interval | compact)),
-            frame_interval: (against-steady frame_interval $mine $steady),
+            frame_interval: $frame,
             phases: $phases,
-            located: (if not $timing { null } else if ($risen | is-empty) { ["delivery past the guest"] } else { $risen | each {|p| { work: "the work", wait: "the wait", call: "the flip call" } | get $p } }),
+            located: $located,
         }
     }
 }

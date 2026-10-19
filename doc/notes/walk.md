@@ -107,11 +107,15 @@ same rules the probed fps runs are read by, in `nu/mod/selection`.
 A slow stretch is five or more presented flips in a row that reached
 the host 25 milliseconds or more apart. Each stretch is set against the
 same run's steady flips, those outside every stretch. A phase of the
-guest's frame has risen when its median in the stretch is past the
-steady flips' 95th percentile. The reading names the work, the wait, or
-the flip call that rose. When none rose while the uploads spread, it
-names delivery past the guest. A run without the phase stamps reports its
-stretches with their intervals and names no phase.
+guest's frame has risen when its median in the stretch passes the
+steady flips' median by a quarter of a period, 4.17 milliseconds. The
+reading names the work, the wait, or the flip call that rose. A risen
+wait is a late flip moving the next tick a period on. When no phase
+rose and the guest's frames kept their pace while the uploads spread,
+it names delivery past the guest. When the frames slowed with no one
+phase rising that far, it says the rise was spread across the phases.
+A run without the phase stamps reports its stretches with their
+intervals and names no phase.
 
 Every reading states its limits. The guest's clock measures elapsed
 time, so a host stall inside a phase reads as that phase. The pairing

@@ -116,6 +116,14 @@ A slow stretch's least host flip interval, 1.5 periods, 25 ms.
 
 The least presented flips a slow stretch holds, 5.
 
+## const RISE
+
+A measure's least rise over the run's steady median for a stretch to call it
+risen: a quarter period, 4.17 ms, the protocol's bound for a notable change,
+as the pairing's stall report takes it. The steady median, not its 95th: a run
+whose isolated late frames pass a twentieth of its steady flips puts that tail
+inside the 95th, and a stretch's full-period wait read against it as not risen.
+
 ## const PHASES
 
 The guest's phases a stretch is located by: the work, the wait, and the flip
@@ -304,8 +312,8 @@ interval, the presented interval, the age, and the shown interval.
 ## def against-steady
 
 One measure of a stretch against the run's steady flips, those in no stretch:
-the stretch's median, the steady median and 95th, and risen where the stretch's
-median passes the steady 95th.
+the stretch's median, the steady median and 95th, the rise, the stretch's
+median less the steady median, and risen where the rise is RISE or more.
 
 ## def stretches-of
 
@@ -314,9 +322,11 @@ host flip interval is at least STRETCH_US. Each with its first and last frame
 and ordinal, its flips, its start in seconds from the origin, its host and
 presented intervals, its frame interval against the steady flips, and with
 TIMING each phase against them, located by the phases risen, the work, the
-wait, or the flip call, or, none risen while the uploads spread, delivery past
-the guest. A TIMING-off run's stretches are counted with their intervals, no
-phase located.
+wait (a late flip re-anchoring the tick, P0), or the flip call (the device or
+the presentation); with none risen, delivery past the guest where the frame
+interval kept its pace while the uploads spread, else the frame's rise spread
+across its phases. A TIMING-off run's stretches are counted with their
+intervals, no phase located.
 
 ## def paired-reading
 
