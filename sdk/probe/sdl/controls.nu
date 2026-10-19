@@ -56,17 +56,28 @@ const SYSTEM_PREFIX = "/usr"
 const MODULE_DIRS = ["/usr/lib64/qemu" "/usr/lib/qemu" "/usr/lib/x86_64-linux-gnu/qemu"]
 const CONSOLE_UPDATES = ["qemu_console_update" "qemu_console_update_full" "dpy_gfx_update" "dpy_gfx_update_full"]
 
+# A file's inode, size, and modification time, or null where nothing is
+# there.
+def file-state [file: path]: nothing -> oneof<record, nothing> {
+    if ($file | path type) == null { return null }
+    ls -l $file | get 0 | select inode size modified
+}
+
 # One probe run, `nu/bin/nuance/probe.nu sdl <program>` for SECONDS with
 # `qemu_args` in JAB_QEMU_ARGS: its exit, its record where it printed one,
-# its stderr, and its shim log, each kept under `out` by `name`.
+# its stderr, and the shim log it wrote, each kept under `out` by `name`.
+# A run refused before its QEMU starts writes no log, and the one an
+# earlier probe left is not kept.
 def probe-run [name: string, program: string, out: path, qemu_args: string]: nothing -> record<exit: int, record: oneof<record, nothing>, stderr: string, log: string> {
     let tool = ($JAB | path join "nu" "bin" "nuance" "probe.nu")
+    let log = (build program-out ($JAB | path join $program) "release" | path join "probe" "sdl.log")
+    let before = (file-state $log)
     let ran = (with-env { JAB_QEMU_ARGS: $qemu_args } { ^$nu.current-exe $tool sdl $program --seconds ($SECONDS | into string) | complete })
     $ran.stdout | save -f ($out | path join $"($name).stdout")
     $ran.stderr | save -f ($out | path join $"($name).stderr")
-    let log = (build program-out ($JAB | path join $program) "release" | path join "probe" "sdl.log")
     let kept = ($out | path join $"($name).sdl.log")
-    if ($log | path exists) { cp $log $kept }
+    let after = (file-state $log)
+    if $after != null and $after != $before { cp $log $kept }
     let lines = ($ran.stdout | lines)
     let opens = ($lines | enumerate | where item == "{" | get index)
     let record = (if $ran.exit_code != 0 or ($opens | is-empty) { null } else { try { $lines | skip ($opens | last) | str join "\n" | from nuon } catch { null } })
