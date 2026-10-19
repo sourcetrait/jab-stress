@@ -274,7 +274,7 @@ export def import-rules [contract: record, landed: list<string>, roots: record, 
         let m = (module-at $contract $landed $from)
         let is_module = ($m != null and ($contract.modules | any {|x| (key-of $x.repo $x.file '' '') == $from }))
         for imp in (imports lines-of $s.src) {
-            let r = (imports resolve $roots $s.repo $s.file $s.kind $s.src $imp $placed)
+            let r = (imports resolve $roots $s.repo $s.file $s.kind $s.src $imp)
             if $r.kind == 'refused' {
                 $out = ($out | append (refusal import $s.repo $s.file $imp.line $imp.target $r.detail))
                 continue
@@ -342,7 +342,7 @@ def reached [contract: record, landed: list<string>, roots: record, s: record]: 
     let modules = ($contract.modules | each {|m| {family: $m.family, repo: $m.repo, file: $m.file} })
     let family_files = ($monoliths | append $modules)
     imports lines-of $s.src | each {|imp|
-        let r = (imports resolve $roots $s.repo $s.file $s.kind $s.src $imp $family_files)
+        let r = (imports resolve $roots $s.repo $s.file $s.kind $s.src $imp)
         if $r.kind == 'file' {
             let fam = ($family_files | where {|x| $x.repo == $r.repo and $x.file == $r.file } | get -o 0)
             if $fam != null and not (inside $contract $fam.family $s.file) {

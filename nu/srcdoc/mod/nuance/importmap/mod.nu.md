@@ -21,8 +21,8 @@ run names what it read.
 `--landed` is the coherent groups that have landed, comma separated, each
 a name the contract's `groups` holds; the mixed state of old and new places
 is the normal case between groups. Every source of both trees is read: the
-nu files outside `.git`, the targets, and `extern`; the runners' bodies;
-and the justfiles' recipes. Signatures are read only for the files the
+nu files outside `.git`, the targets, and `extern`, and the runners'
+bodies. Signatures are read only for the files the
 contract's mapped defs live in, old or new. Every rule runs and every
 refusal is collected, so one run names them all. With `--out` the report,
 `report.nuon`, records the contract's path and SHA-256, both trees' commits

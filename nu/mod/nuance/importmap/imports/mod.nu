@@ -61,20 +61,8 @@ def refused [why: string]: nothing -> record<kind: string, repo: string, file: s
     {kind: 'refused', repo: '', file: '', detail: $why}
 }
 
-# A recipe's import: the monolith, or the module directory, its path ends
-# with, the longest when two do, else unread.
-def recipe-target [target: string, known: table]: [
-    nothing -> record<kind: string, repo: string, file: string, detail: string>
-] {
-    let named = ($known
-        | where {|k| ($target | str ends-with $k.file) or (($k.file | path basename) == 'mod.nu' and ($target | str ends-with ($k.file | path dirname))) }
-        | sort-by {|k| $k.file | str length } --reverse)
-    if ($named | is-empty) { return {kind: 'unread', repo: '', file: $target, detail: 'a path through a placeholder'} }
-    {kind: 'file', repo: ($named | first | get repo), file: ($named | first | get file), detail: ''}
-}
-
 # Where an import resolves: a checkout's file, an external leaf, or a refusal.
-export def resolve [roots: record, repo: string, file: string, kind: string, src: string, imp: record, monoliths: table]: [
+export def resolve [roots: record, repo: string, file: string, kind: string, src: string, imp: record]: [
     nothing -> record<kind: string, repo: string, file: string, detail: string>
 ] {
     if $imp.form == 'overlay use' { return (refused 'overlay use') }
@@ -89,7 +77,6 @@ export def resolve [roots: record, repo: string, file: string, kind: string, src
     }
     if ($target | str contains '$') or ($target | str contains '(') { return (refused $"($target), built at run time") }
     if ($target | str starts-with '/') or ($target | str starts-with '~') { return (refused $"($target), absolute") }
-    if $kind == 'recipe' { return (recipe-target $target $monoliths) }
     let at = ($roots | get $repo | path join $file | path dirname | path join $target | path expand)
     let found = (if ($at | path type) == 'file' {
         $at

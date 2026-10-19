@@ -18,17 +18,11 @@ here writes; a quoted name, `def "main build"`, is read whole. The
 extractor's `declarations-of` is the same rule, so the contract and the
 checker read one declaration one way.
 
-## def recipes-of
-
-A recipe's body is its indented lines; each `{{...}}` becomes `X` so the
-body parses as nu, its paths through a placeholder read by their suffix.
-
 ## def sources-of
 
-Every nu file, every runner's body (`runners/*.nuon` today,
-`nu/nuon/runner/` after the move), and every justfile's recipes, each
-tagged with its kind, since a descriptor's body may import the long engine
-and a recipe's paths are placeholders.
+Every nu file and every runner's body, `nu/nuon/runner/*.nuon`, each
+tagged with its kind, since a descriptor's body may import the long
+engine.
 
 ## def shape-text, dv-text, sig-text, signatures-of
 

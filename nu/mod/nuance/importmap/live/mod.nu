@@ -20,23 +20,7 @@ export def declarations-of [src: string]: [
     } | compact
 }
 
-# A justfile's recipe bodies as nu sources, each `{{...}}` a placeholder.
-def recipes-of [text: string]: nothing -> list<string> {
-    mut out = []
-    mut cur = []
-    for l in ($text | lines) {
-        if ($l =~ '^\s+\S') {
-            $cur = ($cur | append ($l | str replace --all --regex '\{\{[^}]*\}\}' 'X'))
-        } else if ($cur | is-not-empty) {
-            $out = ($out | append ($cur | str join "\n"))
-            $cur = []
-        }
-    }
-    if ($cur | is-not-empty) { $out = ($out | append ($cur | str join "\n")) }
-    $out
-}
-
-# A checkout's live sources: its nu files, its runners' bodies, and its recipes.
+# A checkout's live sources: its nu files and its runners' bodies.
 export def sources-of [repo: string, root: path]: [
     nothing -> table<repo: string, file: string, kind: string, src: string>
 ] {
@@ -51,20 +35,13 @@ export def sources-of [repo: string, root: path]: [
         | where {|f| do $kept $f }
         | sort
         | each {|f| {repo: $repo, file: ($f | path relative-to $root), kind: 'nu', src: (open --raw $f | decode)} })
-    let descriptors = (['runners' 'nu/nuon/runner'] | each {|d| glob ($root | path join $d '*.nuon') }
-        | flatten
+    let descriptors = (glob ($root | path join 'nu' 'nuon' 'runner' '*.nuon')
         | sort
         | each {|f|
             let body = (try { open $f | get body } catch { '' })
             {repo: $repo, file: ($f | path relative-to $root), kind: 'descriptor', src: $body}
         })
-    let justs = ((glob ($root | path join '**' '*.just') --exclude $pruned)
-        ++ (glob ($root | path join '**' 'justfile') --exclude $pruned))
-    let recipes = ($justs | where {|f| do $kept $f } | sort | each {|f|
-        let file = ($f | path relative-to $root)
-        recipes-of (open --raw $f | decode) | each {|r| {repo: $repo, file: $file, kind: 'recipe', src: $r} }
-    } | flatten)
-    $nus | append $descriptors | append $recipes
+    $nus | append $descriptors
 }
 
 # A scalar shape's name as nushell writes it in a signature.

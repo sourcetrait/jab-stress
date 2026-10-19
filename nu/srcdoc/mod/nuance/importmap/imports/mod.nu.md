@@ -14,9 +14,9 @@ engine a runner's body imports, `rig/sourcetrait/emptwo/prototype/long`.
 of a statement after a `;` on it, the path quoted, bare, or named through
 `(path self <path>)`, the nu trees' form, which is read as that path since
 `path self` resolves it against the file's directory as a bare one is, and
-the list in brackets that follows it: a recipe's one-line body, `use
-<jab.nu>; use <test.nu> [...]; let ...`, holds two imports, and its first
-path would otherwise carry the `;`.
+the list in brackets that follows it: a one-line body, `use <a>; use <b>
+[...]; let ...`, holds two imports, and its first path would otherwise
+carry the `;`.
 
 ## def path-consts
 
@@ -44,12 +44,7 @@ checkout is that checkout's file. The path is resolved as the system opens
 it, links followed, the way the checkouts' roots are, so a sibling reached
 through a link is still its checkout. Refused: `overlay use`, a path built at
 run time, an absolute path, a path that names nothing, a path outside both
-checkouts, and the long engine outside a runner's body. A recipe's path
-runs through a placeholder, so it is read by the monolith whose path it
-ends with, the monoliths given where the landed groups have put them, or
-by the module whose directory it ends with, `{{jab}}/nu/mod/target` the
-SDK's `target`, the longest match when two end it; otherwise it is left
-unread.
+checkouts, and the long engine outside a runner's body.
 
 ## def cycles-of
 
