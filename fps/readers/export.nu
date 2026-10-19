@@ -15,7 +15,7 @@
 # what the program declares, and `prepare`, `do`, and `target_assets`,
 # which name the program's own tree, dropped; `source.nuon` naming
 # the commit and the symbols; built release there by the checkout's
-# `sdk/nu/jab.nu` through a scratch justfile's `cand-build-release`, which
+# build verb through a scratch justfile's `cand-build-release`, which
 # takes the symbols as its set beside `release`; a program with assets
 # given its romfs beside the image, `<name>.romfs`, genromfs over the
 # export's copy with the program's name as the volume, as the tool's run
@@ -28,6 +28,8 @@
 # export.nu <repo> <commit> <cands> <jf> <expected> [--set <symbols>]
 # [--program <path>]`, the symbols comma separated.
 
+use ../../../jab/nu/mod/identity
+
 # The build symbols a set names as the tool makes them: screaming snake
 # case, each once, sorted.
 export def symbols-of [set: string]: nothing -> list<string> {
@@ -36,8 +38,8 @@ export def symbols-of [set: string]: nothing -> list<string> {
 
 # An image's provenance, written beside it as `provenance.nuon` and
 # returned: the commit for the source and the SDK, the symbols the build
-# names beside its tree's, the build tool's revision apart (the checkout's
-# commit, its dirty state, and `sdk/nu/jab.nu`'s SHA-256), the
+# names beside its tree's, the build tool's identity apart (`identity
+# reader` over the checkout, its commit and state and its interpreters), the
 # toolchain's prefix, its advertised version, and the SHA-256 of the
 # resolved assembler, linker, and objcopy, the flags, and the image's and
 # the ELF's SHA-256, the ELF the image's stem's; and the romfs's, the
@@ -48,14 +50,12 @@ export def provenance-of [repo: string, full: string, image: string, symbols: li
     let flags = (open --raw ($beside | path join "flags") | decode | lines | first)
     let prefix = ($flags | split row " " | last)
     let tool = {|name: string| let p = ($"($prefix)($name)" | path expand); { path: $p, sha256: (open --raw $p | into binary | hash sha256) } }
-    let checkout = (^git -C $repo rev-parse HEAD | complete | get stdout | str trim)
-    let dirty = ((^git -C $repo status --porcelain | complete | get stdout | str trim) != "")
     let provenance = {
         commit: $full,
         symbols: $symbols,
         source: $"the program's src/ and manifest at ($full)",
         sdk: $"sdk/src at ($full), the export's own",
-        build_tool: { checkout: $checkout, dirty: $dirty, jab_nu_sha256: (open --raw ($repo | path join "sdk" "nu" "jab.nu") | into binary | hash sha256) },
+        build_tool: (identity reader [$repo] --launches),
         toolchain: {
             prefix: $prefix,
             version: (^$"($prefix)as" --version | complete | get stdout | lines | get -o 0),

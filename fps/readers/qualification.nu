@@ -14,6 +14,7 @@
 # qualification.nu <command> ...` (`fps/just/qualification.just`).
 use ../../../jab/nu/mod/spec
 use ../../../jab/nu/mod/build
+use ../../../jab/nu/mod/identity
 use ../../../jab/kit/fierce/test/gauge.nu
 use ./observer.nu
 
@@ -459,11 +460,10 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
     })
     let normal = ($CASES | where case == "normal play" | get 0.steps | get $target)
     let routed = ($runs | where {|r| $r.step in $normal and $r.kind == "route" })
-    let head = (head-of $STRESS)
     {
         target: $target,
         written: (date now | format date "%Y-%m-%dT%H:%M:%S%z"),
-        readers: { commit: $head.commit, dirty: $head.dirty, sha256: (sha-of $SELF) },
+        readers: (identity reader [$STRESS $JAB] --launches),
         candidate: ($cand | insert file ($candidate | path expand) | insert sha256 (sha-of $candidate)),
         spec: { name: $spec.name, cores: $spec.cores, ram_bytes: ($spec.ram | into int), display: $spec.display, fps: $spec.fps },
         bench: {

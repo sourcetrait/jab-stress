@@ -5,18 +5,20 @@
 # the checkout's, so the toolchain is the checkout's `extern/riscv` and the
 # code's layout the suite's, and its `do`, a script the export does not
 # carry, dropped; `source.nuon` naming the commit and the symbols; built
-# release with the symbols by the checkout's `sdk/nu/jab.nu`, the export
+# release with the symbols by the checkout's build verb, the export
 # lying in the checkout's target, so the build lands beside it in
 # `kernel/release/`; then beside the ELF, `jab.bin`, objcopy's flat image,
 # the bytes the kernel loads, and `provenance.nuon`: the commit, the
-# symbols, the flags, the build tool's revision (the checkout's commit, its
-# dirty state, and `sdk/nu/jab.nu`'s SHA-256), the toolchain's prefix, its
+# symbols, the flags, the build tool's identity (`identity reader` over the
+# checkout: its commit and state, its interpreters), the toolchain's prefix, its
 # version, and the SHA-256 of its assembler, linker, and objcopy, the
 # ELF's SHA-256 and the loaded bytes'. A gate before anything measures it:
 # the ELF's SHA-256 the one `expected` names, unless `expected` is "".
 # DEBUG is refused, since a measured kernel is a release one. Run under
 # the real nu: `nu export.nu <repo> <commit> <cands> <symbols> <expected>`,
 # the symbols comma separated, "" for none.
+
+use ../../../jab/nu/mod/identity
 
 def main [repo: string, commit: string, cands: string, symbols: string, expected: string] {
     let full = (^git -C $repo rev-parse $commit | complete | get stdout | str trim)
@@ -58,14 +60,12 @@ def main [repo: string, commit: string, cands: string, symbols: string, expected
     if $copied.exit_code != 0 { error make { msg: $"objcopy of ($elf): ($copied.stderr)" } }
     let elf_sha = (open --raw $elf | into binary | hash sha256)
     let loaded_sha = (open --raw $bin | into binary | hash sha256)
-    let checkout = (^git -C $repo rev-parse HEAD | complete | get stdout | str trim)
-    let dirty = ((^git -C $repo status --porcelain | complete | get stdout | str trim) != "")
     {
         commit: $full,
         symbols: $names,
         source: $"kernel/src and kernel/kernel.jab.toml at ($full)",
         sdk: $"sdk/src at ($full), the export's own",
-        build_tool: { checkout: $checkout, dirty: $dirty, jab_nu_sha256: (open --raw ($repo | path join "sdk" "nu" "jab.nu") | into binary | hash sha256) },
+        build_tool: (identity reader [$repo] --launches),
         toolchain: {
             prefix: $prefix,
             version: (^$"($prefix)as" --version | complete | get stdout | lines | get -o 0),

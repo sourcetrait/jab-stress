@@ -14,7 +14,9 @@
 #
 # `main <readings> <out>` writes decision.nuon in `out`.
 
-# This file, whose SHA-256 a decision records.
+use ../../../jab/nu/mod/identity
+
+# This file, from which a decision's selector finds its checkout.
 const SELF = (path self)
 # The late-frame legs the guest's presentation predicate reads.
 const LATE_LEGS = [start up yard pressure]
@@ -235,7 +237,7 @@ export def decide [readings: record]: nothing -> record {
 
 def main [readings: path, out: path] {
     let raw = (open --raw $readings | into binary)
-    let decision = (decide ($raw | decode | from nuon) | merge { readings_sha256: ($raw | hash sha256), selector_sha256: (open --raw $SELF | hash sha256) })
+    let decision = (decide ($raw | decode | from nuon) | merge { readings_sha256: ($raw | hash sha256), selector: (identity reader [($SELF | path dirname | path join .. .. | path expand)]) })
     mkdir $out
     $decision | to nuon --indent 1 | save --raw -f ($out | path join "decision.nuon")
     print $"timing select: ($decision.outcome), the contract ($decision.contract)"
