@@ -51,8 +51,8 @@ def target-section [r: record]: nothing -> list<string> {
     let normal = ($r.cases | where case == "normal play" | get 0.runs | each {|ref| $r.runs | where {|x| $x.step == $ref.step and $x.run == $ref.run } | get 0 } | where kind == "route")
     let legs = ($normal | each {|x| $x.measured | get -o legs | default [] | get leg } | flatten | uniq)
     let leg_of = {|x: record, leg: string, field: string| $x.measured | get -o legs | default [] | where leg == $leg | get -o 0 | get -o $field }
-    let route_table = (md-table ["Leg" "Critical path" "Drawing" "Preparation" "Raster" "Flip" "Presented interval" "Submission age"] ($legs | each {|leg|
-        [$leg] ++ ([critical draw preparation raster flip flip_interval submission_age] | each {|f| ms-cell ($normal | each {|x| do $leg_of $x $leg $f | get -o median }) })
+    let route_table = (md-table ["Leg" "Critical path" "Drawing" "Preparation" "Raster" "Flip" "Acceptance interval" "Completion interval" "Submission age"] ($legs | each {|leg|
+        [$leg] ++ ([critical draw preparation raster flip acceptance_interval completion_interval submission_age] | each {|f| ms-cell ($normal | each {|x| do $leg_of $x $leg $f | get -o median }) })
     }))
     let tails_table = (md-table ["Leg" "Frames at or over 15 ms" "95th" "99th" "Greatest"] ($legs | each {|leg|
         let over = ($normal | each {|x| do $leg_of $x $leg "over" } | compact)

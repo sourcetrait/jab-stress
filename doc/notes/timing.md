@@ -26,9 +26,11 @@ machine), its target, its workload (`fps` or `walk`), its kernel's rule
 phase stamps were on (`timing`), whether it was probed, its backend, its
 build, its battery and position, whether its reading was valid, and its
 K violations. An fps run carries its legs, each with its critical path's
-median and its presented interval's 95th, and a probed one its shown
-frames' 95th. A walk run carries its presented interval's median and
-95th, and with its stamps on, its drawing and phases.
+median and its presented interval's 95th, the gauge's acceptance
+interval, never its completion interval (AcceptanceInterval), and a
+probed one its shown frames' 95th. A walk run carries its presented
+interval's median and 95th, from its acceptances, and with its stamps on,
+its drawing and phases.
 
 `controls` holds the observer controls: each its kind (`timing` for
 walk's stamps, `shim` for the SDL probe), the scope it was measured in

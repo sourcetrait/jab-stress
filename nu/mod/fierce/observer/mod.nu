@@ -4,8 +4,10 @@ export const MEASURES = [
     ["critical path median", [critical median]]
     ["drawing median", [draw median]]
     ["flip median", [flip median]]
-    ["presented interval median", [flip_interval median]]
-    ["presented interval 95th", [flip_interval p95]]
+    ["acceptance interval median", [acceptance_interval median]]
+    ["acceptance interval 95th", [acceptance_interval p95]]
+    ["completion interval median", [completion_interval median]]
+    ["completion interval 95th", [completion_interval p95]]
 ]
 
 # A list's median by nearest rank, null for no values

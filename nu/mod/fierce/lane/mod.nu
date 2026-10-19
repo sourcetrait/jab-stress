@@ -70,7 +70,7 @@ def summary [rows: list<any>]: nothing -> record {
     let presented = ($rows | where flip_status == 0)
     {
         frames: ($rows | length),
-        interval: (spread ($rows | get flip_interval_us)),
+        completion_interval: (spread ($rows | each {|r| $r | get -o completion_interval_us | default ($r | get -o flip_interval_us) })),
         call_interval: (spread ($rows | get call_interval_us)),
         submission_age: (spread ($rows | get submission_age_us)),
         critical: (spread ($rows | get critical_us)),

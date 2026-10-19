@@ -151,7 +151,12 @@ repositories, under the session's scratch directory or
 - `observer` is ProbeRuns' observer control as a function: two arms of
   runs, each a name and its whole-run summary, every measure's arm
   statistics, effect, noise, and whether it is within it. ProbeRuns'
-  reader takes it too.
+  reader takes it too. Its presentation measures are the acceptance
+  interval's median and 95th, between consecutive presents' acceptance
+  stamps, with the completion interval, between their flips' ends, as
+  measures of their own (AcceptanceInterval); a run read before schema 7
+  holds no acceptance interval and is a problem, never a completion
+  standing in.
 - `footprint` takes its still copies, its stamps, and its bindings from
   `workerparity`'s `disk-of` and `answered-frames` and jab's gauge, and
   each image's provenance from `freeze`'s `provenance-of`. Its pose set

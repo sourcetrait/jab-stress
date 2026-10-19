@@ -15,7 +15,13 @@ the unprobed program's presentation only when every measure is within its noise
 
 The measures, each a name and the cell path of its statistic in a run's
 whole-run summary: the critical path's, the drawing's, and the flip
-phase's medians, and the guest's presented interval's median and 95th.
+phase's medians; the guest's presentation, the acceptance interval
+between consecutive presents' acceptance stamps, its median and 95th;
+and the completion interval between their flips' ends, a measure of its
+own, since the shim runs inside the synchronous flip and moves the
+completions (AcceptanceInterval). A run whose summary holds no
+acceptance interval, one read before schema 7 or by an older reader, is a
+problem, never a completion stood in for it.
 
 ## def median-of
 
