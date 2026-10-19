@@ -115,6 +115,11 @@ cap, the target's frame rate; and the release tree.
 
 ## def finite
 
+An int is finite; a float is finite unless its text is `inf`, `-inf`, or
+`NaN`. The text, since nushell 0.115.1 compares every finite number equal
+to `inf`: `1.5 == inf` reads true and `1.5 < inf` false, so a guard
+written against `inf` refuses every finite value.
+
 ## def conditions-of
 
 Where a run differs from its step's declared conditions (RederivedChecks),

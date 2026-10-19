@@ -155,9 +155,13 @@ export def agreement-of [id: record, candidate: record, target: string, spec: re
     ] | compact
 }
 
-# Whether a value is a finite number
+# Whether a value is a finite number, a float judged by its text
 def finite [v: any]: nothing -> bool {
-    ($v | describe) in [int float] and $v == $v and $v != inf and $v != -inf
+    match ($v | describe) {
+        "int" => true,
+        "float" => (($v | into string) not-in ["inf" "-inf" "NaN"]),
+        _ => false,
+    }
 }
 
 # Where a run's identity and record differ from its step's words, each named
