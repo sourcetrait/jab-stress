@@ -24,9 +24,7 @@ test on its candidate loop.
 ## Exporting a candidate
 
 A measured kernel is an export, frozen with its provenance, by the module
-`nu/mod/kernel/freeze`. Its commands are bins, run under the real nu, with
-`kernel/just/export.just` a shim over them until every consumer calls
-them:
+`nu/mod/kernel/freeze`. Its commands are bins, run under the real nu:
 
 | Command | What it does |
 |---|---|

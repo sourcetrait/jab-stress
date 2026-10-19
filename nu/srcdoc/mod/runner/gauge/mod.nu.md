@@ -1,15 +1,15 @@
 # mod.nu
 
-The batteries' hook into fierce's gauge, which `just do gauge` and `just do
-gauge-compare` were: fierce's own bins under `<fps>/nu/bin`, run from fierce's
-directory as the recipe ran them.
+The batteries' hook into fierce's gauge: fierce's own bins under
+`<fps>/nu/bin`, run from fierce's directory.
 
 ## def measured
 
 fierce's `nu/bin/do.nu build --set debug` for the debug tree, `--set ""`
 otherwise, then, when it built, `nu/bin/nuance.nu gauge run --tree <tree>
 --runs <runs>` with the batch's flags. The log's text is both commands'
-stdout, then both commands' stderr, the order just's captured output had; a
+stdout, then both commands' stderr, the order the batteries' logs have
+always had; a
 failed build ends it with the build's own exit.
 
 ## def batch

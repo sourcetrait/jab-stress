@@ -59,5 +59,3 @@ second parse of it; `nu/bin/do.nu`, which the root's link reaches,
 resolves itself first, since `path self` names the link. Code that drives
 another checkout of Jab, given at run time, reaches it through that
 checkout's bins and never imports its modules, whose paths a parse fixes.
-The justfiles in `fps/just/`, `kernel/just/`, and `sdk/just/` stand as
-one-line shims over these bins until every consumer calls the bins.

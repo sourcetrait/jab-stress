@@ -1,8 +1,7 @@
 # mod.nu
 
 The captures' hook: a map's poses captured on an image by the pose bin,
-`nu/bin/nuance/fierce/pose.nu`, which `poses.just`'s `pose-map` was, and each
-screen's SHA-256 a row.
+`nu/bin/nuance/fierce/pose.nu`, and each screen's SHA-256 a row.
 
 ## def shot
 

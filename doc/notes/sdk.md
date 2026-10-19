@@ -88,5 +88,4 @@ when it reads as recorded.
   needs them unchanged since the capture.
 
 Reread the set's current record whenever the reader changes in a way
-that reaches what a capture holds. `sdk/just/probe.just` stands as a
-shim over the bin until every consumer calls it.
+that reaches what a capture holds.

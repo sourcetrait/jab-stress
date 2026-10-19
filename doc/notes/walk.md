@@ -15,9 +15,6 @@ Its commands are its bins, run under the real nu:
 | `nu nu/bin/nuance/kernel/walk.nu replay-of <run dir> <stream>` | Writes a replay stream from a run's records, for a replay build to repeat its workload |
 | `nu nu/bin/nuance/kernel/walk/launches.nu <jab checkout> <scratch>` | Builds walk's test variants, runs each through walk's wrapper, and holds what each run must show |
 
-`kernel/just/walk.just` stands as a shim over these until every consumer
-calls the bins.
-
 ## walk's own launches
 
 `nu/mod/kernel/walk/launches` is walk's fixture for its measurement build.

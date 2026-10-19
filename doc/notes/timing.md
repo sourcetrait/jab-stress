@@ -6,8 +6,7 @@ today, P0. It reads one readings record and writes one decision record.
 The rules it applies are JointTiming's selection rule, in the Jab
 iter's plan for the kernel.
 
-Its command is its bin, run under the real nu, with
-`kernel/just/timing.just` a shim over it until every consumer calls it:
+Its command is its bin, run under the real nu:
 
 | Command | What it does |
 |---|---|

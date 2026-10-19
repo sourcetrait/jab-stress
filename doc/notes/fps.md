@@ -178,8 +178,6 @@ repositories, under the session's scratch directory or
   Zero's still copy, `spawn.nuon`, Render Zero's spawn, and
   `footprint.nuon`, the level comparison's seventeen views on both maps'
   still copies.
-- `fps/just/` holds one-line shims over these bins, one justfile a
-  purpose, until every consumer calls the bins.
 
 ## What the code expects
 
