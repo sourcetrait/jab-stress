@@ -44,6 +44,17 @@ justfiles in `fps/just/` provide them.
 | `captures_base.nuon` | f5J7eWcBJ9e | maps' poses captured on a set of images, through `poses.just` |
 | `captures_compare.nuon` | 6udeEi69pqu | the same, compared with a base's captures |
 | `pixel_identity.nuon` | 49AGzVbsa3Y | two sets' captures held pixel for pixel |
-| `view_captures.nuon` | 9D0O2NWYvbt | a set of views captured |
-| `layout_probe.nuon` | 32lvIfah9Aq | a code-layout probe, a directive aligned at a label |
-| `layout_rerun.nuon` | l4cGiCZ3DTh | the layout probe's rerun |
+
+## Retired
+
+Three runners were removed, each with the reason it went:
+
+- `layout_probe.nuon` and `layout_rerun.nuon` served TileLayout's layout
+  probe, which is finished. Each saved a probed raster over the game's
+  source and restored it only after its runs, so a cancel or an error
+  between them left the source altered. A later layout comparison runs
+  its candidates in exports, as the layout probe's `layout-cands` does.
+- `view_captures.nuon` captured a set of views for the owner captures. It
+  wrote a temporary map source into the game's `content/` and removed it
+  after its compile. One `pose capture` call over a map now takes the same
+  views.
