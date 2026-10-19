@@ -360,6 +360,9 @@ def verdict-of [today: record, cand: record, prefix: string]: nothing -> record 
 # The revised criterion as SecantCriterion states it, printed with every reading
 const REVISION = "The criterion is revised after the first measurement (SecantCriterion): it now tests whether the candidate's row estimate gives the level a block's footprint asks when the along term is the engine's own step, the secant over the block's true length, and the down term the analytic derivative at the block's start on the mapping the engine uses there; it does not test whether the engine's along stepping matches the analytic derivative (AlongSpanFootprint). The declared criteria's result stands as recorded."
 
+# The clamp's limit as ClampedReference states it, printed with every reading
+const LIMIT = "The release threshold, IZ_MIN 4096 in 6.26, a depth of 16,384 m, is not exercised by the inventoried content and poses; the clamp is proved at the test threshold, IZ_TEST's, on the clamp pose (ClampedReference)."
+
 # A view's no-new-departure check against the declared reference, by its blocks
 def departure-of [b: record]: nothing -> record<new_off: int, own_sharper: int, holds: bool> {
     { new_off: $b.new_off, own_sharper: $b.own_sharper, holds: ($b.new_off == 0 and $b.own_sharper == 0) }
@@ -424,9 +427,10 @@ export def read [out: path, poses: path] {
     }
     for r in $refused { print $"($r.pose): refused, ($r.problems | str join '; ')" }
     for m in $missing { print $"($m): missing, the pose set's but never captured" }
-    { views: $views, refused: $refused, missing: $missing, whole: $whole, declared_holds: $declared, secant_holds: $secant, departures_hold: $departures, revised_holds: $revised, revision: $REVISION, own_sharper: $own } | to nuon --indent 2 | save --raw -f ($out | path join "reading.nuon")
+    { views: $views, refused: $refused, missing: $missing, whole: $whole, declared_holds: $declared, secant_holds: $secant, departures_hold: $departures, revised_holds: $revised, revision: $REVISION, limit: $LIMIT, own_sharper: $own } | to nuon --indent 2 | save --raw -f ($out | path join "reading.nuon")
     print $"footprint read: ($views | length) views, ($refused | length) refused, ($missing | length) missing; (if $whole { 'every view accounted for' } else { 'incomplete: a view refused, missing, or unresolved' }); the declared criteria (if $declared { 'hold' } else { 'fail' }), as recorded; the revised criterion (if $revised { 'holds' } else { 'fails' }), the secant's verdicts (if $secant { 'holding' } else { 'failing' }) and no new departure (if $departures { 'holding' } else { 'failing' }); the candidate's own sharper blocks by the declared reference ($own)"
     print $REVISION
+    print $LIMIT
 }
 
 # Each region where a pose's pictures differ cut out of both as PNGs

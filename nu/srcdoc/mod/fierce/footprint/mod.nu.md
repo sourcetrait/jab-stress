@@ -205,6 +205,13 @@ analytic derivative at the block's start on the engine's mapping, what it
 leaves to AlongSpanFootprint, and the declared result standing as
 recorded.
 
+## const LIMIT
+
+The clamp's limit, ClampedReference's: the release floor, IZ_MIN 4096, a
+depth of 16,384 m, reached by no surface of the inventoried content at the
+inventoried poses, so the clamp stands proved at the test threshold alone,
+IZ_TEST's on the clamp pose.
+
 ## def departure-of
 
 A view's no-new-departure check by its blocks: the candidate never off
@@ -231,8 +238,8 @@ and regions. A view holds only resolved; the criteria hold only when the
 reading is whole and every view holds. reading.nuon holds it, the declared
 criteria's whole verdict as recorded, the revised criterion's
 (SecantCriterion), the secant's verdicts and no new departure on every
-view together, and the statement of the revision, which the reading
-prints too.
+view together, the statement of the revision, and the clamp's limit
+(LIMIT), the last two printed with the reading too.
 
 ## def crops
 
