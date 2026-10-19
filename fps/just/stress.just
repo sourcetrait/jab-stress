@@ -10,8 +10,8 @@ stress := justfile_directory() / "../stress"
 
 # the tile eviction fixtures on a debug image, all or those named
 eviction image out *fixtures:
-    use {{jab}}/sdk/nu/jab.nu; let t = (jab target-root {{jab}} | path join debug); ^nu {{stress}}/eviction.nu ($t | path join kernel jab.elf) {{image}} ($t | path join kit fierce still.romfs) {{out}} {{fixtures}}
+    use {{jab}}/nu/mod/target; let t = (target root {{jab}} | path join debug); ^nu {{stress}}/eviction.nu ($t | path join kernel jab.elf) {{image}} ($t | path join kit fierce still.romfs) {{out}} {{fixtures}}
 
 # the same on the checkout's own debug build
 eviction-debug out *fixtures:
-    use {{jab}}/sdk/nu/jab.nu; let t = (jab target-root {{jab}} | path join debug); ^nu {{stress}}/eviction.nu ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) ($t | path join kit fierce still.romfs) {{out}} {{fixtures}}
+    use {{jab}}/nu/mod/target; let t = (target root {{jab}} | path join debug); ^nu {{stress}}/eviction.nu ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) ($t | path join kit fierce still.romfs) {{out}} {{fixtures}}

@@ -23,23 +23,23 @@ handoff-set set="handoff":
 
 # handoff-holds alone on the debug build, its reading saved beside out
 handoff out:
-    use {{jab}}/sdk/nu/jab.nu; use {{jab}}/kit/fierce/test/test.nu [handoff-holds]; let t = (jab target-root {{jab}} | path join debug); let game = '{{jab}}/kit/fierce'; let s = (date now); let r = (handoff-holds ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) {{out}} DEBUG,COUNT (open ($game | path join content map render_1.nuon)) $game); $r | to nuon --indent 1 | save -f {{out}}/handoff_read.nuon; print $'took ((date now) - $s)'
+    use {{jab}}/nu/mod/target; use {{jab}}/kit/fierce/test/test.nu [handoff-holds]; let t = (target root {{jab}} | path join debug); let game = '{{jab}}/kit/fierce'; let s = (date now); let r = (handoff-holds ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) {{out}} DEBUG,COUNT (open ($game | path join content map render_1.nuon)) $game); $r | to nuon --indent 1 | save -f {{out}}/handoff_read.nuon; print $'took ((date now) - $s)'
 
 # builder-holds alone on the debug build
 builder out:
-    use {{jab}}/sdk/nu/jab.nu; use {{jab}}/kit/fierce/test/test.nu [builder-holds]; let t = (jab target-root {{jab}} | path join debug); let game = '{{jab}}/kit/fierce'; let r = (builder-holds ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) {{out}} DEBUG (open ($game | path join content map render_1.nuon)) $game); $r | to nuon --indent 1 | save -f {{out}}/builder.nuon; print ($r | reject by_level | to nuon)
+    use {{jab}}/nu/mod/target; use {{jab}}/kit/fierce/test/test.nu [builder-holds]; let t = (target root {{jab}} | path join debug); let game = '{{jab}}/kit/fierce'; let r = (builder-holds ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) {{out}} DEBUG (open ($game | path join content map render_1.nuon)) $game); $r | to nuon --indent 1 | save -f {{out}}/builder.nuon; print ($r | reject by_level | to nuon)
 
 # builder-holds alone on another image
 builder-on image out:
-    use {{jab}}/sdk/nu/jab.nu; use {{jab}}/kit/fierce/test/test.nu [builder-holds]; let t = (jab target-root {{jab}} | path join debug); let game = '{{jab}}/kit/fierce'; let r = (builder-holds ($t | path join kernel jab.elf) {{image}} {{out}} DEBUG (open ($game | path join content map render_1.nuon)) $game); print ($r | reject by_level | to nuon)
+    use {{jab}}/nu/mod/target; use {{jab}}/kit/fierce/test/test.nu [builder-holds]; let t = (target root {{jab}} | path join debug); let game = '{{jab}}/kit/fierce'; let r = (builder-holds ($t | path join kernel jab.elf) {{image}} {{out}} DEBUG (open ($game | path join content map render_1.nuon)) $game); print ($r | reject by_level | to nuon)
 
 # the oblique handoff's residual probe on a handoff map's romfs
 oblique spec disk out:
-    use {{jab}}/sdk/nu/jab.nu; let t = (jab target-root {{jab}} | path join debug); ^nu {{probe}}/handoff/oblique.nu ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) {{disk}} {{out}} "{{spec}}"
+    use {{jab}}/nu/mod/target; let t = (target root {{jab}} | path join debug); ^nu {{probe}}/handoff/oblique.nu ($t | path join kernel jab.elf) ($t | path join kit fierce fierce.jab) {{disk}} {{out}} "{{spec}}"
 
 # the held-off pictures of two debug images held byte for byte
 identity base handoff_disk still_disk out:
-    use {{jab}}/sdk/nu/jab.nu; let t = (jab target-root {{jab}} | path join debug); ^nu {{probe}}/handoff/identity.nu ($t | path join kernel jab.elf) {{base}} ($t | path join kit fierce fierce.jab) {{handoff_disk}} {{still_disk}} {{out}}
+    use {{jab}}/nu/mod/target; let t = (target root {{jab}} | path join debug); ^nu {{probe}}/handoff/identity.nu ($t | path join kernel jab.elf) {{base}} ($t | path join kit fierce fierce.jab) {{handoff_disk}} {{still_disk}} {{out}}
 
 # a capture's dumps keyed: each tile's header and its texels' SHA-256
 keys api out:
