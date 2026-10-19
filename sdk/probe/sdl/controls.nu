@@ -60,8 +60,8 @@ const CONSOLE_UPDATES = ["qemu_console_update" "qemu_console_update_full" "dpy_g
 # `qemu_args` in JAB_QEMU_ARGS: its exit, its record where it printed one,
 # its stderr, and its shim log, each kept under `out` by `name`.
 def probe-run [name: string, program: string, out: path, qemu_args: string]: nothing -> record<exit: int, record: oneof<record, nothing>, stderr: string, log: string> {
-    let tool = ($JAB | path join "sdk" "nu" "jab.nu")
-    let ran = (with-env { JAB_QEMU_ARGS: $qemu_args } { ^$nu.current-exe $tool probe $JAB sdl $program --seconds ($SECONDS | into string) | complete })
+    let tool = ($JAB | path join "nu" "bin" "nuance" "probe.nu")
+    let ran = (with-env { JAB_QEMU_ARGS: $qemu_args } { ^$nu.current-exe $tool $JAB sdl $program --seconds ($SECONDS | into string) | complete })
     $ran.stdout | save -f ($out | path join $"($name).stdout")
     $ran.stderr | save -f ($out | path join $"($name).stderr")
     let log = (build program-out ($JAB | path join $program) "release" | path join "probe" "sdl.log")

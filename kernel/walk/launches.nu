@@ -11,9 +11,9 @@
 # TIMING run with frame 331's clamp among its frames; the bounded waits'
 # four exits go through jab launch with frames of their own. A case's
 # failure is raised with its name. Alone on the box, about two minutes.
-use ../../../jab/sdk/nu/jab.nu
 use ../../../jab/nu/mod/target
 use ../../../jab/nu/mod/launch
+use ../../../jab/nu/mod/probe
 use cadence.nu
 
 const HZ = 10000000
@@ -120,7 +120,7 @@ def fail [name: string, why: string] {
 # the frame whole, or the frame whole before a replay header's first 32
 # bytes, its magic, schema 1, and 16 frames then zeros.
 def exit-bytes [frame: string]: nothing -> binary {
-    let nonce = (jab nonce-frame 77)
+    let nonce = (probe wnon-frame 77)
     let word = {|v: int| $v | into binary --endian little | bytes at 0..<4 }
     let cut = ([(do $word 0x4c505257) (do $word 1) (do $word 16)] | bytes collect) ++ (0..<20 | each { 0x[00] } | bytes collect)
     match $frame {
