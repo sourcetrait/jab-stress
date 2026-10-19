@@ -169,12 +169,47 @@ def wrapped [wrapper: path, image: path, kernel: path, out: path, label: string,
     let extra = (if $replay == null { [] } else { [--replay $replay] })
     let r = (^nu $wrapper $image $kernel --spec $SPEC --out $out --label $label ...$extra | complete)
     if $r.exit_code != 0 { fail $label $"the wrapper exited ($r.exit_code): ($r.stdout + $r.stderr | str trim)" }
+    recorded $out $label --replay $replay
+}
+
+# A run's records read whole, its reading valid
+def recorded [out: path, label: string, --replay: path]: nothing -> record {
     let identity = (open --raw ($out | path join "identity.nuon") | decode | from nuon)
     let api = ($out | path join "api.out")
     let bytes = (if ($api | path exists) { open --raw $api | into binary } else { 0x[] })
-    let reading = (walk guest-reading $bytes $identity --test)
+    let reading = (walk guest-reading $bytes $identity --test --replay $replay)
     if not $reading.valid { fail $label $"the reading refused it: ($reading.faults | to nuon)" }
     { identity: $identity, bytes: $bytes, reading: $reading, stream: (walk stream-of $bytes --test) }
+}
+
+# A landed run's recorded cases read again by today's reader, each held as its launch held it
+export def reread [tree: path, out: path] {
+    let root = ($tree | path expand)
+    let runs = ($root | path join "runs")
+    let has = {|name: string| $runs | path join $name "api.out" | path exists }
+    let four = ($FOUR | where {|c| do $has $c } | each {|name|
+        let r = (recorded ($runs | path join $name) $name)
+        four-holds $name $r
+        print $"walk launches reread: ($name): ($r.stream.frames | length) frames, the stall's median interval (stall-median $r.stream.frames) ms"
+        { name: $name, frames: ($r.stream.frames | length), stall_median_ms: (stall-median $r.stream.frames), reading: $r.reading }
+    })
+    let room = (if (do $has "event_room") {
+        let r = (recorded ($runs | path join "event_room") "event_room")
+        room-holds $r
+        print $"walk launches reread: event_room: closed at frame ($r.stream.frames | last | get frame) with ($r.stream.header.events) events, ($r.stream.end.omitted) omitted"
+        { closed_at: ($r.stream.frames | last | get frame), events: $r.stream.header.events, omitted: $r.stream.end.omitted, reading: $r.reading }
+    } else { null })
+    let replay = (if (do $has "replay") and (do $has "await_on") {
+        let reference = (recorded ($runs | path join "await_on") "await_on")
+        let r = (recorded ($runs | path join "replay") "replay" --replay ($root | path join "await_on.wrpl"))
+        replay-holds $r $reference
+        print $"walk launches reread: replay: ($r.stream.frames | length) frames, the reference's workload and dt frame for frame"
+        { frames: ($r.stream.frames | length), reading: $r.reading }
+    } else { null })
+    let exits = ($EXITS | get name | where {|c| $runs | path join $c | path exists })
+    { reader: "walk launches reread", tree: $root, four: $four, event_room: $room, replay: $replay, exits_unread: $exits } | to nuon --indent 1 | save --raw -f $out
+    for c in $exits { print $"walk launches reread: ($c): an exit case, its holds its launch's, no stream to read" }
+    print $"walk launches reread: ok, ($out)"
 }
 
 # Each frame's start to the next's, for the frames first to last

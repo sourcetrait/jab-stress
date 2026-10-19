@@ -63,9 +63,26 @@ symbols its table carries.
 
 ## def wrapped
 
-One run through walk's wrapper, its records read whole: the wrapper's
-exit, its identity, the API's bytes, the guest-only reading, and the
-stream as the reader reads it.
+One run through walk's wrapper, its exit held, then its records read
+(recorded).
+
+## def recorded
+
+A run's records read whole: its identity, the API's bytes, the guest-only
+reading with its test's admission, raised by name unless valid, a replay
+read against the stream `replay` names, and the stream as the reader reads
+it.
+
+## def reread
+
+`nu/bin/nuance/kernel/walk/launches.nu reread <tree> <out.nuon>`: a landed
+launches run's recorded cases read again by today's reader, nothing
+launched, each held as its launch held it: the loop-order runs present
+under `tree/runs/` by four-holds, the event room by room-holds, and the
+replay against the await order's TIMING run and the stream beside them,
+`await_on.wrpl`, by replay-holds. The exit cases hold no stream; their
+holds are their launches', named unread. The record of what each held,
+with its reading, saved to `out`; a case's failure raised by name.
 
 ## def intervals
 

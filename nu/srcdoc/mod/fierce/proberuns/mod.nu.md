@@ -34,11 +34,6 @@ The bounds `gauge measure flips` labels as a call's own, `recorded` and
 `derived`. An `outer` bound, schema 7's load presents and a retried
 frame's, holds more than its call, so a long one is no stall.
 
-## def stamp-us
-
-A log stamp, the shim's seconds and six digits, as whole microseconds, so a
-host interval is exact.
-
 ## def longest
 
 The longest run of trues in a list, 0 for none.
@@ -66,19 +61,17 @@ whose length is the load's or a retried frame's whole and never a stall.
 
 ## def frames-of
 
-The window's presents read against the renders that select them. The log's
-events in order, its flip uploads numbered from 1 as the pairing numbers
-them; each render selects the latest upload before it, the one SDL's
-texture holds, and its gap is the time since the render before. For each
-paired present: its frame and leg, the frame's critical path, submission
-age, and acceptance interval, the presented interval (AcceptanceInterval);
-its upload's stamp and the interval since the upload before; the renders
-selecting it; shown where one does, superseded where none does and a later
-render does, unshown at the end where no render follows; its repeats, the
-renders past the first; its age at the first render that shows it, both
-host stamps; the interval since the shown frame before, between their first
-renders; and its renders' gaps. The load's presents come back apart from
-the frames, with the count of renders.
+The window's presents read against the renders that select them, by the
+rules walk's paired reading shares (`selection`, `nu/mod/selection`): each
+render selects the latest upload before it, the one SDL's texture holds.
+For each paired present: its frame and leg, the frame's critical path,
+submission age, and acceptance interval, the presented interval
+(AcceptanceInterval); then the selection's own, its upload's stamp and the
+interval since the upload before, the renders selecting it, shown,
+superseded, or unshown at the end, its repeats, its age at the first render
+that shows it, the interval since the shown frame before, and its renders'
+gaps. The load's presents come back apart from the frames, with the count
+of renders.
 
 ## def pooled
 

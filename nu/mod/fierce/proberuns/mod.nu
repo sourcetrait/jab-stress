@@ -2,6 +2,7 @@ use (path self ../../../../../jab/kit/fierce/nu/mod/gauge)
 use (path self ../../../../../jab/nu/mod/sdl)
 use (path self ../../../../../jab/nu/mod/present)
 use (path self ../observer)
+use (path self ../../selection)
 
 # The guest's clock, ticks a second
 const HZ = 10000000
@@ -11,12 +12,6 @@ const EPS = 10000
 
 # The bounds that are a call's own; an outer one holds more than its call
 const CALLS = ["recorded" "derived"]
-
-# A log stamp, the shim's seconds and six digits, as whole microseconds
-def stamp-us [stamp: string]: nothing -> int {
-    let parts = ($stamp | split row ".")
-    ($parts.0 | into int) * 1000000 + ($parts.1 | into int)
-}
 
 # The longest run of trues in a list, 0 for none
 def longest [flags: list<bool>]: nothing -> int {
@@ -65,47 +60,24 @@ def stalls-of [stalls: list<any>, flips: list<any>]: nothing -> record<calls: li
 
 # The window's presents read against the renders that select them
 def frames-of [rows: list<any>, flips: list<any>, pairs: list<any>, events: list<any>]: nothing -> record<frames: list<any>, load: list<any>, renders: int> {
-    mut uploads = 0
-    mut previous: any = null
-    mut renders = []
-    for e in $events {
-        if $e.kind == "upload" {
-            $uploads += 1
-        } else if $e.kind == "render" {
-            let us = (stamp-us $e.stamp)
-            $renders = ($renders | append { key: $"o($uploads)", ordinal: $uploads, us: $us, gap_us: (if $previous == null { null } else { $us - $previous }) })
-            $previous = $us
-        }
-    }
-    let selected = (if ($renders | is-empty) { {} } else { $renders | group-by key })
-    let reach = (if ($renders | is-empty) { 0 } else { $renders | get ordinal | math max })
+    let chosen = (selection $events $pairs)
     let presented = ($flips | where status == 0)
-    mut last_upload: any = null
-    mut last_shown: any = null
-    mut read = []
-    for p in $pairs {
-        let mine = ($selected | get -o $"o($p.ordinal)" | default [])
-        let n = ($mine | length)
-        let first_us = ($mine | get -o 0.us)
-        let flip = ($presented | where ordinal == $p.ordinal | first)
+    let read = ($chosen.frames | each {|s|
+        let flip = ($presented | where ordinal == $s.ordinal | first)
         let row = (if $flip.frame == null { null } else { $rows | where frame == $flip.frame | get -o 0 })
-        $read = ($read | append {
-            present: $flip.present, frame: $flip.frame, ordinal: $p.ordinal, bound: $flip.bound,
+        {
+            present: $flip.present, frame: $flip.frame, ordinal: $s.ordinal, bound: $flip.bound,
             leg: ($row | get -o leg), cadence: ($row | get -o cadence),
             critical_us: ($row | get -o critical_us), submission_age_us: ($row | get -o submission_age_us),
             acceptance_interval_us: ($row | get -o acceptance_interval_us),
-            upload_us: $p.upload_us,
-            upload_interval_us: (if $last_upload == null { null } else { $p.upload_us - $last_upload }),
-            renders: $n, repeats: ([($n - 1) 0] | math max),
-            shown: ($n > 0), superseded: ($n == 0 and $reach > $p.ordinal), unshown: ($n == 0 and $reach < $p.ordinal),
-            age_us: (if $n == 0 { null } else { $first_us - $p.upload_us }),
-            shown_interval_us: (if $n == 0 or $last_shown == null { null } else { $first_us - $last_shown }),
-            render_intervals_us: ($mine | each {|r| $r.gap_us } | compact),
-        })
-        $last_upload = $p.upload_us
-        if $n > 0 { $last_shown = $first_us }
-    }
-    { frames: ($read | where present == "frame"), load: ($read | where present != "frame"), renders: ($renders | length) }
+            upload_us: $s.upload_us, upload_interval_us: $s.upload_interval_us,
+            renders: $s.renders, repeats: $s.repeats,
+            shown: $s.shown, superseded: $s.superseded, unshown: $s.unshown,
+            age_us: $s.age_us, shown_interval_us: $s.shown_interval_us,
+            render_intervals_us: $s.render_intervals_us,
+        }
+    })
+    { frames: ($read | where present == "frame"), load: ($read | where present != "frame"), renders: $chosen.renders }
 }
 
 # A set of frames pooled: intervals, selections, the age, and the path

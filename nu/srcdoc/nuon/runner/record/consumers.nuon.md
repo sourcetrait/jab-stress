@@ -8,5 +8,11 @@ flush trace. Its other inputs, the modular and stripped controls' logs, are
 read where they are there, so they are not required. ProbeRuns' reader,
 `fps proberuns`, requires a batch's report and each run's capture,
 identity, route, and bundle manifest, at any depth under the tree, so a run
-landed as one battery or as several reads alike. Each reader that comes to
-read through a restoration adds its rows here.
+landed as one battery or as several reads alike. walk's readers take three
+names: `kernel walk guest`, a set's runs read guest-only, each run's stream
+and identity at any depth; `kernel walk paired`, a probed run read paired,
+its bundle's manifest, stream, identity, shim log, and classification; and
+`kernel walk launches`, the CADENCE_TEST launches' recorded cases, each
+case's stream and identity under `runs/` and the replay's stream beside
+them. Each reader that comes to read through a restoration adds its rows
+here.
