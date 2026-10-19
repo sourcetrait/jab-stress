@@ -28,7 +28,8 @@ through a link is still its checkout. Refused: `overlay use`, a path built at
 run time, an absolute path, a path that names nothing, a path outside both
 checkouts, and the long engine outside a runner's body. A recipe's path
 runs through a placeholder, so it is read by the monolith whose path it
-ends with, or left unread.
+ends with, the monoliths given where the landed groups have put them, or
+left unread.
 
 ## def cycles-of
 

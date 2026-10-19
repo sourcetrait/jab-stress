@@ -9,6 +9,15 @@ A coherent group's moves are path prefixes moved whole, KitFierce's
 `game/fps/` to `kit/fierce/`; once a group lands, every old path under its
 prefix is read at the new one.
 
+## def monolith-files
+
+The families' monoliths at their places once the landed groups moved
+them, `kit/fierce/test/gauge.nu` for `game/fps/test/gauge.nu` with
+KitFierce landed: what an import of one resolves to, so every rule that
+asks whether a file is a monolith asks of where it is. Read at the
+contract's old names, a moved monolith drops every consumer and its calls
+out of the check without a refusal.
+
 ## def name-in-module
 
 A final name is called through its module, `launch plan`, `gauge measure
@@ -51,8 +60,9 @@ import of any other file refused; and no file on a cycle.
 
 ## def def-of
 
-A call through a monolith names the def by its old name; a call through a
-module names it by its name inside the module.
+A call through a monolith, where the landed groups put it, names the def
+by its old name; a call through a module names it by its name inside the
+module.
 
 ## def consumer-rules
 

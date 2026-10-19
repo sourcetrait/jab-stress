@@ -1,10 +1,4 @@
 const LEAVES = ['std' 'rig/sourcetrait/emptwo/prototype/long']
-const MONOLITHS = [
-    [repo, file];
-    [jab, 'sdk/nu/jab.nu']
-    [jab, 'game/fps/test/test.nu']
-    [jab, 'game/fps/test/gauge.nu']
-]
 const FORM = '^\s*(?P<form>export use|overlay use|use|source)\s+(?P<rest>\S.*)$'
 const PATH_CONST = '^(?:export )?const (?P<n>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*["''](?P<v>[^"'']*)["'']\s*$'
 
@@ -49,14 +43,16 @@ def refused [why: string]: nothing -> record<kind: string, repo: string, file: s
 }
 
 # A recipe's import: the monolith its path ends with, else unread.
-def recipe-target [target: string]: nothing -> record<kind: string, repo: string, file: string, detail: string> {
-    let named = ($MONOLITHS | where {|k| $target | str ends-with $k.file })
+def recipe-target [target: string, monoliths: table]: [
+    nothing -> record<kind: string, repo: string, file: string, detail: string>
+] {
+    let named = ($monoliths | where {|k| $target | str ends-with $k.file })
     if ($named | is-empty) { return {kind: 'unread', repo: '', file: $target, detail: 'a path through a placeholder'} }
     {kind: 'file', repo: ($named | first | get repo), file: ($named | first | get file), detail: ''}
 }
 
 # Where an import resolves: a checkout's file, an external leaf, or a refusal.
-export def resolve [roots: record, repo: string, file: string, kind: string, src: string, imp: record]: [
+export def resolve [roots: record, repo: string, file: string, kind: string, src: string, imp: record, monoliths: table]: [
     nothing -> record<kind: string, repo: string, file: string, detail: string>
 ] {
     if $imp.form == 'overlay use' { return (refused 'overlay use') }
@@ -73,7 +69,7 @@ export def resolve [roots: record, repo: string, file: string, kind: string, src
     }
     if ($target | str contains '$') or ($target | str contains '(') { return (refused $"($target), built at run time") }
     if ($target | str starts-with '/') or ($target | str starts-with '~') { return (refused $"($target), absolute") }
-    if $kind == 'recipe' { return (recipe-target $target) }
+    if $kind == 'recipe' { return (recipe-target $target $monoliths) }
     let at = ($roots | get $repo | path join $file | path dirname | path join $target | path expand)
     let found = (if ($at | path type) == 'file' {
         $at

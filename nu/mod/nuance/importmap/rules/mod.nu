@@ -19,6 +19,15 @@ export def mapped [contract: record, landed: list<string>, repo: string, file: s
     $f
 }
 
+# The families' monolith files where the landed groups have moved them.
+def monolith-files [contract: record, landed: list<string>]: [
+    nothing -> table<family: string, repo: string, file: string>
+] {
+    $contract.families | each {|f|
+        $f.files | each {|x| {family: $f.family, repo: $f.repo, file: (mapped $contract $landed $f.repo $x)} }
+    } | flatten
+}
+
 # A final name's def in its module: the name less the module's words, or main.
 export def name-in-module [name: string, module: string]: nothing -> string {
     let parts = ($module | split row '/')
@@ -220,12 +229,13 @@ def module-at [contract: record, key: string]: nothing -> oneof<record, nothing>
 }
 
 # Every import resolved, every module edge the contract's, and no cycle.
-export def import-rules [contract: record, roots: record, sources: table]: [
+export def import-rules [contract: record, landed: list<string>, roots: record, sources: table]: [
     nothing -> record<refusals: table, edges: int>
 ] {
     let allowed = ($contract.edges
         | reduce --fold {} {|e, acc| $acc | upsert ([$e.family $e.from $e.to] | str join '|') true })
-    let monoliths = ($contract.families | each {|f| $f.files | each {|x| key-of $f.repo $x '' '' } } | flatten)
+    let placed = (monolith-files $contract $landed)
+    let monoliths = ($placed | each {|x| key-of $x.repo $x.file '' '' })
     mut out = []
     mut edges = []
     for s in $sources {
@@ -233,7 +243,7 @@ export def import-rules [contract: record, roots: record, sources: table]: [
         let m = (module-at $contract $from)
         let is_module = ($m != null and ($contract.modules | any {|x| (key-of $x.repo $x.file '' '') == $from }))
         for imp in (imports lines-of $s.src) {
-            let r = (imports resolve $roots $s.repo $s.file $s.kind $s.src $imp)
+            let r = (imports resolve $roots $s.repo $s.file $s.kind $s.src $imp $placed)
             if $r.kind == 'refused' {
                 $out = ($out | append (refusal import $s.repo $s.file $imp.line $imp.target $r.detail))
                 continue
@@ -272,10 +282,14 @@ def import-name [file: string]: nothing -> string {
 }
 
 # The contract's def a call reaches, through an old monolith or a module.
-def def-of [contract: record, family: string, target: string, word: string]: nothing -> oneof<record, nothing> {
-    let f = ($contract.families | where family == $family | first)
-    if $target in $f.files {
-        let found = ($contract.defs | where {|d| $d.family == $family and $d.file == $target and $d.def == $word })
+def def-of [contract: record, landed: list<string>, family: string, target: string, word: string]: [
+    nothing -> oneof<record, nothing>
+] {
+    let files = (monolith-files $contract $landed | where family == $family | get file)
+    if $target in $files {
+        let found = ($contract.defs | where {|d|
+            $d.family == $family and $d.file != null and (mapped $contract $landed $d.repo $d.file) == $target and $d.def == $word
+        })
         return ($found | get -o 0)
     }
     let m = ($contract.modules | where {|x| $x.family == $family and $x.file == $target } | get -o 0)
@@ -286,14 +300,12 @@ def def-of [contract: record, family: string, target: string, word: string]: not
 }
 
 # The family files a source imports from outside them: each its name and list.
-def reached [contract: record, roots: record, s: record]: nothing -> table {
-    let monoliths = ($contract.families
-        | each {|f| $f.files | each {|x| {family: $f.family, repo: $f.repo, file: $x} } }
-        | flatten)
+def reached [contract: record, landed: list<string>, roots: record, s: record]: nothing -> table {
+    let monoliths = (monolith-files $contract $landed)
     let modules = ($contract.modules | each {|m| {family: $m.family, repo: $m.repo, file: $m.file} })
     let family_files = ($monoliths | append $modules)
     imports lines-of $s.src | each {|imp|
-        let r = (imports resolve $roots $s.repo $s.file $s.kind $s.src $imp)
+        let r = (imports resolve $roots $s.repo $s.file $s.kind $s.src $imp $monoliths)
         if $r.kind == 'file' {
             let fam = ($family_files | where {|x| $x.repo == $r.repo and $x.file == $r.file } | get -o 0)
             if $fam != null and not (inside $contract $fam.family $s.file) {
@@ -304,13 +316,13 @@ def reached [contract: record, roots: record, s: record]: nothing -> table {
 }
 
 # No consumer outside a family calls one of its internal or private defs.
-export def consumer-rules [contract: record, roots: record, sources: table]: [
+export def consumer-rules [contract: record, landed: list<string>, roots: record, sources: table]: [
     nothing -> record<refusals: table, calls: int>
 ] {
     mut out = []
     mut calls = 0
     for s in $sources {
-        let reach = (reached $contract $roots $s)
+        let reach = (reached $contract $landed $roots $s)
         if ($reach | is-empty) { continue }
         let words = (live module-calls $s.src ($reach | get name))
         for r in $reach {
@@ -319,7 +331,7 @@ export def consumer-rules [contract: record, roots: record, sources: table]: [
                 | uniq)
             for w in $named {
                 $calls += 1
-                let d = (def-of $contract $r.family $r.file $w)
+                let d = (def-of $contract $landed $r.family $r.file $w)
                 if $d != null and $d.class in ['internal' 'private'] {
                     let why = $"a consumer calling ($r.family)'s ($d.class) ($d.def)"
                     $out = ($out | append (refusal consumer $s.repo $s.file $r.line $"($r.name) ($w)" $why))
