@@ -6,21 +6,37 @@ use (path self ../../../../../jab/kit/fierce/nu/mod/console)
 use (path self ../../../../../jab/kit/fierce/nu/mod/gauge)
 use (path self ../../../../../jab/kit/fierce/nu/mod/picture)
 use (path self ../../../../../jab/kit/fierce/nu/mod/map)
+use (path self ../../../../../jab/kit/fierce/nu/mod/tree)
 use (path self ../freeze) [symbols-of provenance-of]
 use (path self ../workerparity) [disk-of answered-frames]
 
 # The game's directory in jab, checked out beside the workbench
 const GAME = path self ../../../../../jab/kit/fierce
 
-# The images an export is built as, each a label and its set
+# The images an export is built as, each a label, its set, and the poses' kind it serves
 const BUILDS = [
-    [label, set];
-    [picture, "debug"]
-    [picture_candidate, "debug,footprint"]
-    [owner, "debug,owner"]
-    [levels, "debug,levels"]
-    [levels_candidate, "debug,footprint,levels"]
+    [label, set, kind];
+    [picture, "debug", view]
+    [picture_candidate, "debug,footprint", view]
+    [owner, "debug,owner", view]
+    [levels, "debug,levels", view]
+    [levels_candidate, "debug,footprint,levels", view]
+    [owner_clamp, "debug,iz_test,owner", clamp]
+    [levels_clamp, "debug,iz_test,levels", clamp]
+    [levels_candidate_clamp, "debug,footprint,iz_test,levels", clamp]
 ]
+
+# Each kind of pose's images: the OWNER capture's, the two LEVELS captures', the pictures'
+const KINDS = {
+    view: { owner: owner, levels: [levels levels_candidate], pictures: [picture picture_candidate] }
+    clamp: { owner: owner_clamp, levels: [levels_clamp levels_candidate_clamp], pictures: [] }
+}
+
+# The console's X, the presented frames' snapshots exported
+const CONSOLE_X = "X"
+
+# The console's A, every actor at its spawn state and held there
+const CONSOLE_A = "A"
 
 # The images' record, in the export's own directory
 const IMAGES = "footprint_images.nuon"
@@ -46,14 +62,22 @@ def placement [p: record]: nothing -> binary {
     [("P" | into binary), 0x[00 00 00], ($floats | each {|f| map float-bytes $f } | bytes collect), (0..<36 | each {|i| 0x[00] } | bytes collect)] | bytes collect
 }
 
-# A launch's sends under the picture contract, the serial backend's
+# A console frame of a letter with its fourth byte set, the rest zero
+def knob-frame [letter: string, value: int]: nothing -> binary {
+    [($letter | into binary), 0x[00 00 00], ($value | into binary | bytes at 0..<1), (0..<59 | each {|i| 0x[00] } | bytes collect)] | bytes collect
+}
+
+# A launch's sends under the picture contract, the serial backend's, the snapshots asked after the screen
 def sends-of [p: record]: nothing -> list<any> {
+    let hold = (if ($p | get -o hold | default false) { [{ at: $STAMP_AT, bytes: (knob-frame $CONSOLE_A 1) }] } else { [] })
     [
         { at: $STAMP_AT, bytes: (console raise 0 --stamp) }
         { at: $STAMP_AT, bytes: (console workers 0 0) }
+        ...$hold
         { at: 1900ms, bytes: (pose command-frame "L") }
         { at: 2000ms, bytes: (placement $p) }
         { at: 8000ms, bytes: (placement $p) }
+        { at: $SCREEN_AT, bytes: (pose command-frame $CONSOLE_X) }
         { at: $SCREEN_AT, bytes: (pose command-frame "E") }
     ] | sort-by at
 }
@@ -87,6 +111,15 @@ def footprint-tool []: nothing -> record<path: string, sha256: string, commit: s
         commit: (^git -C $repo rev-parse HEAD | complete | get stdout | str trim),
         dirty: ((^git -C $repo status --porcelain | complete | get stdout | str trim) != ""),
     }
+}
+
+# The 1/z floor an image was assembled with: its ELF's IZ_MIN, an integer in 6.26
+def iz-min-of [elf: path, prefix: string]: nothing -> int {
+    let listed = (^$"($prefix)nm" $elf | complete)
+    if $listed.exit_code != 0 { error make { msg: $"nm of ($elf): ($listed.stderr)" } }
+    let found = ($listed.stdout | lines | parse "{value} {type} {name}" | where name == "IZ_MIN")
+    if ($found | length) != 1 { error make { msg: $"($elf) carries ($found | length) IZ_MIN symbols, where an image carries one" } }
+    $found | first | get value | into int --radix 16
 }
 
 # The export's program directory, the one holding a manifest
@@ -133,12 +166,13 @@ export def images [export: path] {
         if $copied.exit_code != 0 { error make { msg: $"objcopy of ($kernel): ($copied.stderr)" } }
         let provenance = (provenance-of $repo $source.commit $image $names)
         let entry = {
-            label: $b.label, set: $b.set, symbols: $names, image: $image, image_sha256: $provenance.image_sha256,
-            elf_sha256: $provenance.elf_sha256, kernel: $kernel, kernel_sha256: (open --raw $kernel | into binary | hash sha256),
+            label: $b.label, set: $b.set, kind: $b.kind, symbols: $names, image: $image, image_sha256: $provenance.image_sha256,
+            elf_sha256: $provenance.elf_sha256, iz_min: (iz-min-of ($out | path join $"($name).elf") $prefix),
+            kernel: $kernel, kernel_sha256: (open --raw $kernel | into binary | hash sha256),
             kernel_loaded_sha256: (open --raw $bin | into binary | hash sha256), flags: $flags,
         }
         $images = ($images | append $entry)
-        print $"($b.label): ($image), SHA-256 ($entry.image_sha256), the kernel's loaded bytes ($entry.kernel_loaded_sha256)"
+        print $"($b.label): ($image), SHA-256 ($entry.image_sha256), IZ_MIN ($entry.iz_min), the kernel's loaded bytes ($entry.kernel_loaded_sha256)"
     }
     let loaded = ($images | get kernel_loaded_sha256 | uniq)
     if ($loaded | length) != 1 { error make { msg: $"the images' kernels load different bytes: ($images | select label kernel_loaded_sha256 | to nuon)" } }
@@ -146,9 +180,23 @@ export def images [export: path] {
     print $"footprint images: ($images | length) built from ($source.commit), one kernel's code under all"
 }
 
-# A map's still disk for a capture, made once in `out` and reused
-def disk-for [map: string, out: path]: nothing -> record {
-    let dir = ($out | path join $"disk_($map)")
+# A map's copy with its androids dropped but those kept, compiled to a disk in `dir`
+def kept-disk [map: string, keep: list<string>, dir: path]: nothing -> record<name: string, tree: string, disk: string, sha256: string> {
+    let src = (open ($GAME | path join "content" "map" $"($map).nuon"))
+    let unknown = ($keep | where {|k| ($src.entities | where {|e| $e.class == "android" and $e.name == $k } | is-empty) })
+    if not ($unknown | is-empty) { error make { msg: $"($map) holds no android named ($unknown | str join ', ')" } }
+    let source = ($src | update entities ($src.entities | where {|e| $e.class != "android" or $e.name in $keep }))
+    let name = $"($map)_($keep | str join '_')"
+    let tree = (tree variant $source $name [] ($dir | path join "tree") $GAME)
+    let disk = ($dir | path join $"($name).romfs")
+    let made = (^genromfs -d $tree -f $disk -V "fps" | complete)
+    if $made.exit_code != 0 { error make { msg: $"genromfs: ($made.stderr)" } }
+    { name: $name, tree: $tree, disk: $disk, sha256: (open --raw $disk | hash sha256) }
+}
+
+# A pose's disk for a capture, its map's still copy or a copy keeping its androids, made once in `out` and reused
+def disk-for [map: string, keep: list<string>, out: path]: nothing -> record {
+    let dir = ($out | path join (if ($keep | is-empty) { $"disk_($map)" } else { $"disk_($map)_($keep | str join '_')" }))
     let record = ($dir | path join "disk.nuon")
     if ($record | path exists) {
         let disk = (open $record)
@@ -157,21 +205,42 @@ def disk-for [map: string, out: path]: nothing -> record {
         return $disk
     }
     mkdir $dir
-    let disk = (disk-of $map $dir)
+    let disk = (if ($keep | is-empty) { disk-of $map $dir } else { kept-disk $map $keep $dir })
     let made = ($disk | insert map (($disk.tree | path join "map" $"($disk.name).jabfps.map")))
     $made | to nuon --indent 2 | save --raw $record
     $made
 }
 
-# A launch's row: its label, status, screen, faults, and binding
+# The lumel maps a launch's load line says the engine baked, or null
+def bake-of [lines: list<string>]: nothing -> any {
+    let found = ($lines | parse "fps: lumel maps {maps} baked in {ms} ms: {lumels} lumels, {unmapped} unmapped")
+    if ($found | is-empty) { return null }
+    let b = ($found | first)
+    { maps: ($b.maps | into int), lumels: ($b.lumels | into int), unmapped: ($b.unmapped | into int) }
+}
+
+# A launch's row: its label, status, screen, faults, bake, and binding
 def row-of [run: record, image: record, p: record]: nothing -> record {
     let lines = ($run.serial | lines)
     {
         label: $image.label, status: $run.status, screen: $run.screen,
         screen_sha256: (if $run.screen != "" { open --raw $run.screen | hash sha256 } else { null }),
         faults: ($lines | where {|l| ($l starts-with "jab: ") and (($l =~ "fault") or ($l =~ "shutdown")) }),
+        bake: (bake-of $lines),
         binding: (bind $run $p ("LEVELS" in $image.symbols)),
     }
+}
+
+# Each launch whose bake differs from the crate's replication of it, the folds' ground
+def bake-problems [rows: list<any>, reference: record]: nothing -> list<string> {
+    let crate = $reference.lumels
+    $rows | each {|r|
+        if $r.bake == null {
+            [$"($r.label): no lumel maps line on its UART"]
+        } else if $r.bake.maps != $crate.maps or $r.bake.lumels != $crate.lumels or $r.bake.unmapped != $crate.unmapped {
+            [$"($r.label): the engine baked ($r.bake.maps) maps, ($r.bake.lumels) lumels, ($r.bake.unmapped) unmapped, where the crate's bake reads ($crate.maps), ($crate.lumels), ($crate.unmapped)"]
+        } else { [] }
+    } | flatten
 }
 
 # Each pose captured on every image, then referenced and differed
@@ -184,30 +253,37 @@ export def capture [export: path, poses: path, out: path, --only: string = ""] {
     if not ($unknown | is-empty) { error make { msg: $"no pose named ($unknown | str join ', ') in ($poses)" } }
     let chosen = (if ($wanted | is-empty) { $all } else { $all | where {|p| $p.name in $wanted } })
     let tool = (footprint-tool)
-    let image = {|label: string| $made.images | where label == $label | first }
     for p in $chosen {
         let dir = ($out | path join $p.name)
         if ($dir | path join "pose.nuon" | path exists) { error make { msg: $"($dir) holds a capture; a pose is captured once into an out" } }
-        let disk = (disk-for $p.map $out)
-        let rows = ($made.images | each {|i|
+        let kind = ($KINDS | get ($p | get -o images | default "view"))
+        let labels = ([$kind.owner] ++ $kind.levels ++ $kind.pictures)
+        let used = ($made.images | where {|i| $i.label in $labels })
+        let floors = ($used | where {|i| $i.label in ([$kind.owner] ++ $kind.levels) } | get iz_min | uniq)
+        if ($floors | length) != 1 { error make { msg: $"($p.name)'s OWNER and LEVELS images were assembled at IZ_MIN ($floors | str join ' and '), where one threshold binds them" } }
+        let disk = (disk-for $p.map ($p | get -o keep | default []) $out)
+        let rows = ($used | each {|i|
             let run = (launch --kernel $i.kernel --image $i.image --out ($dir | path join $i.label) --set $i.set --sound --api --disk $disk.disk --serial "fps" --send (sends-of $p) --screen $SCREEN_AT --seconds $SECONDS)
             row-of $run $i $p
         })
-        let problems = ($rows | each {|r|
+        let launched = ($rows | each {|r|
             let own = ($r.binding.problems | each {|x| $"($r.label): ($x)" })
             let status = (if $r.status != $BOUND_STATUS { [$"($r.label): status ($r.status), where the bound's ($BOUND_STATUS) was expected"] } else { [] })
             let faults = ($r.faults | each {|f| $"($r.label): ($f)" })
             $own ++ $status ++ $faults
         } | flatten)
-        let screen = {|label: string| $rows | where label == $label | first | get screen }
-        let reference = (if not ($problems | is-empty) { null } else {
-            let s = ($rows | where label == levels | first | get binding.state)
-            let r = (^$tool.path reference $disk.map $disk.tree $s.x $s.y $s.z $s.yaw $s.pitch $s.roll (do $screen owner) (do $screen levels) (do $screen levels_candidate) --rows ($dir | path join "rows.nuon") | complete)
+        let row = {|label: string| $rows | where label == $label | first }
+        let captured = {|label: string| let r = (do $row $label); ["--export" ($dir | path join $label "api.out") $"($r.binding.frame)"] }
+        let reference = (if not ($launched | is-empty) { null } else {
+            let s = (do $row ($kind.levels | first) | get binding.state)
+            let words = (["--iz-min" $"($floors | first)" "--owner" (do $row $kind.owner | get screen) ...(do $captured $kind.owner)] ++ ($kind.levels | each {|l| ["--levels" (do $row $l | get screen) ...(do $captured $l)] } | flatten))
+            let r = (^$tool.path reference $disk.map $disk.tree $s.x $s.y $s.z $s.yaw $s.pitch $s.roll ...$words --rows ($dir | path join "rows.nuon") | complete)
             if $r.exit_code != 0 { error make { msg: $"the reference at ($p.name): ($r.stderr)" } }
             $r.stdout | from nuon
         })
-        let pictures = (if not ($problems | is-empty) { null } else {
-            let d = (^$tool.path differ (do $screen picture) (do $screen picture_candidate) | complete)
+        let problems = ($launched ++ (if $reference == null { [] } else { bake-problems $rows $reference }))
+        let pictures = (if not ($problems | is-empty) or ($kind.pictures | is-empty) { null } else {
+            let d = (^$tool.path differ (do $row ($kind.pictures | get 0) | get screen) (do $row ($kind.pictures | get 1) | get screen) | complete)
             if $d.exit_code != 0 { error make { msg: $"the pictures at ($p.name): ($d.stderr)" } }
             $d.stdout | from nuon
         })
@@ -215,11 +291,28 @@ export def capture [export: path, poses: path, out: path, --only: string = ""] {
         if ($problems | is-empty) {
             let today = ($reference.captures | get 0)
             let cand = ($reference.captures | get 1)
-            print $"($p.name): ($today.judged) blocks judged, ($today.sensitive) in a band; today ($today.sharper) sharper ($today.coarser) coarser, the candidate ($cand.sharper) sharper ($cand.coarser) coarser; by the secant today ($today.secant_sharper) and ($today.secant_coarser), the candidate ($cand.secant_sharper) and ($cand.secant_coarser); the pictures differ in ($pictures.pixels) pixels, ($pictures.regions | length) regions"
+            let pop = $reference.population
+            let differ = (if $pictures == null { "no pictures" } else { $"the pictures differ in ($pictures.pixels) pixels, ($pictures.regions | length) regions" })
+            print $"($p.name): ($pop.blocks) blocks, ($pop.classes.judged) judged, ($pop.unresolved) unresolved, ($pop.sensitive) in a band, ($pop.clamped) clamped, ($pop.actors) on actors; today ($today.sharper) sharper ($today.coarser) coarser, the candidate ($cand.sharper) sharper ($cand.coarser) coarser; by the secant today ($today.secant_sharper) and ($today.secant_coarser), the candidate ($cand.secant_sharper) and ($cand.secant_coarser); ($differ)"
         } else {
             print $"($p.name): refused, ($problems | str join '; ')"
         }
     }
+}
+
+# The clamp's plan over a pose already captured: the threshold, the clamped blocks, the witnesses
+export def clamp-plan [dir: path, surface: int, --owner: string = "owner", --levels: string = "levels"] {
+    let c = (open ($dir | path join "pose.nuon"))
+    let s = ($c.rows | where label == $levels | first | get binding.state)
+    let screen = {|label: string| $c.rows | where label == $label | first | get screen }
+    let tool = (footprint-tool)
+    let r = (^$tool.path clamp-plan $c.disk.map $c.disk.tree $s.x $s.y $s.z $s.yaw $s.pitch $s.roll --owner (do $screen $owner) --levels (do $screen $levels) --surface $surface | complete)
+    if $r.exit_code != 0 { error make { msg: $"the clamp's plan at ($c.pose.name): ($r.stderr)" } }
+    let plan = ($r.stdout | from nuon | insert pose ($c.pose | select name map x y z yaw pitch roll) | insert tool $tool)
+    $plan | to nuon --indent 2 | save --raw -f ($dir | path join "clamp_plan.nuon")
+    print $"($c.pose.name): surface ($surface)'s ($plan.blocks) blocks from ($plan.depths.least | math round --precision 2) to ($plan.depths.greatest | math round --precision 2) m; the threshold ($plan.depth) m, IZ_MIN ($plan.iz_min), puts ($plan.share * 100 | math round --precision 1) percent past it; ($plan.clamped) clamped, ($plan.witnesses) witnesses"
+    for w in $plan.strongest { print $"  witness: row ($w.row) at ($w.x0), ($w.depth | math round --precision 2) m, held level ($w.held.level), unbranched ($w.unbranched.level), free ($w.free.level), margin ($w.margin | math round --precision 3)" }
+    print $"  derivative at row ($plan.derivative.block.row) at ($plan.derivative.block.x0): analytic ($plan.derivative.analytic), its finite difference ($plan.derivative.difference)"
 }
 
 # A level's verdict against a reference level and its band
@@ -231,7 +324,7 @@ def judged [level: int, reference: int, band: any]: nothing -> string {
 
 # A pose's judged blocks read one by one, by both references
 def blocks-of [rows: path]: nothing -> record {
-    let read = (open $rows | where {|r| ($r.levels | get 0) != null and ($r.levels | get 1) != null } | each {|r|
+    let read = (open $rows | where {|r| ($r | get -o class | default "judged") == "judged" and ($r.levels | get 0) != null and ($r.levels | get 1) != null } | each {|r|
         let today = ($r.levels | get 0)
         let cand = ($r.levels | get 1)
         {
@@ -272,38 +365,67 @@ def departure-of [b: record]: nothing -> record<new_off: int, own_sharper: int, 
     { new_off: $b.new_off, own_sharper: $b.own_sharper, holds: ($b.new_off == 0 and $b.own_sharper == 0) }
 }
 
-# Every captured pose judged, reading.nuon written
-export def read [out: path] {
+# A view's population held: nothing unresolved, a block judged, and its kind's own blocks
+def population-of [c: record, rows: path]: nothing -> record<counts: record, problems: list<string>> {
+    let pop = $c.reference.population
+    let unresolved = ($pop.classes | transpose class blocks | where {|x| $x.class not-in [judged sky] and $x.blocks > 0 } | each {|x| $"($x.blocks) blocks unresolved, ($x.class)" })
+    let none = (if $pop.classes.judged == 0 { ["no block judged"] } else { [] })
+    let actors = (if ($c.pose | get -o hold | default false) and $pop.actors == 0 { ["no actor's block judged"] } else { [] })
+    let witness = ($c.pose | get -o witness)
+    let clamp = (if $witness == null { [] } else {
+        let found = (open $rows | where {|r| $r.row == $witness.row and $r.x0 == $witness.x0 } | get -o 0)
+        if $pop.clamped == 0 {
+            ["no clamped block judged"]
+        } else if $found == null or $found.class != "judged" or (not $found.clamped) {
+            [$"the witness at row ($witness.row) and ($witness.x0) is no clamped block judged"]
+        } else if (judged ($found.levels | get 1) $found.secant_reference $found.secant_band) != "agree" {
+            [$"the candidate's level at the witness, ($found.levels | get 1), is not the clamped reference's ($found.secant_reference)"]
+        } else { [] }
+    })
+    { counts: $pop, problems: ($unresolved ++ $none ++ $actors ++ $clamp) }
+}
+
+# Every captured pose judged against the pose set's inventory, reading.nuon written
+export def read [out: path, poses: path] {
+    let inventory = (open $poses | get name)
     let captured = (glob ($out | path join "*" "pose.nuon") | sort | each {|f| open $f })
     if ($captured | is-empty) { error make { msg: $"no pose captured in ($out)" } }
+    let missing = ($inventory | where {|n| $n not-in ($captured | get pose.name) })
     let refused = ($captured | where {|c| not ($c.problems | is-empty) } | each {|c| { pose: $c.pose.name, problems: $c.problems } })
     let views = ($captured | where {|c| $c.problems | is-empty } | each {|c|
         let today = ($c.reference.captures | get 0)
         let cand = ($c.reference.captures | get 1)
-        let blocks = (blocks-of ($out | path join $c.pose.name "rows.nuon"))
+        let rows = ($out | path join $c.pose.name "rows.nuon")
+        let blocks = (blocks-of $rows)
+        let population = (population-of $c $rows)
         {
-            pose: $c.pose.name, map: $c.pose.map, judged: $today.judged, sensitive: $today.sensitive, clamped: $today.clamped,
+            pose: $c.pose.name, map: $c.pose.map, judged: $today.judged, sensitive: $population.counts.sensitive, clamped: $population.counts.clamped,
+            population: $population.counts, resolved: ($population.problems | is-empty), unresolved: $population.problems,
             declared: (verdict-of $today $cand ""), secant: (verdict-of $today $cand "secant_"),
             departure: (departure-of $blocks),
             blocks: $blocks,
             today_levels: $today.levels, candidate_levels: $cand.levels,
-            pictures: { pixels: $c.pictures.pixels, regions: ($c.pictures.regions | length), largest: ($c.pictures.regions | get -o largest | default [] | append 0 | math max) },
+            pictures: (if $c.pictures == null { null } else { { pixels: $c.pictures.pixels, regions: ($c.pictures.regions | length), largest: ($c.pictures.regions | get -o largest | default [] | append 0 | math max) } }),
         }
     })
-    let declared = (($views | length) > 0 and ($refused | is-empty) and ($views | all {|v| $v.declared.holds }))
-    let secant = (($views | length) > 0 and ($refused | is-empty) and ($views | all {|v| $v.secant.holds }))
-    let departures = (($views | length) > 0 and ($refused | is-empty) and ($views | all {|v| $v.departure.holds }))
+    let whole = (($views | length) > 0 and ($refused | is-empty) and ($missing | is-empty) and ($views | all {|v| $v.resolved }))
+    let declared = ($whole and ($views | all {|v| $v.declared.holds }))
+    let secant = ($whole and ($views | all {|v| $v.secant.holds }))
+    let departures = ($whole and ($views | all {|v| $v.departure.holds }))
     let revised = ($secant and $departures)
     let own = ($views | get blocks.own_sharper | math sum)
     for v in $views {
         let b = $v.blocks
-        print $"($v.pose): ($v.judged) judged, ($v.sensitive) in a band, ($v.clamped) clamped; declared today ($v.declared.today) off, the candidate ($v.declared.candidate) with ($v.declared.candidate_sharper) sharper, (if $v.declared.holds { 'holds' } else { 'fails' }); secant today ($v.secant.today), the candidate ($v.secant.candidate) with ($v.secant.candidate_sharper) sharper, (if $v.secant.holds { 'holds' } else { 'fails' }); the pictures ($v.pictures.pixels) pixels in ($v.pictures.regions) regions, at most ($v.pictures.largest) apart"
+        let pictures = (if $v.pictures == null { "no pictures" } else { $"the pictures ($v.pictures.pixels) pixels in ($v.pictures.regions) regions, at most ($v.pictures.largest) apart" })
+        print $"($v.pose): ($v.population.blocks) blocks, ($v.judged) judged, ($v.sensitive) in a band, ($v.clamped) clamped, ($v.population.actors) on actors; (if $v.resolved { 'every block accounted for' } else { $v.unresolved | str join '; ' })"
+        print $"  declared today ($v.declared.today) off, the candidate ($v.declared.candidate) with ($v.declared.candidate_sharper) sharper, (if $v.declared.holds { 'holds' } else { 'fails' }); secant today ($v.secant.today), the candidate ($v.secant.candidate) with ($v.secant.candidate_sharper) sharper, (if $v.secant.holds { 'holds' } else { 'fails' }); ($pictures)"
         print $"  blocks: levels differing in ($b.levels_differ); sharper for both ($b.shared_sharper), the candidate's own ($b.own_sharper), today's own ($b.today_own_sharper); the along step's, today ($b.along_today.blocks) and the candidate ($b.along_candidate.blocks), the along term deciding in ($b.along_candidate.along_decides) of the candidate's, its step over the start's derivative ($b.along_candidate.ratio | default [] | each {|x| $x | math round --precision 3 } | str join ' to ')"
         print $"  no new departure from the declared reference: ($v.departure.new_off) blocks off it where today's agrees, ($v.departure.own_sharper) sharper where today's is not, (if $v.departure.holds { 'holds' } else { 'fails' })"
     }
     for r in $refused { print $"($r.pose): refused, ($r.problems | str join '; ')" }
-    { views: $views, refused: $refused, declared_holds: $declared, secant_holds: $secant, departures_hold: $departures, revised_holds: $revised, revision: $REVISION, own_sharper: $own } | to nuon --indent 2 | save --raw -f ($out | path join "reading.nuon")
-    print $"footprint read: ($views | length) views, ($refused | length) refused; the declared criteria (if $declared { 'hold' } else { 'fail' }), as recorded; the revised criterion (if $revised { 'holds' } else { 'fails' }), the secant's verdicts (if $secant { 'holding' } else { 'failing' }) and no new departure (if $departures { 'holding' } else { 'failing' }); the candidate's own sharper blocks by the declared reference ($own)"
+    for m in $missing { print $"($m): missing, the pose set's but never captured" }
+    { views: $views, refused: $refused, missing: $missing, whole: $whole, declared_holds: $declared, secant_holds: $secant, departures_hold: $departures, revised_holds: $revised, revision: $REVISION, own_sharper: $own } | to nuon --indent 2 | save --raw -f ($out | path join "reading.nuon")
+    print $"footprint read: ($views | length) views, ($refused | length) refused, ($missing | length) missing; (if $whole { 'every view accounted for' } else { 'incomplete: a view refused, missing, or unresolved' }); the declared criteria (if $declared { 'hold' } else { 'fail' }), as recorded; the revised criterion (if $revised { 'holds' } else { 'fails' }), the secant's verdicts (if $secant { 'holding' } else { 'failing' }) and no new departure (if $departures { 'holding' } else { 'failing' }); the candidate's own sharper blocks by the declared reference ($own)"
     print $REVISION
 }
 

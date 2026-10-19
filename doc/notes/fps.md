@@ -34,19 +34,24 @@ repositories, under the session's scratch directory or
     [--program <dir>]` exports a commit's program and builds it release,
     the export named after its symbols (`export_<commit>-footprint`).
   - `footprint.nu` runs FootprintEstimate's level comparison. `images
-    <export>` builds five debug images of one export, each in a copy of
-    the export's program named `<export>_<label>`: `picture` and
-    `picture_candidate` (debug, and debug with FOOTPRINT) for the
+    <export>` builds eight debug images of one export, each in a copy of
+    the export's program named `<export>_<label>`: for a view, `picture`
+    and `picture_candidate` (debug, and debug with FOOTPRINT) for the
     pictures, `owner`, and `levels` and `levels_candidate` (debug with
-    LEVELS, and with LEVELS and FOOTPRINT). Each image keeps the kernel
-    built with it as `kernel.elf` and its provenance; their record is
-    `footprint_images.nuon` in the export. `capture <export> <poses>
-    <out> [--only <poses>]` launches every image at each pose `--only`
-    names, comma separated, all of them by default, and runs the
-    footprint crate's `reference` and `differ` over the bound captures; a
-    pose already captured into `out` is refused. `read <out>` judges the
-    views, and `crops <out> <pose>` cuts each region where the two
-    pictures differ out of both, side by side.
+    LEVELS, and with LEVELS and FOOTPRINT); for the clamp pose,
+    `owner_clamp`, `levels_clamp`, and `levels_candidate_clamp`, the
+    same with IZ_TEST. Each image keeps the kernel built with it as
+    `kernel.elf`, its provenance, and the IZ_MIN its ELF was assembled
+    with; their record is `footprint_images.nuon` in the export.
+    `capture <export> <poses> <out> [--only <poses>]` launches each pose's
+    kind's images, every pose `--only` names, comma separated, all of
+    them by default, asks each launch for its frames' snapshots, and runs
+    the footprint crate's `reference` and `differ` over the bound
+    captures; a pose already captured into `out` is refused. `clamp-plan
+    <dir> <surface>` plans the clamp pose's threshold and witnesses over a
+    pose captured at the release floor. `read <out> <poses>` judges the
+    pose set whole, and `crops <out> <pose>` cuts each region where a
+    view's two pictures differ out of both, side by side.
   - `qualification.nu`: `candidate <out> [--tag <tag>]` builds jab's
     release tree and writes the candidate's record, jab's checkout clean
     and the tag, when given, on its HEAD, this repository's changes and
@@ -175,11 +180,17 @@ repositories, under the session's scratch directory or
 - `footprint` takes its still copies, its stamps, and its bindings from
   `workerparity`'s `disk-of` and `answered-frames` and jab's gauge, and
   each image's provenance from `freeze`'s `provenance-of`. Its pose set
-  is the data checkout's `assets/fierce/poses/footprint.nuon`, each row a
-  map, the eye, and the three angles, roll among them, which it sends in
-  a P frame of its own. A LEVELS capture's frame must be drawn from one
-  packet, since a flush restarts the span indices its pixels carry. A
-  pose's five launches take about 27 seconds each alone.
+  is the data checkout's `assets/fierce/poses/footprint.nuon`, each pose
+  a map, the eye, and the three angles, roll among them, which it sends in
+  a P frame of its own; a pose may name its kind of images (`images:
+  clamp`), the witness its plan recorded (`witness`), the androids its
+  disk keeps (`keep`), and the actors' hold (`hold`), the console's A. A
+  LEVELS capture's frame must be drawn from one packet, since a flush
+  restarts the span indices its pixels carry, and its snapshot, the X's
+  export, must bind to that frame. Every launch's load line must give the
+  lumel bake the crate replicates, since the crate counts a lit surface's
+  coordinates from its map's origin. A view's five launches take about 27
+  seconds each alone.
 - `workerparity` draws a map's still copy by the serial backend and by
   workers, a launch a pose and mode. The copy is built from the
   checkout's map with its androids dropped, by jab's suite's
@@ -197,7 +208,8 @@ repositories, under the session's scratch directory or
   `render_1_settled.nuon` on Render One, `census_still.nuon` on Render
   Zero's still copy, `spawn.nuon`, Render Zero's spawn, and
   `footprint.nuon`, the level comparison's seventeen views on both maps'
-  still copies.
+  still copies, the clamp pose `garage_far_clamp`, and the held android
+  `android_near` on a copy keeping `bay_android_1`.
 
 ## What the code expects
 

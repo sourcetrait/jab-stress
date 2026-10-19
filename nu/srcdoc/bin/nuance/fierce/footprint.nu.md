@@ -6,18 +6,24 @@ standalone so its closures run in a nu that loads no other module.
 ## def main images
 
 `nu/bin/nuance/fierce/footprint.nu images`, its parameters `export: path`: An
-export's five debug images built with their kernels and provenance.
+export's debug images built with their kernels, provenance, and IZ_MIN.
 
 ## def main capture
 
 `nu/bin/nuance/fierce/footprint.nu capture`, its parameters `export: path,
-poses: path, out: path, --only: string = ""`: Each pose captured on every image,
-then referenced and differed.
+poses: path, out: path, --only: string = ""`: Each pose captured on its kind's
+images, then referenced and differed.
 
 ## def main read
 
-`nu/bin/nuance/fierce/footprint.nu read`, its parameters `out: path`: Every
-captured pose judged, reading.nuon written.
+`nu/bin/nuance/fierce/footprint.nu read`, its parameters `out: path, poses:
+path`: Every captured pose judged against the pose set, reading.nuon written.
+
+## def main clamp-plan
+
+`nu/bin/nuance/fierce/footprint.nu clamp-plan`, its parameters `dir: path,
+surface: int, --owner: string = "owner", --levels: string = "levels"`: The
+clamp's threshold and witnesses planned over a captured pose.
 
 ## def main crops
 
