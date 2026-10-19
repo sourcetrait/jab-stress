@@ -43,7 +43,10 @@ modules, a child duplicating its parent's few lines.
 ## def files
 
 A file the contract owns whole keeps its declarations in its place until
-its group lands, then under its group's home, any file there.
+its group lands, then under its group's home, any file there. A
+declaration the contract marks `retired` by a group, a constant naming a
+monolith's path, which the group's direct imports replace, is gone from
+its place once that group lands, and refused as stale if it stays.
 
 ## def ownership
 

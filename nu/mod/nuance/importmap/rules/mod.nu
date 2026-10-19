@@ -140,7 +140,7 @@ export def constants [contract: record, landed: list<string>, decls: table]: not
     $out
 }
 
-# Each owned file's declarations in it, or under its home once its group landed.
+# Each owned file's declarations in place or at its home, the retired ones gone.
 export def files [contract: record, landed: list<string>, decls: table]: nothing -> table {
     mut out = []
     for f in $contract.files {
@@ -152,6 +152,14 @@ export def files [contract: record, landed: list<string>, decls: table]: nothing
         } else { [] })
         for d in $f.declarations {
             let at_old = ($here | any {|x| $x.kind == $d.kind and $x.name == $d.name })
+            let retired = ($d | get -o retired)
+            if $retired != null and $retired in $landed {
+                if $at_old {
+                    let why = $"($d.kind) retired by ($retired), yet here"
+                    $out = ($out | append (refusal stale $f.repo $old 0 $d.name $why))
+                }
+                continue
+            }
             if $moved {
                 let at_home = ($homed | any {|x| $x.kind == $d.kind and $x.name == $d.name })
                 if $at_old {
