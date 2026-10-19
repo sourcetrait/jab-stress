@@ -1,6 +1,14 @@
 use (path self ../../../../../../jab/nu/mod/spec)
+use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge)
 use (path self ../matrix)
-use (path self ../matrix) [CASES JAB TARGETS]
+use (path self ../record)
+use (path self ../matrix) [CASES JAB RECORD TARGETS]
+
+# The check's own file beside the record it derives again
+const CHECK = "check.nuon"
+
+# The files a kept run's reading reopens
+const RUN_FILES = ["api.out" "identity.nuon" "route.nuon" "run.nuon"]
 
 # The fields a value lacks of those named, each named where it sits
 def lacking [value: any, keys: list<string>, at: string]: nothing -> list<string> {
@@ -14,63 +22,112 @@ def schema-problems [r: any]: nothing -> list<string> {
     if not ($top | is-empty) { return $top }
     let cand = (lacking $r.candidate [tag jab stress image_sha256 elf_sha256 kernel_sha256 assets] "the candidate")
     let runs = ($r.runs | enumerate | each {|e| lacking $e.item [step run seed kind standing reasons identity agreement measured] $"run ($e.index)" } | flatten)
-    let verdicts = ($r.runs | where {|x| ($x | describe | str starts-with "record") and ($x | get -o step) != null and ($CASES | where kind == acceptance | any {|c| $x.step in ($c.steps | get -o $r.target | default []) }) } | each {|x|
-        if ($x | get -o verdict) == null { [$"($x.step) run ($x.run) holds no verdict"] } else { lacking $x.verdict [pass median_us under over frames problems] $"($x.step) run ($x.run)'s verdict" }
-    } | flatten)
     let cases = ($r.cases | enumerate | each {|e| lacking $e.item [case kind steps runs expected missing problems reading] $"case ($e.index)" } | flatten)
     let named = ($CASES | where {|c| $c.case not-in ($r.cases | get -o case | default []) } | each {|c| $"the record holds no case ($c.case)" })
-    let presented = ($CASES | where reading == "presentation" | get case)
-    let readings = ($r.cases | where {|c| ($c | describe | str starts-with "record") and ($c | get -o case) in $presented } | each {|c|
-        lacking ($c | get -o reading) [read bundles runs cadences unread problems] $"($c.case)'s reading"
-    } | flatten)
-    $cand ++ $runs ++ $verdicts ++ $cases ++ $named ++ $readings
+    $cand ++ $runs ++ $cases ++ $named
 }
 
-# A record held to the schema and the acceptance, every problem named
-export def check-of [r: any]: nothing -> list<string> {
+# Every kept file the check reads held to its inventory row by SHA-256
+def reopened [bench: path, inventory: string]: nothing -> record<checked: int, problems: list<string>> {
+    if $inventory == "" { return { checked: 0, problems: [] } }
+    let rows = (open $inventory)
+    let read = (glob ($bench | path join "*" "run_*" "*") | where {|f| ($f | path basename) in $RUN_FILES } | append ($bench | path join "bench.nuon"))
+    let problems = ($read | each {|f|
+        let rel = ($f | path relative-to $bench)
+        let row = ($rows | where path == $rel | get -o 0)
+        let sha = (open --raw $f | hash sha256)
+        if $row == null { $"($rel) is no original of the inventory" } else if $row.sha256 != $sha { $"($rel) has SHA-256 ($sha) where the inventory names ($row.sha256)" }
+    } | compact)
+    let absent = ($rows | where {|x| $x.disposition in [kept archived] and (($x.path | path basename) in $RUN_FILES or $x.path == "bench.nuon") and not ($bench | path join $x.path | path exists) } | each {|x| $"($x.path) is kept by the inventory and absent from the bench" })
+    { checked: ($read | length), problems: ($problems ++ $absent) }
+}
+
+# The bench laid out again in `work`: its listing beside every step's report made again
+def rebuilt [bench: path, work: path]: nothing -> nothing {
+    mkdir $work
+    for f in ["bench.nuon" "watch.nuon"] {
+        let at = ($bench | path join $f)
+        if ($at | path exists) { cp $at ($work | path join $f) }
+    }
+    let listed = (open ($bench | path join "bench.nuon"))
+    for s in $listed.steps {
+        let step = ($bench | path join $s.label)
+        if ($step | path type) == "dir" and not (glob ($step | path join "run_*") | is-empty) {
+            gauge read batch $step --label $s.label --out ($work | path join $s.label)
+        }
+    }
+}
+
+# The candidate's record the check reads: the file given, held to the record's SHA-256
+def candidate-file [r: record, given: string, work: path]: nothing -> record<file: string, problems: list<string>> {
+    if $given != "" {
+        let sha = (open --raw $given | hash sha256)
+        let problems = (if $sha != $r.candidate.sha256 { [$"the candidate's record ($given) has SHA-256 ($sha) where the record names ($r.candidate.sha256)"] } else { [] })
+        return { file: ($given | path expand), problems: $problems }
+    }
+    let file = ($work | path join "candidate.nuon")
+    $r.candidate | reject -o file sha256 | to nuon --indent 2 | save --raw -f $file
+    { file: $file, problems: [$"the candidate's record was not reopened: the record's own copy of it stands in"] }
+}
+
+# Where the record's stored answers differ from those derived again, each item with both
+def history-of [stored: record, fresh: record]: nothing -> list<any> {
+    let runs = ($fresh.runs | each {|f|
+        let s = ($stored.runs | where {|x| $x.step == $f.step and $x.run == $f.run } | get -o 0)
+        let name = (matrix run-name $f)
+        if $s == null { return [{ item: $name, stored: null, derived: "present" }] }
+        [
+            (if ($s | get -o standing) != $f.standing { { item: $"($name)'s standing", stored: $s.standing, derived: $f.standing } })
+            (if ($s | get -o verdict.pass) != ($f | get -o verdict.pass) { { item: $"($name)'s verdict", stored: ($s | get -o verdict.pass), derived: ($f | get -o verdict.pass) } })
+            (if ($s | get -o verdict.median_us) != ($f | get -o verdict.median_us) { { item: $"($name)'s median", stored: ($s | get -o verdict.median_us), derived: ($f | get -o verdict.median_us) } })
+        ] | compact
+    } | flatten)
+    let gone = ($stored.runs | where {|s| ($fresh.runs | where {|x| $x.step == $s.step and $x.run == $s.run } | is-empty) } | each {|s| { item: (matrix run-name $s), stored: "present", derived: null } })
+    let cases = ($fresh.cases | each {|f|
+        let s = ($stored.cases | where case == $f.case | get -o 0)
+        let met = {|c: any| if $c == null { null } else if $c.kind == "control" { $c.reading.met } else if $c.kind == "acceptance" { $c.reading.passed } else { $c.reading.read } }
+        [
+            (if (do $met $s) != (do $met $f) { { item: $"($f.case)'s reading", stored: (do $met $s), derived: (do $met $f) } })
+            (if ($s | get -o missing | default [] | length) != ($f.missing | length) { { item: $"($f.case)'s missing runs", stored: ($s | get -o missing | default [] | length), derived: ($f.missing | length) } })
+        ] | compact
+    } | flatten)
+    let bench = (if $stored.bench.problems != $fresh.bench.problems { [{ item: "the bench's problems", stored: $stored.bench.problems, derived: $fresh.bench.problems }] } else { [] })
+    $runs ++ $gone ++ $cases ++ $bench
+}
+
+# A record derived again from its reopened inputs, checked, its ledger recomputed
+export def check-of [r: any, bench: path, work: path, --inventory: string = "", --candidate: string = ""]: nothing -> record {
     let schema = (schema-problems $r)
-    if not ($schema | is-empty) { return $schema }
-    let cand = $r.candidate
+    if not ($schema | is-empty) { return { problems: $schema, ledger: [], verdicts: null, history: [], reopened: null, record: null } }
     let spec = (try { spec row $JAB $r.target } catch { null })
-    if $r.target not-in $TARGETS or $spec == null { return [$"the record's target, ($r.target), is no target of the qualification's matrix"] }
-    let tag = (if $cand.tag == null { ["the candidate is untagged, so no qualification stands on it"] } else { [] })
-    let bench = ($r.bench.problems | each {|p| $"the bench: ($p)" })
-    let acceptance = ($r.cases | where kind == acceptance | each {|c|
-        let missing = ($c.missing | each {|m| $"($c.case): ($m.step) run ($m.run), seed ($m.seed), is missing" })
-        let reseeded = ($c.problems | each {|p| $"($c.case): ($p)" })
-        let judged = ($c.runs | each {|ref|
-            let run = ($r.runs | where {|x| $x.step == $ref.step and $x.run == $ref.run } | get 0)
-            let agreement = (matrix agreement-of $run.identity $cand $r.target $spec)
-            let again = (matrix verdict-of ($run | update agreement $agreement))
-            let name = $"($c.case): (matrix run-name $run), seed ($run.seed)"
-            let drift = (if $agreement != $run.agreement or $again.pass != $run.verdict.pass or $again.problems != $run.verdict.problems {
-                [$"($name): the record's verdict, (if $run.verdict.pass { 'pass' } else { 'fail' }), is not the one its own fields give, (if $again.pass { 'pass' } else { 'fail' })"]
-            } else { [] })
-            $drift ++ ($again.problems | each {|p| $"($name): ($p)" })
-        } | flatten)
-        $missing ++ $reseeded ++ $judged
-    } | flatten)
-    let controls = ($r.cases | where kind == control | each {|c|
-        let reseeded = ($c.problems | each {|p| $"($c.case): ($p)" })
-        let unmet = (if $c.reading.met { [] } else { $c.reading.problems | each {|p| $"($c.case): ($p)" } })
-        $reseeded ++ $unmet
-    } | flatten)
-    let presented = ($r.cases | where kind == diagnostic | each {|c|
-        let reseeded = ($c.problems | each {|p| $"($c.case): ($p)" })
-        let unread = (if $c.reading.read { [] } else { $c.reading.problems | each {|p| $"($c.case): ($p)" } })
-        $reseeded ++ $unread
-    } | flatten)
-    let diagnostics = ($r.diagnostics | each {|d|
-        let unread = (if ($d.readings | is-empty) { [$"($d.case): no normal play route run to read"] } else { [] })
-        $unread ++ ($d.missing | each {|m| $"($d.case): ($m)" })
-    } | flatten)
-    $tag ++ $bench ++ $acceptance ++ $controls ++ $presented ++ $diagnostics
+    if $r.target not-in $TARGETS or $spec == null { return { problems: [$"the record's target, ($r.target), is no target of the qualification's matrix"], ledger: [], verdicts: null, history: [], reopened: null, record: null } }
+    let bench = ($bench | path expand)
+    if not ($bench | path join "bench.nuon" | path exists) { error make { msg: $"($bench) holds no bench.nuon, so it is no bench run's directory" } }
+    let held = (reopened $bench $inventory)
+    rebuilt $bench $work
+    let cand = (candidate-file $r $candidate $work)
+    let fresh = (record record-of $work $cand.file $r.target)
+    let tag = (matrix tag-state $fresh.candidate.tag $fresh.candidate.jab)
+    let ledger = (matrix ledger-of $fresh $tag ($fresh.bench.problems ++ $fresh.conditions.problems ++ $held.problems ++ $cand.problems))
+    let verdicts = (matrix verdicts-of $ledger)
+    let problems = ($ledger | where state == "failed" | each {|x| $x.problems | each {|p| $"($x.row): ($p)" } } | flatten)
+    { problems: $problems, ledger: $ledger, verdicts: $verdicts, history: (history-of $r $fresh), reopened: { inventory: (if $inventory == "" { null } else { $inventory | path expand }), checked: $held.checked, problems: $held.problems }, record: $fresh }
 }
 
-# A record held to the schema and the acceptance, every problem printed
-export def main [record: path] {
-    let problems = (check-of (open $record))
-    for p in $problems { print $"qualification: ($p)" }
-    if not ($problems | is-empty) { error make { msg: $"($record): ($problems | length) problems" } }
-    print $"qualification: ($record) holds"
+# A record checked: derived again from its bench's kept inputs into `out`, its verdicts printed
+export def main [record: path, --bench: string = "", --inventory: string = "", --candidate: string = "", --out: string = ""] {
+    let r = (open $record)
+    let out = (if $out == "" { $record | path expand | path dirname | path join "check" } else { $out | path expand })
+    if ($out | path join $CHECK | path exists) { error make { msg: $"($out) holds a check; a check is written once into an out" } }
+    let bench_dir = (if $bench == "" { $r.bench.dir } else { $bench })
+    let c = (check-of $r $bench_dir ($out | path join "bench") --inventory $inventory --candidate $candidate)
+    if $c.record != null { $c.record | to nuon --indent 1 | save --raw ($out | path join $RECORD) }
+    { checked: ($record | path expand), checked_sha256: (open --raw $record | hash sha256), bench: ($bench_dir | path expand), record: (if $c.record == null { null } else { $out | path join $RECORD }), problems: $c.problems, ledger: $c.ledger, verdicts: $c.verdicts, history: $c.history, reopened: $c.reopened } | to nuon --indent 1 | save --raw ($out | path join $CHECK)
+    for h in $c.history { print $"qualification: the record's ($h.item) reads ($h.stored | to nuon), derived again ($h.derived | to nuon)" }
+    for p in $c.problems { print $"qualification: ($p)" }
+    if $c.verdicts != null {
+        print $"qualification: ($r.target): ($c.verdicts.subset.verdict); ($c.verdicts.final.verdict)"
+    }
+    print $"qualification: ($out | path join $CHECK)"
+    if not ($c.problems | is-empty) { error make { msg: $"($record): ($c.problems | length) problems" } }
 }

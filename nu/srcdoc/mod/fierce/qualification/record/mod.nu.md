@@ -1,21 +1,20 @@
 # mod.nu
 
 One target's qualification record from a bench run of the game's qualification
-bench: every run with its standing, its identity, and that identity's agreement
-with the candidate and the target; each case of the matrix with its runs; every
-acceptance run's verdict; the controls' and the diagnostics' readings; the host;
-and the limits. `main` writes it as qualification.nuon and prints the count of
-problems its check names.
-
-## def flag-of
-
-The value after a flag among a step's words, null where it is absent.
+bench: every run with its standing, its identity, that identity's agreement
+with the candidate and the target, and its conditions against its step; each
+case of the matrix with its runs; every acceptance run's verdict; the controls'
+and the diagnostics' readings; the bench's one host and one QEMU and each case's
+one backend; the host; the limits; and its own ledger and verdicts. `main`
+writes it as qualification.nuon and prints the record's own verdicts; the
+check derives them again from the reopened inputs.
 
 ## def expected-of
 
 The runs a step's words ask for, the gauge's defaults where they name
 none: `run` its `--runs`, 3 unless given, each run n played at its n of
-`--seeds`, else n; `play` one run at its `--seed`, else 1.
+`--seeds`, else n; `play` one run at its `--seed`, else 1. The verb is
+matrix's step-verb, in either word shape.
 
 ## def identity-summary
 
@@ -29,13 +28,28 @@ the toolchain; the host; the mode; and the capture's shim and nonce.
 
 A run's directory as its report's run-dirs find it, null where none is.
 
+## def step-words
+
+A step's words: the definition's at the candidate's commit, a packaged
+run's as its package reads them, else the bench run's own.
+
 ## def step-runs
 
 A bench step's runs as the record keeps them (record-of): each run of
 its gauge.nuon read through run-request, its standing and reasons as the
 bench-doc classified it, its identity (identity-summary) and that
 identity's agreement with the candidate and the target (agreement-of),
-whether it was probed, its bundle, its measurement, and its CPU windows.
+its conditions against its step's words (conditions-of), its backend,
+the window and the audio driver its run record names, whether it was
+probed, its bundle, its measurement, and its CPU windows.
+
+## def condition-problems
+
+The bench's one host and one QEMU, by each identity's hostname and its
+QEMU's version and binary SHA-256, and each case's one backend: a bench
+that ran on two hosts or two QEMUs, or a case holding two backends,
+offscreen against a window or two audio drivers, mixes conditions no
+verdict may pool, each named.
 
 ## def bench-problems
 
@@ -109,9 +123,13 @@ watch.nuon in its directory, null where the bench ran unwatched.
 
 One target's qualification record from a bench run (the file header):
 `bench` the run's directory, `candidate` the candidate's record file,
-`target` its named spec.
+`target` its named spec. A bench run from a host package (bench.nuon's
+`package`) is held to the candidate's bench file as its package runs it
+(packaged-bench at the package's directory). Its ledger is matrix's
+ledger-of over the record, the tag's state, and the bench's and the
+conditions' problems; its verdicts verdicts-of's.
 
 ## def main
 
 A target's record (record-of), written as qualification.nuon in `out`,
-its check's problems printed after it.
+the record's own verdicts printed after it.

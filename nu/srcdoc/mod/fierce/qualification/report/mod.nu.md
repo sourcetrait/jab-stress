@@ -1,10 +1,12 @@
 # mod.nu
 
-The report over the targets' records, written for its reader as a public
-document: the candidate, then a section a target with its verdict, its runs, the
-route by leg, the tails, the presentation, the CPU, the tile pool, the host, the
-worker scaling, the problems, and the limits. `main` writes it to the last path
-given.
+The report over the targets' checks, written for its reader as a public
+document: the candidate, then a section a target with its final verdict, the
+preparation subset's apart, the obligations, its runs, the route by leg, the
+tails, the presentation, the CPU, the tile pool, the host, the worker scaling,
+the problems, the record's own answers that differ, and the limits. Every
+section reads the record the check derived, never a stored one. `main` writes it
+to the last path given.
 
 ## def median-of
 
@@ -27,13 +29,19 @@ bench ran unwatched or its reports hold none.
 
 A table in Markdown from its header and rows of cells.
 
+## def sentence
+
 ## def target-section
 
 One target's section of the report (report-text), public-production
-writing for TheUser: the verdict, every acceptance run's, the route by
-leg, the tails, the presentation and its shim control, the CPU beside
-the guest's waits, the tile pool, the host, the worker scaling control,
-the problems the check names, and the limits. The presentation states
+writing for TheUser, from a check and the record it derived: the final
+verdict its opening sentence, the preparation subset's beside it and
+never in its place (ObligationLedger), the obligations a table, every
+acceptance run's verdict, the route by leg, the tails, the presentation
+and its shim control, the CPU beside the guest's waits, the tile pool,
+the host, the worker scaling control, the problems the check names, the
+record's stored answers that differ from those derived again, and the
+limits. The presentation states
 the bundles, then a row for each probed run read whole, its pairing's
 verdict, its frames shown with their share, superseded with the longest
 run of them, the repeats, and the age's and the presented interval's
@@ -42,12 +50,13 @@ left unread, whose reasons are among the problems.
 
 ## def report-text
 
-The report for TheUser over the targets' records (Qualification.md's
+The report for TheUser over the targets' checks (Qualification.md's
 reports), public-production writing: the candidate, then a section a
-target in the records' order; with `compared` a comparison `gauge
+target in the checks' order; with `compared` a comparison `gauge
 compare` wrote, its table rendered as the comparison with the first
 baseline.
 
 ## def main
 
-The report over records (report-text), the last path its Markdown file.
+The report over checks (report-text), the last path its Markdown file; a
+check that derived no record is refused.

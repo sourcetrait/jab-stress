@@ -3,24 +3,17 @@ use (path self ../../../../../../jab/nu/mod/identity)
 use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge)
 use (path self ../../observer)
 use (path self ../../proberuns)
-use (path self ../check)
 use (path self ../matrix)
 use (path self ../matrix) [CASES DIAGNOSTICS JAB LIMITS RECORD STRESS TARGETS]
 
-# The value after a flag among a step's words, null where it is absent
-def flag-of [words: list<string>, flag: string]: nothing -> any {
-    let at = ($words | enumerate | where item == $flag | get -o 0.index)
-    if $at == null { null } else { $words | get -o ($at + 1) }
-}
-
 # The runs a step's words ask for, the gauge's defaults where none named
 export def expected-of [words: list<string>]: nothing -> record<kind: string, runs: list<any>> {
-    let verb = ($words | get -o 1)
+    let verb = (matrix step-verb $words)
     if $verb == "play" {
-        return { kind: "play", runs: [{ run: 1, seed: (flag-of $words "--seed" | default "1" | into int) }] }
+        return { kind: "play", runs: [{ run: 1, seed: (matrix flag-of $words "--seed" | default "1" | into int) }] }
     }
-    let count = (flag-of $words "--runs" | default "3" | into int)
-    let seeds = (flag-of $words "--seeds" | default "[]" | from nuon)
+    let count = (matrix flag-of $words "--runs" | default "3" | into int)
+    let seeds = (matrix flag-of $words "--seeds" | default "[]" | from nuon)
     { kind: "route", runs: (1..$count | each {|n| { run: $n, seed: ($seeds | get -o ($n - 1) | default $n) } }) }
 }
 
@@ -44,8 +37,14 @@ def dir-of [file: path, r: record]: nothing -> any {
     gauge identity dirs $file $r | where {|d| ($d | path type) == "dir" } | get -o 0
 }
 
+# A step's words: the definition's at the candidate's commit, else the bench run's own
+def step-words [label: string, listed: record, definition: any]: nothing -> list<string> {
+    let defined = ($definition | get -o steps | default [] | where label == $label | get -o 0.run)
+    if $defined != null { $defined } else { $listed.steps | where label == $label | get -o 0.run | default [] }
+}
+
 # A bench step's runs as the record keeps them
-def step-runs [step: record, doc: record, candidate: record, target: string, spec: record]: nothing -> list<any> {
+def step-runs [step: record, doc: record, candidate: record, target: string, spec: record, words: list<string>]: nothing -> list<any> {
     if $step.file == null { return [] }
     let g = (open $step.file)
     $g.runs | each {|r|
@@ -54,15 +53,32 @@ def step-runs [step: record, doc: record, candidate: record, target: string, spe
         let id = (identity-summary $req)
         let dir = (dir-of $step.file $r)
         let bundle = (if $dir == null { null } else { $dir | path join "bundle" })
+        let ran = ($r | get -o ran | default {})
         {
             step: $step.label, run: $r.run, seed: ($r | get -o seed),
             kind: ($classed | get -o kind), selection: $req.selection, cadence: $req.cadence, workers: $req.workers, grain: $req.grain,
             standing: ($classed | get -o standing | default "unclassified"), reasons: ($classed | get -o reasons | default []),
             probed: $req.probed, dir: $dir, bundle: (if $bundle != null and ($bundle | path type) == "dir" { $bundle } else { null }),
-            identity: $id, agreement: (matrix agreement-of $id $candidate $target $spec),
+            identity: $id, agreement: (matrix agreement-of $id $candidate $target $spec), conditions: (matrix conditions-of $id $ran $words),
+            backend: { window: ($ran | get -o window), audio: ($ran | get -o audio | default "" | split row "," | first) },
             measured: ($r | get -o measured), cpu: ($r | get -o cpu),
         }
     }
+}
+
+# The bench's one host and one QEMU and each case's one backend, else each named
+def condition-problems [runs: list<any>, cases: list<any>]: nothing -> record {
+    let hosts = ($runs | each {|r| $r.identity.host | get -o hostname } | uniq)
+    let qemus = ($runs | each {|r| { version: ($r.identity.qemu | get -o version), sha256: ($r.identity.qemu | get -o sha256) } } | uniq)
+    let backends = ($cases | each {|c|
+        let these = ($runs | where {|r| ($c.runs | any {|x| $x.step == $r.step and $x.run == $r.run }) })
+        { case: $c.case, backends: ($these | get backend | uniq) }
+    })
+    let problems = ([
+        (if ($hosts | length) > 1 { $"the bench ran on ($hosts | length) hosts, ($hosts | str join ', '), where a bench runs on one" })
+        (if ($qemus | length) > 1 { $"the bench ran ($qemus | length) QEMUs, ($qemus | each {|q| $'($q.version | default 'unrecorded') of SHA-256 ($q.sha256 | default 'unrecorded')' } | str join '; '), where a bench runs one" })
+    ] | compact) ++ ($backends | where {|b| ($b.backends | length) > 1 } | each {|b| $"($b.case) holds ($b.backends | length) backends, ($b.backends | each {|x| $'($x.window) with ($x.audio)' } | str join '; '), where a case holds one" })
+    { hosts: $hosts, qemus: $qemus, backends: $backends, problems: $problems }
 }
 
 # The bench run held to the candidate's bench file, each problem named
@@ -190,9 +206,10 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
     let spec = (spec row $JAB $target)
     let defined = (matrix jab-file $cand.jab $"kit/fierce/bench/qual_($target).nuon"
         | default (matrix jab-file $cand.jab $"game/fps/bench/qual_($target).nuon"))
-    let definition = (if $defined == null { null } else { $defined | from nuon })
+    let package = ($listed | get -o package)
+    let definition = (if $defined == null { null } else if $package == null { $defined | from nuon } else { matrix packaged-in (matrix packaged-bench ($defined | from nuon) $target) $package })
     let doc = (gauge bench doc $bench)
-    let runs = ($doc.steps | each {|s| step-runs $s $doc $cand $target $spec } | flatten)
+    let runs = ($doc.steps | each {|s| step-runs $s $doc $cand $target $spec (step-words $s.label $listed $definition) } | flatten)
     let runs = ($runs | each {|r|
         let acceptance = ($CASES | where kind == acceptance | any {|c| $r.step in ($c.steps | get $target) })
         if $acceptance { $r | insert verdict (matrix verdict-of $r) } else { $r }
@@ -211,7 +228,9 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
     })
     let normal = ($CASES | where case == "normal play" | get 0.steps | get $target)
     let routed = ($runs | where {|r| $r.step in $normal and $r.kind == "route" })
-    {
+    let conditions = (condition-problems $runs $cases)
+    let bench_problems = (bench-problems $listed $definition)
+    let r = {
         target: $target,
         written: (date now | format date "%Y-%m-%dT%H:%M:%S%z"),
         readers: (identity reader [$STRESS $JAB] --launches),
@@ -223,8 +242,9 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
                 let file = ($bench | path join $s.label "gauge.nuon")
                 { label: $s.label, state: $s.state, exit: ($s | get -o exit), seconds: ($s | get -o seconds), run: $s.run, gauge: (if ($file | path exists) { $file } else { null }), gauge_sha256: (matrix sha-of $file) }
             }),
-            problems: (bench-problems $listed $definition),
+            problems: $bench_problems,
         },
+        conditions: $conditions,
         hosts: {
             hosts: ($runs | each {|r| $r.identity.host } | uniq),
             qemus: ($runs | each {|r| $r.identity.qemu } | uniq),
@@ -238,14 +258,15 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
         diagnostics: ($DIAGNOSTICS | each {|d| diagnostic-reading $d $routed }),
         limits: $LIMITS,
     }
+    let ledger = (matrix ledger-of $r (matrix tag-state $cand.tag $cand.jab) ($bench_problems ++ $conditions.problems))
+    $r | insert ledger $ledger | insert verdicts (matrix verdicts-of $ledger)
 }
 
-# A target's record written to `out`, its check's problems printed
+# A target's record written to `out`, its own verdicts printed
 export def main [bench: path, candidate: path, target: string, out: path] {
     mkdir $out
     let r = (record-of $bench $candidate $target)
     let file = ($out | path join $RECORD)
     $r | to nuon --indent 1 | save --raw $file
-    let problems = (check check-of $r)
-    print $"qualification: ($r.target), ($r.runs | length) runs, ($problems | length) problems the check names; ($file)"
+    print $"qualification: ($r.target), ($r.runs | length) runs; the record reads ($r.verdicts.subset.verdict), and ($r.verdicts.final.verdict); `check` derives both again from the reopened inputs; ($file)"
 }

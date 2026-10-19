@@ -39,6 +39,55 @@ export const DIAGNOSTICS = [
     ["worker balance", [], [frames workers grains raster slowest busy dispatch barrier]]
 ]
 
+# Every final obligation past the bench's cases: its kind, and by target its dependency or its reason
+export const OBLIGATIONS = [
+    [row, kind, state, why];
+    ["service active", acceptance, {"1ka1": "not applicable", "1kb1": pending}, {"1ka1": "1KA1's three harts hold the main hart and the two reserved graphics harts, so no feature is admitted there (TheUser's spec model)", "1kb1": "SceneOwnership's service and its load"}]
+    ["feature unavailable", control, {"1ka1": pending, "1kb1": "not applicable"}, {"1ka1": "SceneOwnership's service, its refusal on 1KA1's harts", "1kb1": "1KB1's seven harts admit the feature, so its refusal is 1KA1's row"}]
+    ["audio", control, {"1ka1": pending, "1kb1": pending}, {"1ka1": "RegressionSuite's service-holds and TheUser's host", "1kb1": "RegressionSuite's service-holds and TheUser's host"}]
+    ["the parity", correctness, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the parity tool on both maps' still copies at the freeze", "1kb1": "the parity tool on both maps' still copies at the freeze"}]
+    ["the OWNER captures", correctness, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the OWNER captures at the freeze", "1kb1": "the OWNER captures at the freeze"}]
+    ["the fps suite on the target", correctness, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the fps suite on 1KA1 at the freeze", "1kb1": "the fps suite on 1KB1 at the freeze"}]
+    ["the freeze's fps suite", freeze, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the fps suite at the tagged candidate", "1kb1": "the fps suite at the tagged candidate"}]
+    ["the freeze's root suite", freeze, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the root suite at the tagged candidate", "1kb1": "the root suite at the tagged candidate"}]
+    ["TheUser's Linux host", host, {"1ka1": pending, "1kb1": pending}, {"1ka1": "his host's bench on 1KA1, its probed runs bundled (U1)", "1kb1": "his host's bench on 1KB1, its probed runs bundled (U1)"}]
+    ["the Windows runs", host, {"1ka1": pending, "1kb1": pending}, {"1ka1": "WindowsHost, PadWindows, and his host (U4)", "1kb1": "WindowsHost, PadWindows, and his host (U4)"}]
+    ["the reports and the evidence package", reports, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the reports from the final records and the evidence package landed (EvidenceRetention)", "1kb1": "the reports from the final records and the evidence package landed (EvidenceRetention)"}]
+]
+
+# The bench's verb in a step's words, play or run, whatever script names it
+export def step-verb [words: list<string>]: nothing -> any {
+    $words | skip 1 | where {|w| $w in [play run] } | get -o 0
+}
+
+# The guest inputs every packaged step takes, by their places in the package
+export const PACKAGED = {
+    image: "fierce/fierce.jab", kernel: "kernel/jab.elf", assets: "asset/render_0", route: "route/route_render_0.nuon",
+}
+
+# The candidate's bench as its package runs it: the preflight first, every run naming the package's inputs, nothing built
+export def packaged-bench [definition: record, target: string]: nothing -> record {
+    let at = {|rel: string| $"{package}/($rel)" }
+    let inputs = ["--image" (do $at $PACKAGED.image) "--kernel" (do $at $PACKAGED.kernel) "--assets" (do $at $PACKAGED.assets)]
+    let route = ["--route" (do $at $PACKAGED.route)]
+    let preflight = {
+        label: "preflight", gate: true,
+        run: ["../../nu/bin/nuance/package.nu" "preflight" "{package}" "--spec" $target "--image" $PACKAGED.image "--kernel" $PACKAGED.kernel "--tree" $PACKAGED.assets "--serial" "fps" "--bench" $"bench/qual_($target).nuon"],
+    }
+    $definition | upsert build "none" | update steps ([$preflight] ++ ($definition.steps | each {|s| $s | update run ($s.run ++ $inputs ++ (if (step-verb $s.run) == "run" { $route } else { [] })) }))
+}
+
+# A packaged bench's words as a run of it at `package` reads them
+export def packaged-in [definition: record, package: string]: nothing -> record {
+    $definition | update steps ($definition.steps | each {|s| $s | update run ($s.run | each {|w| $w | str replace --all "{package}" $package }) })
+}
+
+# The value after a flag among a step's words, null where it is absent
+export def flag-of [words: list<string>, flag: string]: nothing -> any {
+    let at = ($words | enumerate | where item == $flag | get -o 0.index)
+    if $at == null { null } else { $words | get -o ($at + 1) }
+}
+
 # What a qualification record cannot claim, stated with every reading
 export const LIMITS = [
     "The physical display is not qualified. TheUser's eye is a qualitative reading and never a measured 60 frames a second."
@@ -106,14 +155,52 @@ export def agreement-of [id: record, candidate: record, target: string, spec: re
     ] | compact
 }
 
+# Whether a value is a finite number
+def finite [v: any]: nothing -> bool {
+    ($v | describe) in [int float] and $v == $v and $v != inf and $v != -inf
+}
+
+# Where a run's identity and record differ from its step's words, each named
+export def conditions-of [id: record, ran: any, words: list<string>]: nothing -> list<string> {
+    let play = ((step-verb $words) == "play")
+    let host = ($play or ("--host" in $words))
+    let forced = (flag-of $words "--workers")
+    let workers = (if $forced == null { null } else { $forced | into int })
+    let cadence = (flag-of $words "--cadence" | default "1" | into int)
+    let probed = ("--sdl-probe" in $words)
+    let mode = ($id.mode | default {})
+    let pad = (if $play { "host" } else { "route" })
+    let sound = (if $host { "host" } else { "recorded" })
+    [
+        (if ($mode | get -o workers) != $workers { $"it asked (if ($mode | get -o workers) == null { 'the automatic workers' } else { $'($mode.workers) workers' }) where its step asks (if $workers == null { 'the automatic ones' } else { $'($workers)' })" })
+        (if ($mode | get -o cadence) != $cadence { $"it played cadence ($mode | get -o cadence | default 'unrecorded') where its step asks ($cadence)" })
+        (if ($mode | get -o window) != $host { $"its window was (if ($mode | get -o window) == true { 'on' } else { 'off' }) where its step asks it (if $host { 'on' } else { 'off' })" })
+        (if ($mode | get -o sound) != $sound { $"its sound was ($mode | get -o sound | default 'unrecorded') where its step asks ($sound)" })
+        (if ($mode | get -o pad) != $pad { $"its pad was ($mode | get -o pad | default 'unrecorded') where its step asks ($pad)" })
+        (if (($id.shim | default "") != "") != $probed { $"it ran (if $probed { 'without' } else { 'with' }) the sdl probe where its step (if $probed { 'probes' } else { 'probes nothing' })" })
+    ] | compact
+}
+
+# A tag resolved in jab against the candidate's commit: met, pending, or failed
+export def tag-state [tag: any, commit: string]: nothing -> record<state: string, why: string> {
+    if $tag == null { return { state: "pending", why: "the candidate carries no qual tag, so no freeze stands" } }
+    let named = (^git -C $JAB rev-parse $"($tag)^{commit}" | complete)
+    if $named.exit_code != 0 { return { state: "failed", why: $"jab holds no tag ($tag)" } }
+    let at = ($named.stdout | str trim)
+    if $at != $commit { return { state: "failed", why: $"($tag) names ($at) in jab, where the candidate is ($commit)" } }
+    { state: "met", why: $"($tag) names the candidate's commit in jab" }
+}
+
 # An acceptance run's verdict: valid, the candidate's, under the ceiling
 export def verdict-of [run: record]: nothing -> record {
     let whole = ($run.measured | get -o whole)
     let median = ($whole | get -o critical.median)
-    let under = (if $run.standing == "valid" and $median != null { gauge report under-ceiling $median } else { null })
+    let under = (if $run.standing == "valid" and (finite $median) { gauge report under-ceiling $median } else { null })
     let problems = ([
         (if $run.standing != "valid" { $"it stands ($run.standing): ($run.reasons | str join '; ')" })
+        (if $run.standing == "valid" and not (finite $median) { "it holds no play median, a finite median over a valid play window" })
         ...$run.agreement
+        ...($run | get -o conditions | default [])
         (if $under == false { $"its critical path's median, (ms $median) ms, is at or over the ($CEILING_US // 1000) ms ceiling" })
     ] | compact)
     { pass: ($problems | is-empty), median_us: $median, ceiling_us: $CEILING_US, under: $under, over: ($run.measured | get -o over), frames: ($run.measured | get -o frames), problems: $problems }
@@ -122,4 +209,56 @@ export def verdict-of [run: record]: nothing -> record {
 # A run named for reading
 export def run-name [r: record]: nothing -> string {
     $"($r.step) run ($r.run)"
+}
+
+# A case's problems from a record: its missing and reseeded runs, its verdicts or reading
+export def case-problems [r: record, c: record]: nothing -> list<string> {
+    let missing = ($c.missing | each {|m| $"($m.step) run ($m.run), seed ($m.seed), is missing" })
+    let reseeded = $c.problems
+    let judged = (match $c.kind {
+        "acceptance" => ($c.runs | each {|ref|
+            let run = ($r.runs | where {|x| $x.step == $ref.step and $x.run == $ref.run } | get 0)
+            $run.verdict.problems | each {|p| $"(run-name $run), seed ($run.seed): ($p)" }
+        } | flatten)
+        "control" => (if $c.reading.met { [] } else { $c.reading.problems })
+        _ => (if $c.reading.read { [] } else { $c.reading.problems })
+    })
+    if $c.kind == "acceptance" { $missing ++ $reseeded ++ $judged } else { $reseeded ++ $judged }
+}
+
+# A diagnostic's problems: no route run to read, or a leg a run lacks
+export def diagnostic-problems [d: record]: nothing -> list<string> {
+    let unread = (if ($d.readings | is-empty) { ["no normal play route run to read"] } else { [] })
+    $unread ++ $d.missing
+}
+
+# Every final obligation on the record's target a row: its state and its ground
+export def ledger-of [r: record, tag: record, held: list<string>]: nothing -> list<any> {
+    let row = {|name: string, kind: string, carried: bool, problems: list<string>, evidence: list<string>|
+        { row: $name, kind: $kind, carried: $carried, state: (if ($problems | is-empty) { "met" } else { "failed" }), evidence: $evidence, why: "", problems: $problems }
+    }
+    let cases = ($r.cases | each {|c| do $row $c.case $c.kind true (case-problems $r $c) ($c.runs | each {|x| $"($x.step) run ($x.run)" }) })
+    let diagnostics = ($r.diagnostics | each {|d| do $row $d.case "diagnostic" true (diagnostic-problems $d) ($d.readings | each {|x| $x.name } | uniq) })
+    let bench = (do $row "the bench held to its definition" "freeze" true $held [$"the bench file at ($r.candidate.jab | str substring 0..<10)"])
+    let tagged = { row: "the tagged candidate", kind: "freeze", carried: false, state: $tag.state, evidence: (if $tag.state == "met" { [$r.candidate.tag] } else { [] }), why: (if $tag.state == "met" { "" } else { $tag.why }), problems: (if $tag.state == "failed" { [$tag.why] } else { [] }) }
+    let others = ($OBLIGATIONS | each {|o| { row: $o.row, kind: $o.kind, carried: false, state: ($o.state | get $r.target), evidence: [], why: ($o.why | get $r.target), problems: [] } })
+    $cases ++ $diagnostics ++ [$bench $tagged] ++ $others
+}
+
+# The preparation subset's verdict and the final one, read from a ledger
+export def verdicts-of [ledger: list<any>]: nothing -> record {
+    let carried = ($ledger | where carried)
+    let unmet = ($carried | where {|x| $x.state not-in ["met" "not applicable"] } | get row)
+    let failed = ($ledger | where state == "failed" | get row)
+    let pending = ($ledger | where state == "pending" | each {|x| { row: $x.row, dependency: $x.why } })
+    let subset = (if ($unmet | is-empty) { "the preparation subset passes" } else { $"the preparation subset does not pass: ($unmet | str join ', ')" })
+    let final = (if not ($failed | is-empty) {
+        $"qualification does not pass: ($failed | str join ', ')"
+    } else if not ($pending | is-empty) {
+        $"qualification incomplete: ($pending | each {|p| $'($p.row), pending ($p.dependency)' } | str join '; ')"
+    } else { "qualification passes" })
+    {
+        subset: { rows: ($carried | get row), passes: ($unmet | is-empty), verdict: $subset },
+        final: { passes: (($failed | is-empty) and ($pending | is-empty)), failed: $failed, pending: $pending, verdict: $final },
+    }
 }

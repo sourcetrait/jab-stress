@@ -12,15 +12,23 @@ standalone so its closures run in a nu that loads no other module.
 
 `nu/bin/nuance/fierce/qualification.nu record`, its parameters `bench: path,
 candidate: path, target: string, out: path`: A target's record written to `out`,
-its check's problems printed.
+its own verdicts printed.
 
 ## def main check
 
-`nu/bin/nuance/fierce/qualification.nu check`, its parameters `record: path`: A
-record held to the schema and the acceptance, every problem printed.
+`nu/bin/nuance/fierce/qualification.nu check`, its parameters `record: path,
+--bench: string = "", --inventory: string = "", --candidate: string = "", --out:
+string = ""`: A record derived again from its bench's reopened inputs, its
+ledger checked.
 
 ## def main report
 
 `nu/bin/nuance/fierce/qualification.nu report`, its parameters `...paths: path,
---compared: string = ""`: The report over records, the last path its Markdown
+--compared: string = ""`: The report over checks, the last path its Markdown
 file.
+
+## def main package
+
+`nu/bin/nuance/fierce/qualification.nu package`, its parameters `candidate:
+path, export: path, target: string, out: path, --stage: string = ""`: The
+candidate's host package for a target, one tar from its export.

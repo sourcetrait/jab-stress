@@ -1,4 +1,3 @@
-use (path self ../check)
 use (path self ../matrix)
 
 # A list's median by nearest rank, null for no values
@@ -31,18 +30,29 @@ def md-table [header: list<string>, rows: list<list<string>>]: nothing -> list<s
     [(do $line $header) (do $line ($header | each { "---" }))] ++ ($rows | each {|row| do $line $row })
 }
 
-# One target's section of the report
-def target-section [r: record]: nothing -> list<string> {
+# A sentence's first letter capitalized and a full stop after it
+def sentence [s: string]: nothing -> string {
+    $"($s | str capitalize)."
+}
+
+# One target's section of the report, from its check and the record it derived
+def target-section [c: record]: nothing -> list<string> {
+    let r = (open $c.record)
     let name = ($r.spec.name | str uppercase)
-    let problems = (check check-of $r)
+    let problems = $c.problems
     let acceptance = ($r.runs | where {|x| ($x | get -o verdict) != null })
     let passed = ($acceptance | where {|x| $x.verdict.pass } | length)
-    let missing = ($r.cases | where kind == acceptance | get missing | flatten | length)
-    let verdict = (if ($problems | is-empty) {
-        $"The qualification on ($name) passes. Every one of its ($acceptance | length) acceptance runs played under the 15 ms ceiling at its median frame."
-    } else {
-        $"The qualification on ($name) does not pass. ($passed) of its ($acceptance | length) acceptance runs pass, ($missing) expected runs are missing, and the check names ($problems | length) problems below."
-    })
+    let verdict = $"On ($name), (sentence $c.verdicts.final.verdict)"
+    let subset = $"Its bench carries the preparation subset, ($c.verdicts.subset.rows | length) of the ($c.ledger | length) obligations: (sentence $c.verdicts.subset.verdict) ($passed) of its ($acceptance | length) acceptance runs pass."
+    let ledger_table = (md-table ["Obligation" "Kind" "State" "Ground"] ($c.ledger | each {|x|
+        let ground = (match $x.state {
+            "met" => ($x.evidence | str join ", ")
+            "failed" => ($x.problems | str join "; ")
+            _ => $x.why
+        })
+        [$x.row $x.kind $x.state (if $ground == "" { "-" } else { $ground })]
+    }))
+    let history = ($c.history | each {|h| $"- The record's ($h.item) reads ($h.stored | to nuon), and derived again from its inputs ($h.derived | to nuon)." })
     let done = ($r.bench.steps | where state == "done" | length)
     let bench_line = $"The bench ($r.bench.bench | default 'with no name') ran at ($r.bench.stamp | default 'an unrecorded time'). ($done) of its ($r.bench.steps | length) steps ran to their end."
     let runs_table = (md-table ["Run" "Seed" "Median frame" "Frames at or over 15 ms" "Verdict"] ($acceptance | each {|x|
@@ -103,7 +113,14 @@ def target-section [r: record]: nothing -> list<string> {
         $"## ($name)"
         ""
         $verdict
+        $subset
         $bench_line
+        ""
+        "### The obligations"
+        ""
+        "Every final obligation of the qualification on this target is a row: met on its evidence, failed with its problems, pending on its dependency, or not applicable for its reason. Qualification passes only when every row is met or not applicable."
+        ""
+    ] ++ $ledger_table ++ [
         ""
         "### The acceptance runs"
         ""
@@ -163,14 +180,20 @@ def target-section [r: record]: nothing -> list<string> {
         ""
     ] ++ (if ($problems | is-empty) { ["The check names no problem."] } else { $problems | each {|p| $"- ($p | str capitalize)." } }) ++ [
         ""
+        "### The record's own answers"
+        ""
+        "The check derives the record again from its reopened inputs under the current readers. Where the record's stored answer differs, both are shown; the stored one is its own reader's answer and fails nothing."
+        ""
+    ] ++ (if ($history | is-empty) { ["Every stored answer is the one derived again."] } else { $history }) ++ [
+        ""
         "### Limits"
         ""
     ] ++ ($r.limits | each {|l| $"- ($l)" }) ++ [""]
 }
 
-# The report over the targets' records, a section a target
-export def report-text [records: list<record>, compared: any]: nothing -> string {
-    let cand = ($records | first | get candidate)
+# The report over the targets' checks, a section a target
+export def report-text [checks: list<record>, compared: any]: nothing -> string {
+    let cand = (open ($checks | first | get record) | get candidate)
     let head = [
         $"# Jab FPS qualification(if $cand.tag == null { '' } else { $': ($cand.tag)' })"
         ""
@@ -194,15 +217,17 @@ export def report-text [records: list<record>, compared: any]: nothing -> string
             ""
         ] ++ (md-table ["Build" "Leg" "Value"] ($c.table | each {|t| [$"($t.build)" $t.leg (if $t.value_us == null { "-" } else { $"(matrix ms $t.value_us) \((matrix ms $t.half_spread_us)\)" })] })) ++ [""]
     })
-    ($head ++ ($records | each {|r| target-section $r } | flatten) ++ $comparison) | str join "\n"
+    ($head ++ ($checks | each {|c| target-section $c } | flatten) ++ $comparison) | str join "\n"
 }
 
-# The report over records, the last path its Markdown file
+# The report over checks, the last path its Markdown file
 export def main [...paths: path, --compared: string = ""] {
-    if ($paths | length) < 2 { error make { msg: "report takes one record or more, then the report's file" } }
+    if ($paths | length) < 2 { error make { msg: "report takes one check or more, then the report's file" } }
     let out = ($paths | last)
-    let records = ($paths | drop 1 | each {|p| open $p })
+    let checks = ($paths | drop 1 | each {|p| open $p })
+    let unchecked = ($checks | where {|c| ($c | get -o record) == null })
+    if not ($unchecked | is-empty) { error make { msg: "a check that derived no record cannot be reported: its schema or target was refused" } }
     let c = (if $compared == "" { null } else { open $compared })
-    report-text $records $c | save --raw -f $out
+    report-text $checks $c | save --raw -f $out
     print $"qualification: ($out)"
 }

@@ -1,10 +1,18 @@
 # mod.nu
 
-A record held to the schema and the acceptance: its fields, the candidate
-tagged, the bench the candidate's bench file, every acceptance run present,
-valid, on its target, the candidate's, and passing by its own fields, every
-control met, and every diagnostic read, each problem named. `main` prints them
-and fails when there is one.
+A record derived again from its bench's reopened inputs and checked
+(RederivedChecks): the definition the candidate's bench file at its commit and
+the matrix; every kept input the check reads held to the run's inventory by
+SHA-256; every step's report made again by the batch reread; the record derived
+again under the current readers; its ledger and its two verdicts recomputed; the
+record's own stored answers that differ kept as history. `main` writes the
+derived record and `check.nuon` beside it and fails on a problem.
+
+## const CHECK
+
+## const RUN_FILES
+
+The files a kept run's reading opens, which the inventory's SHA-256 holds.
 
 ## def lacking
 
@@ -12,24 +20,60 @@ The fields a value lacks of those named, each named where it sits.
 
 ## def schema-problems
 
-A record's schema: the record's fields, each run's, each acceptance
-run's verdict, each case's, and the presentation's reading, ProbeRuns'
-reader's runs, cadences, and unread runs beside the bundles, so a record
-written before that reader joined is named as lacking them; every field it
-lacks named.
+A record's schema: the record's fields, each run's, each case's, and the
+matrix's cases present, so a record no reader can derive again is refused
+before anything is reopened.
+
+## def reopened
+
+Every kept file the check reads, bench.nuon and each run's stream,
+identity, route, and run record, held to its row in the run's inventory
+by SHA-256, a file the inventory keeps and the bench lacks named too: a
+reopened input whose digest differs is the captured data itself, a
+problem. With no inventory, a bench not yet landed, the files are read as
+found.
+
+## def rebuilt
+
+The bench laid out again in `work`: its bench.nuon and watch.nuon copied,
+each step's report made again from its kept runs (gauge read batch), so
+the record is derived from the streams and never from a stored report, and
+the bench's own directory is never written.
+
+## def candidate-file
+
+The candidate's record the check reads: the file given, its SHA-256 held to
+the one the record names; with none given, the record's own copy stands in
+and the check says so, since a stored copy is not a reopened input.
+
+## def history-of
+
+Where a record's stored answers differ from those derived again: each
+run's standing, verdict, and median, each case's reading and missing
+runs, and the bench's problems, both values kept. The stored answer is
+its own reader's at its revision, the record's `readers`, and fails
+nothing: the current evidence is judged under the current rules (Astra's
+review 15).
 
 ## def check-of
 
-A record held to the schema and the acceptance: its schema
-(schema-problems); the candidate tagged; the bench the candidate's bench
-file, every step done; every acceptance run present, valid, on the
-target's named spec, its identity the candidate's, and passing, its
-verdict the one its own fields give (verdict-of, agreement-of); every
-control met; every diagnostic's legs read. The readers that wrote it
-are its provenance alone. Every problem named, none for a record that
-holds.
+A record checked: its schema and target; its bench's inputs reopened
+(reopened); every step made again (rebuilt); the candidate's record
+(candidate-file); the record derived again (record's record-of) over the
+rebuilt bench, which holds every run to its step's conditions, the bench
+to the candidate's bench file, the bench to one host and one QEMU, and
+each case to one backend; the tag resolved (tag-state); the ledger over
+the derived record with every problem of the bench, its conditions, its
+inputs, and its candidate; the verdicts; every failed row's problems the
+check's problems. A pending row is no problem: the final verdict names it.
 
 ## def main
 
-A record held to the schema and the acceptance (check-of): every problem
-printed, and an error naming their count when there is one.
+A record checked into `out`, beside the record unless given, written
+once: the derived record as qualification.nuon and `check.nuon`, the
+record checked and its SHA-256, the bench read, the problems, the ledger,
+the verdicts, the history, and the inputs reopened; each history item,
+each problem, and both verdicts printed; an error naming the problems'
+count when there is one. `--bench` a relocated bench, a restoration's,
+in place of the one the record names; `--inventory` the landed run's
+inventory; `--candidate` the candidate's record reopened.

@@ -8,19 +8,24 @@ def "main candidate" [out: path, --tag: string = ""] {
     qualification candidate $out --tag $tag
 }
 
-# A target's record written to `out`, its check's problems printed
+# A target's record written to `out`, its own verdicts printed
 def "main record" [bench: path, candidate: path, target: string, out: path] {
     qualification record $bench $candidate $target $out
 }
 
-# A record held to the schema and the acceptance, every problem printed
-def "main check" [record: path] {
-    qualification check $record
+# A record derived again from its bench's reopened inputs, its ledger checked
+def "main check" [record: path, --bench: string = "", --inventory: string = "", --candidate: string = "", --out: string = ""] {
+    qualification check $record --bench $bench --inventory $inventory --candidate $candidate --out $out
 }
 
-# The report over records, the last path its Markdown file
+# The report over checks, the last path its Markdown file
 def "main report" [...paths: path, --compared: string = ""] {
     qualification report ...$paths --compared $compared
+}
+
+# The candidate's host package for a target, one tar from its export
+def "main package" [candidate: path, export: path, target: string, out: path, --stage: string = ""] {
+    qualification package $candidate $export $target $out --stage $stage | ignore
 }
 
 def main [] { help main }

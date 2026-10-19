@@ -57,14 +57,23 @@ repositories, under the session's scratch directory or
     and the tag, when given, on its HEAD, this repository's changes and
     tag recorded; `record <bench> <candidate> <target> <out>` writes a
     target's `qualification.nuon` from a bench run of
-    `kit/fierce/bench/qual_<target>.nuon`; `check <record>` prints every
-    problem the check names and fails on any; `report <paths>` writes the
-    report from records, the last path its file, `--compared <file>`
-    rendering a `nuance.nu gauge compare` output as the comparison with
-    the first baseline. Its module splits into `matrix`, the targets, the
-    cases, the diagnostics, the limits, the acceptance rules, and the
-    helpers the others share, then `candidate`, `record`, `check`, and
-    `report`.
+    `kit/fierce/bench/qual_<target>.nuon`, its own ledger and verdicts
+    in it; `check <record> [--bench <dir>] [--inventory <file>]
+    [--candidate <file>] [--out <dir>]` derives the record again from the
+    bench's kept inputs, each step's report made again by jab's `gauge
+    read batch`, every reopened input held to the inventory, and writes
+    the derived record and `check.nuon`, printing the record's differing
+    stored answers, every problem, the preparation subset's verdict, and
+    the final one, failing on a problem; `report <checks> <out.md>` writes
+    the report from checks, `--compared <file>` rendering a `nuance.nu
+    gauge compare` output as the comparison with the first baseline;
+    `package <candidate> <export> <target> <out>` writes the candidate's
+    host package for a target, one tar a host runs with `./do bench
+    kit/fierce/qual_<target> --package <dir>`. Its module splits into
+    `matrix`, the targets, the cases, the diagnostics, the other
+    obligations, the packaged bench, the limits, the acceptance's and the
+    conditions' rules, the ledger, and the helpers the others share, then
+    `candidate`, `record`, `check`, `report`, and `package`.
 - The probes are modules under `nu/mod/nuance/fierce/probe/`, one a
   probe, each run by its own bin under `nu/bin/nuance/fierce/probe/`:
   - `eviction.nu` runs the tile eviction probe: views' key sets at first
@@ -151,12 +160,20 @@ repositories, under the session's scratch directory or
   and each target's steps by label; the diagnostics another, each the
   route legs and the summary fields it reads. The bench is held to the
   candidate's bench file read from jab's git at the candidate's commit,
-  so a record can be made from a bench run copied off another host. The
-  readers that wrote a record are its provenance, never a refusal. Its
+  so a record can be made from a bench run copied off another host; a
+  packaged run to that file as its package runs it. Every run is held to
+  its step's conditions, the workers, the cadence, the window and the
+  sound, the pad, and the probe; the bench to one host and one QEMU; each
+  case to one backend. The readers that wrote a record are its
+  provenance, never a refusal: the check judges the evidence under the
+  current readers and keeps a stored answer that differs as history. Its
   presentation row is `proberuns analyse-runs` over the probed runs, each
   by the directory the record found for it: every run's bundle checked,
   its pairing established, and its shown, superseded, and repeated frames
-  pooled; a run left unread names its stage and refusals.
+  pooled; a run left unread names its stage and refusals. Every final
+  obligation is a row of the ledger, met, failed, pending on its
+  dependency, or not applicable; the preparation subset's verdict and the
+  final one are read apart.
 - `proberuns` is ProbeRuns' reader, `nu/bin/nuance/fierce/proberuns.nu
   <base> <out.nuon> <label>...`: each probed run's capture, bundle,
   flips, and pairing read in turn, a run failing one left unread with its
