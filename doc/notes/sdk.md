@@ -1,19 +1,22 @@
 # The sdk workbench
 
-`sdk/` holds recipes and scripts for testing the Jab SDK's tools beyond
-their own suite. A run's record is kept in the data checkout beside this
-repository, `../jab-stress-data`, under `runs/sdk/`.
+The workbench's code for testing the Jab SDK's tools beyond their own
+suite, today the sdl probe's controls, the module
+`nu/mod/nuance/sdk/controls`. A run's record is kept in the data checkout
+beside this repository, `../jab-stress-data`, under `runs/sdk/`.
 
 ## The sdl probe's controls
 
-`just -f sdk/just/probe.just controls <out> <work>` runs `just do probe
-sdl` three times in the Jab checkout beside this one, `../jab`, and holds
-each run to an oracle the probe does not make itself. It prints one NUON
-record and exits non-zero when a control that ran has failed. Every file
-of the run is written under `<out>`, which must not exist yet, and that
-directory is the run's record. The stripped QEMU goes under `<work>`,
-outside the record. The script is `sdk/probe/sdl/controls.nu`. A run
-takes about a minute.
+`nu nu/bin/nuance/sdk/controls.nu <out> <work>` runs the SDK's probe,
+`nu/bin/nuance/probe.nu sdl`, three times in the Jab checkout beside this
+one, `../jab`, and holds each run to an oracle the probe does not make
+itself. It prints one NUON record and exits non-zero when a control that
+ran has failed. Every file of the run is written under `<out>`, which must
+not exist yet, and that directory is the run's record. The stripped QEMU
+goes under `<work>`, outside the record. A run takes about a minute. A
+control's shim log is kept in the record only when the run wrote it: a
+control refused before QEMU started leaves the log of an earlier run,
+which is left out.
 
 - `monolithic` runs `example/walk` for 12 seconds on the workspace's
   QEMU, with QEMU's own trace of the virtio-gpu device's flush and
@@ -53,7 +56,7 @@ Land a run's record as the data checkout's layout note says, under
 
 ## Rereading a run's record
 
-`just -f sdk/just/probe.just reread <record>` reads a controls run's
+`nu nu/bin/nuance/sdk/controls.nu reread <record>` reads a controls run's
 record again through the probe's current reader. Nothing is run and
 nothing is written. Each control's checks are worked out again from the
 logs and the trace saved in the record, and the probe's own record is
@@ -81,4 +84,5 @@ when it reads as recorded.
   needs them unchanged since the capture.
 
 Reread the set's current record whenever the reader changes in a way
-that reaches what a capture holds.
+that reaches what a capture holds. `sdk/just/probe.just` stands as a
+shim over the bin until every consumer calls it.

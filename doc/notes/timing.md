@@ -1,16 +1,17 @@
 # JointTiming's selector
 
-`kernel/timing/select.nu` decides JointTiming's comparison: whether the
-kernel's new presentation rule, P2, replaces the rule the kernel runs
+The module `nu/mod/kernel/timing` decides JointTiming's comparison: whether
+the kernel's new presentation rule, P2, replaces the rule the kernel runs
 today, P0. It reads one readings record and writes one decision record.
 The rules it applies are JointTiming's selection rule, in the Jab
 iter's plan for the kernel.
 
-The recipes are in `kernel/just/timing.just` and run under the real nu:
+Its command is its bin, run under the real nu, with
+`kernel/just/timing.just` a shim over it until every consumer calls it:
 
-| Recipe | What it does |
+| Command | What it does |
 |---|---|
-| `just -f kernel/just/timing.just select <readings> <out dir>` | Reads a readings record and writes `decision.nuon` in the directory, printing the outcome |
+| `nu nu/bin/nuance/kernel/timing.nu <readings> <out dir>` | Reads a readings record and writes `decision.nuon` in the directory, printing the outcome |
 
 ## The readings
 

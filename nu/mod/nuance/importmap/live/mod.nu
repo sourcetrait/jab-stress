@@ -176,11 +176,16 @@ export def tokens-of [src: string]: nothing -> table<shape: string, content: str
 # A source's calls through modules it imports: each module's name and its verb.
 export def module-calls [src: string, names: list<string>]: nothing -> table<module: string, word: string> {
     let toks = (tokens-of $src)
-    $toks | enumerate | where {|e| $e.item.shape == 'shape_external' and $e.item.content in $names } | each {|e|
-        let arg = ($toks | get -o ($e.index + 1))
-        let word = (if $arg != null and $arg.shape == 'shape_externalarg' { $arg.content } else { '' })
-        {module: $e.item.content, word: $word}
-    }
+    $toks | enumerate | each {|e|
+        let words = ($e.item.content | split row ' ')
+        if $e.item.shape == 'shape_external' and $e.item.content in $names {
+            let arg = ($toks | get -o ($e.index + 1))
+            let word = (if $arg != null and $arg.shape == 'shape_externalarg' { $arg.content } else { '' })
+            {module: $e.item.content, word: $word}
+        } else if $e.item.shape == 'shape_internalcall' and ($words | length) > 1 and ($words | first) in $names {
+            {module: ($words | first), word: ($words | skip 1 | str join ' ')}
+        }
+    } | compact
 }
 
 # A body's calls: the internal commands and the calls through named modules.

@@ -46,7 +46,11 @@ resolves a relative `use` against the process's directory.
 ## def module-calls
 
 Each call through one of the named modules: the module's token and the
-argument after it.
+argument after it, or, where the parse resolved the call, the internal
+call's words, the module's name first. `ast` parses in the checker's own
+engine, so a command the checker's bin imports under the same two words, the
+workbench's `tiles handoff` beside the suite's, resolves the call it reads;
+both forms are one call.
 
 ## def call-count
 

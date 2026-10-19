@@ -1,23 +1,26 @@
 # walk's cadence reader
 
-`kernel/walk/cadence.nu` reads the records that walk's measurement build
-sends over its API at the end of a run. The build is walk built with the
-`cadence` symbol, plus `timing`, `prepare`, `replay`, or `cadence_test`
+The module `nu/mod/kernel/walk` reads the records that walk's measurement
+build sends over its API at the end of a run. The build is walk built with
+the `cadence` symbol, plus `timing`, `prepare`, `replay`, or `cadence_test`
 for its variants. walk's own source documentation describes the records
 byte by byte, in `example/walk/srcdoc/main.S.md` of the Jab checkout.
 
-The recipes are in `kernel/just/walk.just` and run under the real nu:
+Its commands are its bins, run under the real nu:
 
-| Recipe | What it does |
+| Command | What it does |
 |---|---|
-| `just -f kernel/just/walk.just cadence <probe dir> <out.nuon>` | Reads a probed run: its bundle is checked first, then the program's records inside it |
-| `just -f kernel/just/walk.just guest <run dir> <out.nuon>` | Reads a run that was not probed, from its own `api.out` and `identity.nuon` |
-| `just -f kernel/just/walk.just replay-of <run dir> <stream>` | Writes a replay stream from a run's records, for a replay build to repeat its workload |
-| `just -f kernel/just/walk.just cadence-launches <jab checkout> <scratch>` | Builds walk's test variants, runs each through walk's wrapper, and holds what each run must show |
+| `nu nu/bin/nuance/kernel/walk.nu <probe dir> <out.nuon>` | Reads a probed run: its bundle is checked first, then the program's records inside it |
+| `nu nu/bin/nuance/kernel/walk.nu guest <run dir> <out.nuon>` | Reads a run that was not probed, from its own `api.out` and `identity.nuon` |
+| `nu nu/bin/nuance/kernel/walk.nu replay-of <run dir> <stream>` | Writes a replay stream from a run's records, for a replay build to repeat its workload |
+| `nu nu/bin/nuance/kernel/walk/launches.nu <jab checkout> <scratch>` | Builds walk's test variants, runs each through walk's wrapper, and holds what each run must show |
+
+`kernel/just/walk.just` stands as a shim over these until every consumer
+calls the bins.
 
 ## walk's own launches
 
-`kernel/walk/launches.nu` is walk's fixture for its measurement build.
+`nu/mod/kernel/walk/launches` is walk's fixture for its measurement build.
 It builds walk six ways with `cadence_test`, which shortens the window
 to ten seconds and adds a quiet stretch, a stall, and one long frame. It
 copies each build out before the next, since a build replaces the last
@@ -27,8 +30,11 @@ replays the await order's stamped run. Four more runs end by the
 bounded waits: no nonce, a nonce cut short, no replay stream, and a
 replay header cut short. Each run but the last four goes through walk's
 wrapper, `example/walk/test/cadence.nu` in the Jab checkout, and the
-reader reads it. It takes about two minutes and must run alone on the
-machine. Each run boots the kernel its own build made: the symbols land
+reader reads it. The checkout is reached through its own bins, never its
+modules: its builds through `nu/bin/do.nu`, their target through
+`nu/bin/nuance/plan.nu`, and the last four runs through
+`nu/bin/nuance/launch.nu`, their nonce frame written in the fixture. It
+takes about two minutes and must run alone on the machine. Each run boots the kernel its own build made: the symbols land
 in the kernel's symbol table, so the kernel files differ, while the
 bytes they load must match, which the script checks.
 

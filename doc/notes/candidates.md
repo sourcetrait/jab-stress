@@ -15,21 +15,23 @@ from one commit.
 ## Testing a candidate
 
 A candidate's cases run in the Jab checkout's own tests, built with its
-symbol: `just test test/framecap --set flip_batch` holds the whole flip's
-receipts on the candidate, and the same test without the symbol holds
-them on the kernel as it is. `just test example/bounce --set prepare`,
-and the same for walk, wasd, and pad, runs each example's own test on
-its candidate loop.
+symbol: `./do test test/framecap --set flip_batch` there holds the whole
+flip's receipts on the candidate, and the same test without the symbol
+holds them on the kernel as it is. `./do test example/bounce --set
+prepare`, and the same for walk, wasd, and pad, runs each example's own
+test on its candidate loop.
 
 ## Exporting a candidate
 
-A measured kernel is an export, frozen with its provenance. The recipe is
-in `kernel/just/export.just` and runs under the real nu:
+A measured kernel is an export, frozen with its provenance, by the module
+`nu/mod/kernel/freeze`. Its commands are bins, run under the real nu, with
+`kernel/just/export.just` a shim over them until every consumer calls
+them:
 
-| Recipe | What it does |
+| Command | What it does |
 |---|---|
-| `just -f kernel/just/export.just kernel-export <jab checkout> <commit> <cands> [symbols] [expected]` | Exports the commit's kernel and builds it release with the symbols, comma separated |
-| `just -f kernel/just/export.just walk-export <jab checkout> <commit> <cands> [symbols] [expected]` | Exports the commit's walk and builds it release with the symbols, comma separated, its romfs beside the image |
+| `nu nu/bin/nuance/kernel/freeze.nu <jab checkout> <commit> <cands> <symbols> <expected>` | Exports the commit's kernel and builds it release with the symbols, comma separated, an empty string for none |
+| `nu nu/bin/nuance/fierce/freeze.nu <jab checkout> <commit> <cands> <expected> --set <symbols> --program example/walk` | Exports the commit's walk and builds it release with the symbols, comma separated, its romfs beside the image |
 
 The export takes the commit's `kernel/src`, its kernel manifest, and
 `sdk/src` out of git into `<cands>/kexport_<commit>`, with each symbol
@@ -51,7 +53,7 @@ and so is a symbol set holding `debug`, since a measured kernel is a
 release build.
 
 walk's images, the CADENCE builds that JointTiming's walk arms run, are
-exported the same way by the fps readers' `export.nu` with `--program
+exported the same way by fierce's `freeze` with `--program
 example/walk`. The export takes the commit's `sdk/src`, walk's `src/` and
 manifest, and the `asset/img` directory its manifest names into
 `<cands>/export_<commit>-<symbols>`, such as
