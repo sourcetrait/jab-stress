@@ -1,0 +1,28 @@
+record<
+    schema: int,
+    set: string,
+    stamp: string,
+    task: string,
+    scope: oneof<
+        record<kind: string, ran: int, of: int>,
+        record<kind: string, ran: int, of: int, names: list<string>>,
+        record<
+            kind: string, ran: int, of: int,
+            combined: record<runs: list<string>, kind: string, ran: int, of: int>
+        >,
+        record<
+            kind: string, ran: int, of: int, names: list<string>,
+            combined: record<runs: list<string>, kind: string, ran: int, of: int>
+        >
+    >,
+    builds: list<oneof<
+        record<part: string, build: oneof<string, nothing>, source: string, record: string>,
+        record<
+            part: string, build: oneof<string, nothing>, source: string, record: string,
+            export: record<name: string, commit: string, provenance: string>
+        >
+    >>,
+    kept: record<as: string, why: string>,
+    inventory: string,
+    storage: string
+>

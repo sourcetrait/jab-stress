@@ -1,0 +1,7 @@
+table<
+    object: string,
+    kind: string,
+    length: int,
+    sha256: string,
+    holds: list<string>
+>

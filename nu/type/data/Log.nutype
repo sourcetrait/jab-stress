@@ -1,0 +1,5 @@
+oneof<
+    record<schema: int, kind: string, source: string, stream: string, captured: datetime>,
+    record<seq: int, bytes: binary>,
+    record<end: bool, chunks: int, length: int, sha256: string, terminated: bool>
+>

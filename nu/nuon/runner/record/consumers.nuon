@@ -1,0 +1,6 @@
+[
+    [reader, input, pattern];
+    ["sdk probe reread", "the controls' record", "controls.nuon"]
+    ["sdk probe reread", "the monolithic control's shim log", "walk.sdl.log"]
+    ["sdk probe reread", "the monolithic control's flush trace", "walk.trace.log"]
+]

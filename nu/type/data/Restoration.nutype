@@ -1,0 +1,7 @@
+record<
+    run: string,
+    inventory_sha256: oneof<string, nothing>,
+    storage_sha256: oneof<string, nothing>,
+    restored: table<path: string, sha256: string, object: string>,
+    absent: table<path: string, disposition: string>
+>

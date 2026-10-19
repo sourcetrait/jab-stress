@@ -1,0 +1,19 @@
+record<
+    set: string,
+    stamp: string,
+    task: string,
+    scope: oneof<
+        record<kind: string, ran: int, of: int>,
+        record<kind: string, ran: int, of: int, names: list<string>>,
+        record<
+            kind: string, ran: int, of: int,
+            combined: record<runs: list<string>, kind: string, ran: int, of: int>
+        >,
+        record<
+            kind: string, ran: int, of: int, names: list<string>,
+            combined: record<runs: list<string>, kind: string, ran: int, of: int>
+        >
+    >,
+    builds: table<part: string, build: oneof<string, nothing>, checkout: string, record: string>,
+    kept: record<as: string, why: string>
+>
