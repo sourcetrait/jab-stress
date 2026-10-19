@@ -10,7 +10,7 @@ layout-cands cands commit *names:
     nu {{probe}}/layout/candidates.nu {{cands}} {{commit}} {{names}}
 
 cand-build dir set:
-    nu {{jab}}/sdk/nu/jab.nu build {{dir}} --set {{set}}
+    nu {{jab}}/nu/bin/do.nu build {{dir}} --set {{set}}
 
 hot elf:
     nu {{probe}}/pool/hot.nu {{elf}}

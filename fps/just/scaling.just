@@ -9,10 +9,10 @@ readers := justfile_directory() / "../readers"
 
 # a candidate built debug, or debug with OWNER, in its own tree
 cand-build-debug dir:
-    nu {{jab}}/sdk/nu/jab.nu build {{dir}} --set debug
+    nu {{jab}}/nu/bin/do.nu build {{dir}} --set debug
 
 cand-build-owner dir:
-    nu {{jab}}/sdk/nu/jab.nu build {{dir}} --set debug,owner
+    nu {{jab}}/nu/bin/do.nu build {{dir}} --set debug,owner
 
 parity kernel image out *flags:
     nu {{readers}}/workerparity.nu {{kernel}} {{image}} {{out}} {{flags}}

@@ -9,4 +9,4 @@ pose-map map image poses out kernel set="debug":
     nu {{jab}}/kit/fierce/test/pose.nu {{map}} {{poses}} {{out}} --kernel {{kernel}} --image {{image}} --set {{set}}
 
 cand-build dir set:
-    nu {{jab}}/sdk/nu/jab.nu build {{dir}} --set {{set}}
+    nu {{jab}}/nu/bin/do.nu build {{dir}} --set {{set}}

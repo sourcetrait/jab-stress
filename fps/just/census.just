@@ -10,7 +10,7 @@ readers := justfile_directory() / "../readers"
 probe := justfile_directory() / "../probe"
 
 build dir set:
-    nu {{jab}}/sdk/nu/jab.nu build {{dir}} --set {{set}}
+    nu {{jab}}/nu/bin/do.nu build {{dir}} --set {{set}}
 
 tilecensus base out *labels:
     nu {{readers}}/tilecensus.nu {{base}} {{out}} {{labels}}

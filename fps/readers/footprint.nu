@@ -16,6 +16,7 @@
 # pictures side by side for reading.
 use ../../../jab/sdk/nu/jab.nu
 use ../../../jab/nu/mod/target
+use ../../../jab/nu/mod/build
 use ../../../jab/kit/fierce/test/pose.nu
 use ../../../jab/kit/fierce/test/gauge.nu
 use ../../../jab/kit/fierce/test/test.nu [raise-frame stamp-of]
@@ -131,7 +132,7 @@ def "main images" [export: path] {
     let program = (program-of $export)
     let source = (open ($program | path join "source.nuon"))
     let repo = (open ($program | path join "program.jab.toml") | get workspace)
-    let tool = ($repo | path join "sdk" "nu" "jab.nu")
+    let tool = (if ($repo | path join "nu" "bin" "do.nu" | path exists) { $repo | path join "nu" "bin" "do.nu" } else { $repo | path join "sdk" "nu" "jab.nu" })
     let place = ($program | path relative-to $export)
     mut images = []
     for b in $BUILDS {
@@ -144,7 +145,7 @@ def "main images" [export: path] {
         if $kernel_built.exit_code != 0 { error make { msg: $"the ($b.label) kernel's build: ($kernel_built.stdout + $kernel_built.stderr | lines | last 6 | str join ' | ')" } }
         let built = (^nu $tool build $target --set $b.set | complete)
         if $built.exit_code != 0 { error make { msg: $"the ($b.label) build of ($target): ($built.stdout + $built.stderr | lines | last 6 | str join ' | ')" } }
-        let out = (jab program-out $target debug)
+        let out = (build program-out $target debug)
         let name = (open ($target | path join "program.jab.toml") | get name)
         let image = ($out | path join $"($name).jab")
         if not ($image | path exists) { error make { msg: $"no ($name).jab at ($out)" } }
@@ -153,7 +154,7 @@ def "main images" [export: path] {
         let missing = ($names | where {|n| not ($flags | str contains $"--defsym ($n)=1") })
         if not ($missing | is-empty) { error make { msg: $"the ($b.label) build's flags lack ($missing | str join ', '): ($flags)" } }
         let kernel = ($out | path join "kernel.elf")
-        cp (jab program-kernel $target debug) $kernel
+        cp (build program-kernel $target debug) $kernel
         let prefix = ($flags | split row " " | last)
         let bin = ($out | path join "kernel.bin")
         let copied = (^$"($prefix)objcopy" -O binary $kernel $bin | complete)

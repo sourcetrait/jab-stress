@@ -44,6 +44,7 @@
 # discrepancy.
 use ../../../../jab/sdk/nu/jab.nu
 use ../../../../jab/nu/mod/sdl
+use ../../../../jab/nu/mod/build
 
 const HERE = (path self | path dirname)
 const JAB = (path self | path dirname | path join .. .. .. .. jab | path expand)
@@ -64,7 +65,7 @@ def probe-run [name: string, program: string, out: path, qemu_args: string]: not
     let ran = (with-env { JAB_QEMU_ARGS: $qemu_args } { ^$nu.current-exe $tool probe $JAB sdl $program --seconds ($SECONDS | into string) | complete })
     $ran.stdout | save -f ($out | path join $"($name).stdout")
     $ran.stderr | save -f ($out | path join $"($name).stderr")
-    let log = (jab program-out ($JAB | path join $program) "release" | path join "probe" "sdl.log")
+    let log = (build program-out ($JAB | path join $program) "release" | path join "probe" "sdl.log")
     let kept = ($out | path join $"($name).sdl.log")
     if ($log | path exists) { cp $log $kept }
     let lines = ($ran.stdout | lines)
@@ -135,7 +136,7 @@ def counts-of [made: table]: nothing -> record<uploads: int, switches: int, cons
 # the device's flush and set_scanout commands in it, and the probe's
 # record of the run.
 def monolithic-of [log: path, trace: path, report: record]: nothing -> record {
-    let read = (jab sdl-classify $log)
+    let read = (sdl classify $log)
     let made = (made-of $read.events)
     let commands = (open --raw $trace | lines
         | parse --regex '^(?P<at>\S+) (?P<command>virtio_gpu_cmd_(?:res_flush|set_scanout))\b'
@@ -186,7 +187,7 @@ def monolithic [out: path]: nothing -> record {
 # virtio-gpu is a module, and the probe's record of the run: the reading,
 # then the same log read a second time by symbols alone.
 def modular-of [log: path, report: record]: nothing -> record {
-    let read = (made-of (jab sdl-classify $log).events)
+    let read = (made-of (sdl classify $log).events)
     let named = (sdl resolve $log --every)
     let modules = ($named.objects | where {|o| $o.file | str starts-with "hw-display-virtio-gpu" } | get index)
     let gates = (made-of $named.events | each {|m|

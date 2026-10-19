@@ -11,7 +11,7 @@ probe := justfile_directory() / "../probe"
 
 # release with any symbols beside it, comma separated
 cand-build-release dir set="":
-    nu {{jab}}/sdk/nu/jab.nu build {{dir}} --set release{{ if set == "" { "" } else { "," + set } }}
+    nu {{jab}}/nu/bin/do.nu build {{dir}} --set release{{ if set == "" { "" } else { "," + set } }}
 
 export repo commit cands jf expected="" set="":
     nu {{readers}}/export.nu {{repo}} {{commit}} {{cands}} {{jf}} '{{expected}}' --set '{{set}}'

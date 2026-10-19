@@ -41,7 +41,7 @@ def main [repo: string, commit: string, cands: string, symbols: string, expected
         symbols: $names,
         exported_from: $"git archive of kernel/src, kernel/kernel.jab.toml, and sdk/src at ($full), the manifest's workspace the checkout's for the toolchain and the target, its do dropped",
     } | to nuon --indent 2 | save --raw ($kernel | path join "source.nuon")
-    let tool = ($repo | path join "sdk" "nu" "jab.nu")
+    let tool = (if ($repo | path join "nu" "bin" "do.nu" | path exists) { $repo | path join "nu" "bin" "do.nu" } else { $repo | path join "sdk" "nu" "jab.nu" })
     let built = (if ($names | is-empty) { ^nu $tool build $kernel --kernel | complete } else { ^nu $tool build $kernel --kernel --set ($names | str join ",") | complete })
     if $built.exit_code != 0 { error make { msg: $"the release build of ($kernel): ($built.stdout + $built.stderr | lines | last 6 | str join ' | ')" } }
     let out = ($kernel | path join "release")
@@ -65,7 +65,7 @@ def main [repo: string, commit: string, cands: string, symbols: string, expected
         symbols: $names,
         source: $"kernel/src and kernel/kernel.jab.toml at ($full)",
         sdk: $"sdk/src at ($full), the export's own",
-        build_tool: { checkout: $checkout, dirty: $dirty, jab_nu_sha256: (open --raw $tool | into binary | hash sha256) },
+        build_tool: { checkout: $checkout, dirty: $dirty, jab_nu_sha256: (open --raw ($repo | path join "sdk" "nu" "jab.nu") | into binary | hash sha256) },
         toolchain: {
             prefix: $prefix,
             version: (^$"($prefix)as" --version | complete | get stdout | lines | get -o 0),

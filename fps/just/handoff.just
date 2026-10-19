@@ -15,7 +15,7 @@ probe := justfile_directory() / "../probe"
 
 # fps built with the build symbols named, debug unless given
 build set="debug":
-    nu {{jab}}/sdk/nu/jab.nu build {{jab}}/kit/fierce --set {{set}}
+    nu {{jab}}/nu/bin/do.nu build {{jab}}/kit/fierce --set {{set}}
 
 # the test's sets, the handoff fixtures alone by default
 handoff-set set="handoff":

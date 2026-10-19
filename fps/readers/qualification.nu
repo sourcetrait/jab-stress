@@ -12,8 +12,8 @@
 # schema and the acceptance, every problem named. `report` writes the
 # document for TheUser, a section a target. Run under the real nu: `nu
 # qualification.nu <command> ...` (`fps/just/qualification.just`).
-use ../../../jab/sdk/nu/jab.nu
 use ../../../jab/nu/mod/spec
+use ../../../jab/nu/mod/build
 use ../../../jab/kit/fierce/test/gauge.nu
 use ./observer.nu
 
@@ -127,12 +127,12 @@ export def candidate-of [tag: string]: nothing -> record {
         { repo: $r.repo, commit: $h.commit }
     })
     let game = ($JAB | path join kit fierce)
-    let built = (^nu ($JAB | path join sdk nu jab.nu) build $game | complete)
+    let built = (^nu (if ($JAB | path join nu bin do.nu | path exists) { $JAB | path join nu bin do.nu } else { $JAB | path join sdk nu jab.nu }) build $game | complete)
     if $built.exit_code != 0 { error make { msg: $"the release build of ($game): ($built.stdout + $built.stderr | lines | last 6 | str join ' | ')" } }
-    let out = (jab program-out $game release)
+    let out = (build program-out $game release)
     let image = ($out | path join fierce.jab)
     let elf = ($out | path join fierce.elf)
-    let kernel = (jab program-kernel $game release)
+    let kernel = (build program-kernel $game release)
     for f in [$image $elf $kernel] { if not ($f | path exists) { error make { msg: $"the release build left no ($f)" } } }
     let flags = (open --raw ($out | path join flags) | decode | lines | first)
     if ($flags =~ '--defsym DEBUG=') { error make { msg: $"the release image's flags define DEBUG: ($flags)" } }
@@ -152,7 +152,7 @@ export def candidate-of [tag: string]: nothing -> record {
             version: (try { ^$"($prefix)as" --version | complete | get stdout | lines | get -o 0 } catch { null }),
             tools: { as: (gauge resolved-file $"($prefix)as"), ld: (gauge resolved-file $"($prefix)ld"), objcopy: (gauge resolved-file $"($prefix)objcopy") },
         },
-        assets: { map: $MAP, digest: (gauge tree-digest (jab program-shard $game asset | path join $MAP)) },
+        assets: { map: $MAP, digest: (gauge tree-digest (build program-shard $game asset | path join $MAP)) },
     }
 }
 
