@@ -15,7 +15,7 @@
 use ../../../jab/nu/mod/spec
 use ../../../jab/nu/mod/build
 use ../../../jab/nu/mod/identity
-use ../../../jab/kit/fierce/test/gauge.nu
+use ../../../jab/kit/fierce/nu/mod/gauge
 use ./observer.nu
 
 # jab checked out beside this repository, and this repository
@@ -151,9 +151,9 @@ export def candidate-of [tag: string]: nothing -> record {
         toolchain: {
             prefix: $prefix,
             version: (try { ^$"($prefix)as" --version | complete | get stdout | lines | get -o 0 } catch { null }),
-            tools: { as: (gauge resolved-file $"($prefix)as"), ld: (gauge resolved-file $"($prefix)ld"), objcopy: (gauge resolved-file $"($prefix)objcopy") },
+            tools: { as: (gauge identity resolved-file $"($prefix)as"), ld: (gauge identity resolved-file $"($prefix)ld"), objcopy: (gauge identity resolved-file $"($prefix)objcopy") },
         },
-        assets: { map: $MAP, digest: (gauge tree-digest (build program-shard $game asset | path join $MAP)) },
+        assets: { map: $MAP, digest: (gauge identity tree-digest (build program-shard $game asset | path join $MAP)) },
     }
 }
 
@@ -247,7 +247,7 @@ export def agreement-of [id: record, candidate: record, target: string, spec: re
 export def verdict-of [run: record]: nothing -> record {
     let whole = ($run.measured | get -o whole)
     let median = ($whole | get -o critical.median)
-    let under = (if $run.standing == "valid" and $median != null { gauge under-ceiling $median } else { null })
+    let under = (if $run.standing == "valid" and $median != null { gauge report under-ceiling $median } else { null })
     let problems = ([
         (if $run.standing != "valid" { $"it stands ($run.standing): ($run.reasons | str join '; ')" })
         ...$run.agreement
@@ -258,7 +258,7 @@ export def verdict-of [run: record]: nothing -> record {
 
 # A run's directory as its report's run-dirs find it, null where none is.
 def dir-of [file: path, r: record]: nothing -> any {
-    gauge run-dirs $file $r | where {|d| ($d | path type) == "dir" } | get -o 0
+    gauge identity dirs $file $r | where {|d| ($d | path type) == "dir" } | get -o 0
 }
 
 # A bench step's runs as the record keeps them (record-of): each run of
@@ -270,7 +270,7 @@ def step-runs [step: record, doc: record, candidate: record, target: string, spe
     if $step.file == null { return [] }
     let g = (open $step.file)
     $g.runs | each {|r|
-        let req = (gauge run-request $step.file $r ($g | get -o identity))
+        let req = (gauge identity request $step.file $r ($g | get -o identity))
         let classed = ($doc.runs | where {|x| $x.label == $step.label and $x.run == $r.run } | get -o 0)
         let id = (identity-summary $req)
         let dir = (dir-of $step.file $r)
@@ -440,7 +440,7 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
     let defined = (jab-file $cand.jab $"kit/fierce/bench/qual_($target).nuon"
         | default (jab-file $cand.jab $"game/fps/bench/qual_($target).nuon"))
     let definition = (if $defined == null { null } else { $defined | from nuon })
-    let doc = (gauge bench-doc $bench)
+    let doc = (gauge bench doc $bench)
     let runs = ($doc.steps | each {|s| step-runs $s $doc $cand $target $spec } | flatten)
     let runs = ($runs | each {|r|
         let acceptance = ($CASES | where kind == acceptance | any {|c| $r.step in ($c.steps | get $target) })

@@ -1,7 +1,8 @@
 use ../../../../jab/nu/mod/target
 use ../../../../jab/nu/mod/launch
 use ../../../../jab/kit/fierce/test/pose.nu
-use ../../../../jab/kit/fierce/test/gauge.nu
+use ../../../../jab/kit/fierce/nu/mod/console
+use ../../../../jab/kit/fierce/nu/mod/gauge
 
 const SPAWN_POSE = { name: "spawn", x: 29.0, y: 2.5, z: 1.6, yaw: 150, pitch: 0 }
 
@@ -36,7 +37,7 @@ def main [mode: string, out: path, --seconds: int = 10] {
     let disk = ($dbg | path join kit fierce still.romfs)
     let sends = (match $mode {
         "rotation" => [
-            { at: 1300ms, bytes: (gauge workers-frame 2 16) }
+            { at: 1300ms, bytes: (console workers 2 16) }
             { at: 1300ms, bytes: (packet-frame 7 500) }
             { at: 1500ms, bytes: (pool-frame --trace --cold --guarantee 1 --ring 4 --merge-us 1) }
             { at: 1500ms, bytes: (pose pose-frame $SPAWN_POSE) }

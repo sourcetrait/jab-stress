@@ -13,8 +13,7 @@
 # justfile: `nu identity_corrections.nu <base> <release flags file> <nm>
 # <out.nuon> <battery>...`.
 
-const GAUGE = "../../../jab/kit/fierce/test/gauge.nu"
-use $GAUGE [correction-of]
+use ../../../jab/kit/fierce/nu/mod/gauge
 
 # the symbols only a debug build of fps carries (workers.S)
 const DEBUG_ONLY = [msg_workers msg_lost_bands msg_unjoined job_delay job_delay_us]
@@ -57,7 +56,7 @@ def main [base: string, release_flags_file: string, nm: string, out: string, ...
                 release_flags_from: $release_flags_file,
             },
         } | to nuon --indent 2 | save --raw $sidecar
-        let read = (correction-of $c.file)
+        let read = (gauge identity corrected $c.file)
         if $read.identity.build.flags != $release_flags or $read.identity.build.elf_sha256 != $c.elf_sha {
             error make { msg: $"($c.file): read back through correction-of as ($read.identity.build | select flags elf_sha256 | to nuon)" }
         }

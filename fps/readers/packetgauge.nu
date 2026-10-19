@@ -17,8 +17,7 @@
 # scratch justfile: `nu packetgauge.nu <settled|play> <base> <out.nuon>
 # <label>...`.
 
-const GAUGE = "../../../jab/kit/fierce/test/gauge.nu"
-use $GAUGE [run-request]
+use ../../../jab/kit/fierce/nu/mod/gauge
 
 const FIELDS = [draw_us critical_us report_us preparation_us raster_us commands packet_bytes]
 const RECORD = 64
@@ -75,7 +74,7 @@ export def analyse [mode: string, base: string, labels: list<string>]: nothing -
         let runs = ($g.runs | each {|r|
             let rows = ($g.rows | where run == $r.run)
             let m = $r.measured
-            let request = (run-request $file $r ($g | get -o identity))
+            let request = (gauge identity request $file $r ($g | get -o identity))
             {
                 run: $r.run,
                 cadence: $request.cadence, image: ($request.identity | get -o build.image_sha256), alike: (held-alike $request.identity),

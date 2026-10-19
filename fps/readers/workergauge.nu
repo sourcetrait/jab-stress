@@ -38,8 +38,7 @@
 # from a scratch justfile: `nu workergauge.nu <settled|play> <base>
 # <out.nuon> <label>...`.
 
-const GAUGE = "../../../jab/kit/fierce/test/gauge.nu"
-use $GAUGE [run-request]
+use ../../../jab/kit/fierce/nu/mod/gauge
 
 const FIELDS = [draw_us critical_us preparation_us raster_us slowest_us busy_us dispatch_us barrier_us imbalance_us remainder_us clear_us prepared_us outside_us game_us hud_us mix_us flip_us report_us]
 const RECORD = 64
@@ -155,7 +154,7 @@ export def analyse [mode: string, base: string, labels: list<string>]: nothing -
         let runs = ($g.runs | each {|r|
             let rows = ($g.rows | where run == $r.run)
             let m = $r.measured
-            let request = (run-request $file $r ($g | get -o identity))
+            let request = (gauge identity request $file $r ($g | get -o identity))
             {
                 run: $r.run,
                 identity: {

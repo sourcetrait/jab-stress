@@ -6,8 +6,10 @@
 # the highest active hart at each count
 use ../../../jab/nu/mod/launch
 use ../../../jab/kit/fierce/test/pose.nu
-use ../../../jab/kit/fierce/test/gauge.nu
-use ../../../jab/kit/fierce/test/test.nu [variant-tree raise-frame stamp-of unstamped-differ]
+use ../../../jab/kit/fierce/nu/mod/console
+use ../../../jab/kit/fierce/nu/mod/gauge
+use ../../../jab/kit/fierce/nu/mod/picture
+use ../../../jab/kit/fierce/nu/mod/tree
 
 # the game's directory, jab checked out beside this repository
 const GAME = (path self | path dirname | path join .. .. .. jab kit fierce)
@@ -100,7 +102,7 @@ export def disk-of [map: string, out: path]: nothing -> record<name: string, tre
     let src = ($GAME | path join "content" "map" $"($map).nuon")
     if not ($src | path exists) { error make { msg: $"no map source ($src): --map names a map of the game's content, render_0 or render_1" } }
     let name = $"($map)_still"
-    let tree = (variant-tree (open $src) $name [android] ($out | path join "tree") $GAME)
+    let tree = (tree variant (open $src) $name [android] ($out | path join "tree") $GAME)
     let disk = ($out | path join $"($name).romfs")
     let made = (^genromfs -d $tree -f $disk -V "fps" | complete)
     if $made.exit_code != 0 { error make { msg: $"genromfs: ($made.stderr)" } }
@@ -112,7 +114,7 @@ export def disk-of [map: string, out: path]: nothing -> record<name: string, tre
 # at 2000 and 8000, and the E at `end`.
 def sends-of [p: record, m: record, cancel: bool, end: duration]: nothing -> list<any> {
     let cancels = (if $cancel { [{ at: 200ms, bytes: (jobs-frame true 0) }] } else { [] })
-    [{ at: $STAMP_AT, bytes: (raise-frame 0 --stamp) }, { at: 200ms, bytes: (workers-frame $m.workers $m.grain) }] ++ $cancels ++ [
+    [{ at: $STAMP_AT, bytes: (console raise 0 --stamp) }, { at: 200ms, bytes: (workers-frame $m.workers $m.grain) }] ++ $cancels ++ [
         { at: 1900ms, bytes: (pose command-frame "L") }
         { at: 2000ms, bytes: (pose pose-frame $p) }
         { at: 8000ms, bytes: (pose pose-frame $p) }
@@ -127,12 +129,12 @@ def sends-of [p: record, m: record, cancel: bool, end: duration]: nothing -> lis
 def bind [run: record, p: record, m: record, cancel: bool]: nothing -> record<stamp: any, from: any, frame: any, problems: list<string>> {
     let placed = (answered-frames $run.api $CONSOLE_P)
     if $run.screen == "" { return { stamp: null, from: ($placed | get -o 1), frame: null, problems: ["no screen was taken"] } }
-    let stamp = (stamp-of (open --raw $run.screen | into binary))
+    let stamp = (picture stamp (open --raw $run.screen | into binary))
     if ($placed | length) < 2 { return { stamp: $stamp, from: null, frame: null, problems: [$"the second placement unanswered: ($placed | length) answered"] } }
     let measured = (gauge measure $run.api [{ name: "start", places: [], pad: [] }, { name: "placed", places: [$p $p], pad: [] }])
     let witness = (if not $cancel { null } else if $m.workers == 0 { "serial" } else { "worker" })
     let expect = { pose: ($p | select x y z yaw pitch | insert roll 0.0), workers: $m.workers, grain: $m.grain, masks: null, witness: $witness }
-    let b = (gauge screen-frame $measured $stamp ($placed | get 1) $expect)
+    let b = (gauge measure screen-frame $measured $stamp ($placed | get 1) $expect)
     { stamp: $stamp, from: ($placed | get 1), frame: $b.frame, problems: $b.problems }
 }
 
@@ -202,7 +204,7 @@ def judge [parity: record, out: path, cancel: bool, harts: int, bootargs: string
         let base_bytes = (if $held { open --raw $base.screen | into binary } else { null })
         for r in ($set | where workers != 0) {
             let bound = ($r.binding.problems | is-empty)
-            let differing = (if $base_bytes == null or $r.screen == "" { null } else { unstamped-differ (open --raw $r.screen | into binary) $base_bytes })
+            let differing = (if $base_bytes == null or $r.screen == "" { null } else { picture unstamped-differ (open --raw $r.screen | into binary) $base_bytes })
             let same = ($differing != null and ($differing | is-empty))
             let differ = (if $base == null or $base.frame == null or $r.frame == null { ["no frame"] } else {
                 $COUNTS | where {|c| ($base.frame | get $c) != ($r.frame | get $c) }

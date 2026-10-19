@@ -5,7 +5,7 @@
 # once every fixture holds.
 #
 # Run as `nu cadence.nu <kernel> <image> <out>`.
-use ../../../jab/kit/fierce/test/test.nu [cadence-holds]
+use ../../../jab/kit/fierce/nu/mod/suite/clock [cadence-holds]
 
 def main [kernel: path, image: path, out: path] {
     let game = ($env.FILE_PWD | path join ".." ".." ".." "jab" "kit" "fierce" | path expand)

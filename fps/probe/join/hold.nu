@@ -9,7 +9,8 @@
 # on the other's join, where an unheld round's is about half.
 use ../../../../jab/nu/mod/launch
 use ../../../../jab/kit/fierce/test/pose.nu
-use ../../../../jab/kit/fierce/test/gauge.nu
+use ../../../../jab/kit/fierce/nu/mod/console
+use ../../../../jab/kit/fierce/nu/mod/gauge
 
 const SET_AT = 1300ms
 const END_AT = 3500ms
@@ -23,7 +24,7 @@ def jobs-frame [delayed: int, delay_us: int, cancel: bool, fault: int, --hold]: 
 
 def main [kernel: path, image: path, disk: path, out: path, --name: string = "hold", --no-hold, --seconds: int = 8, --no-capture] {
     let sends = [
-        { at: $SET_AT, bytes: (gauge workers-frame 2 0) }
+        { at: $SET_AT, bytes: (console workers 2 0) }
         { at: $SET_AT, bytes: (jobs-frame 2 0 false 0 --hold=(not $no_hold)) }
         { at: $END_AT, bytes: (pose command-frame "E") }
     ]

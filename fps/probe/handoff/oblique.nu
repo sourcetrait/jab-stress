@@ -4,7 +4,8 @@
 # its window's rows, and its screen, with the tiled and held references.
 use ../../../../jab/nu/mod/launch
 use ../../../../jab/kit/fierce/test/pose.nu
-use ../../../../jab/kit/fierce/test/gauge.nu
+use ../../../../jab/kit/fierce/nu/mod/console
+use ../../../../jab/kit/fierce/nu/mod/gauge
 
 const POOL_LIFTED = 1
 const POOL_ONCE = 8
@@ -36,7 +37,7 @@ def main [kernel: path, image: path, disk: path, out: path, spec: string] {
                 "held" => [{ at: 1400ms, bytes: (do $light true) }, { at: 1400ms, bytes: (raise-frame $l --stamp) }]
                 "tiled" => [{ at: 1400ms, bytes: (do $light false) }, { at: 1400ms, bytes: (raise-frame $l --stamp) }]
                 _ => [
-                    { at: 1300ms, bytes: (gauge workers-frame 0 0) }
+                    { at: 1300ms, bytes: (console workers 0 0) }
                     { at: 1400ms, bytes: (do $light false) }
                     { at: 1400ms, bytes: (raise-frame $l --stamp) }
                     { at: 1800ms, bytes: (pool-frame --modes ($POOL_LIFTED + $POOL_ONCE) --cold --slots $s.slots) }

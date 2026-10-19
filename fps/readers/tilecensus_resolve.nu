@@ -9,7 +9,7 @@
 # the run's; else refused. `nu tilecensus_resolve.nu <requests as NUON>`
 # prints the answers as NUON.
 
-use ../../../jab/kit/fierce/test/gauge.nu [identity-of]
+use ../../../jab/kit/fierce/nu/mod/gauge
 
 def main [requests: string] {
     $requests | from nuon | each {|q|
@@ -24,7 +24,7 @@ def resolve [report: string, g: record, r: record]: nothing -> record<dir: any, 
     if not ($m.complete and $m.valid) {
         return { dir: null, refused: [$"the capture complete ($m.complete) and valid ($m.valid), both owed"] }
     }
-    let id = (identity-of $report $r $g.identity)
+    let id = (gauge identity of $report $r $g.identity)
     let strength = ($id.binding | default {} | get -o strength)
     let dir = (if $id.file == null { null } else { $id.file | path dirname })
     if $strength != "sha256" {

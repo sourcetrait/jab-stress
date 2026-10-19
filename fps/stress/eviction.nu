@@ -29,8 +29,11 @@
 use std/assert
 use ../../../jab/nu/mod/launch
 use ../../../jab/kit/fierce/test/pose.nu
-use ../../../jab/kit/fierce/test/gauge.nu
-use ../../../jab/kit/fierce/test/test.nu [stamp-of ppm-head raise-frame rows-differ STAMP_BITS STAMP_CELL STAMP_ONE STAMP_ZERO CLOCK_SCHEMA]
+use ../../../jab/kit/fierce/nu/mod/console
+use ../../../jab/kit/fierce/nu/mod/gauge
+use ../../../jab/kit/fierce/nu/mod/picture
+use ../../../jab/kit/fierce/nu/mod/gauge/stream [CLOCK_SCHEMA]
+use ../../../jab/kit/fierce/nu/mod/picture [STAMP_BITS STAMP_CELL STAMP_ONE STAMP_ZERO]
 
 const TILES = (path self | path dirname | path join .. .. .. jab kit fierce test tiles.nu)
 
@@ -211,7 +214,7 @@ def capture-of [screen: string]: nothing -> oneof<binary, nothing> {
 # bit along the top-left, the n-th from the left the n-th bit, STAMP_ONE a
 # one and STAMP_ZERO a zero.
 export def stamp-written [bytes: binary, value: int]: nothing -> binary {
-    let head = (ppm-head $bytes)
+    let head = (picture ppm-head $bytes)
     let width = ($bytes | bytes at 0..<$head | decode | lines | get 1 | split row " " | first | into int)
     let row = (0..<$STAMP_BITS | each {|bit|
         let colour = (if ((($value bit-shr $bit) bit-and 1) == 1) { $STAMP_ONE } else { $STAMP_ZERO })
@@ -261,7 +264,7 @@ export def picture-refusals [e: record]: nothing -> list<record<kind: string, de
     } else if not $m.valid {
         [{ kind: "invalid", detail: ($m.invalid | first 3 | str join "; "), frames: [] }]
     } else { [] })
-    let stamp = (if $e.capture == null { null } else { try { stamp-of $e.capture } catch { null } })
+    let stamp = (if $e.capture == null { null } else { try { picture stamp $e.capture } catch { null } })
     let read = (if $e.capture == null {
         [{ kind: "no capture", detail: "the launch took no screen", frames: [] }]
     } else if $stamp == null {
@@ -314,7 +317,7 @@ def tile-rows [api: binary, tile: record]: nothing -> list<binary> {
 # each as [x, y].
 def pixels-differ [p: binary, q: binary, y: int, most: int]: nothing -> list<list<int>> {
     let row = {|c: binary|
-        let head = (ppm-head $c)
+        let head = (picture ppm-head $c)
         let width = ($c | bytes at 0..<$head | decode | lines | get 1 | split row " " | first | into int)
         $c | bytes at ($head + $y * $width * 3)..<($head + ($y + 1) * $width * 3) | chunks 3
     }
@@ -344,7 +347,7 @@ def cycle-launch [kernel: path, image: path, disk: path, out: path, label: strin
     let dump_at = (($timed | last | get start) + $CYCLE_DUMP)
     let end_at = ($dump_at + $CYCLE_END)
     let ended = (do $at $end_at (pose command-frame "E"))
-    let sends = ([(do $at $STAMP_AT (raise-frame 0 --stamp)) (do $at $CYCLE_CAP_AT (do $o))] ++ $leg_sends ++ [$ended] | sort-by at)
+    let sends = ([(do $at $STAMP_AT (console raise 0 --stamp)) (do $at $CYCLE_CAP_AT (do $o))] ++ $leg_sends ++ [$ended] | sort-by at)
     let dir = ($out | path join $name)
     let run = (launch --kernel $kernel --image $image --out $dir --set DEBUG --sound --api --disk $disk --serial "fps" --send $sends --screen (($dump_at + $CYCLE_SCREEN) * 1ms) --seconds ((($end_at + 4000) / 1000) | math ceil))
     assert equal (open --raw $run.qemu_log) "" $"QEMU has no complaint about the guest on ($label)"
@@ -368,7 +371,7 @@ def cycle-launch [kernel: path, image: path, disk: path, out: path, label: strin
 def sight-launch [kernel: path, image: path, disk: path, out: path, label: string]: nothing -> record {
     let ended = { at: $SIGHT_END_AT, bytes: (pose command-frame "E") }
     let sends = [
-        { at: ($STAMP_AT * 1ms), bytes: (raise-frame 0 --stamp) }
+        { at: ($STAMP_AT * 1ms), bytes: (console raise 0 --stamp) }
         { at: $SIGHT_AT, bytes: (pose pose-frame $SPAWN) }
         { at: $SIGHT_AT, bytes: (pool-frame --cold) }
         $ended
@@ -533,12 +536,12 @@ export def eviction-cycle [kernel: path, image: path, disk: path, out: path]: no
     let a = (stamp-written ($pictures | get 0 | get capture) 0)
     let b = (stamp-written ($pictures | get 1 | get capture) 0)
     if $a != $b {
-        let rows_apart = (rows-differ $a $b [0 0 1920 1080])
+        let rows_apart = (picture rows-differ $a $b [0 0 1920 1080])
         assert false $"($label): the last spawn's screen identical to its settled first sight outside the stamp's cells, ($rows_apart | length) rows differing from row ($rows_apart | get -o 0)"
     }
     let framed = ($pictures | each {|e|
         let window = (picture-window $e.measure $e.from)
-        let stamp = (stamp-of $e.capture)
+        let stamp = (picture stamp $e.capture)
         { label: $e.label, last_build: $window.last_build, displayed: (displayed-frame $e.measure $window $stamp), final: $window.final, completed: $e.completed, ended: $e.ended }
     })
 
@@ -609,7 +612,7 @@ export def held-partial [kernel: path, image: path, disk: path, out: path]: noth
     let quota = ($HELD_TILES * $TILE_TEXELS + $HELD_ROWS * $TILE_ROW_TEXELS)
     let ended = { at: ($HELD_END_AT * 1ms), bytes: (pose command-frame "E") }
     let sends = [
-        { at: ($STAMP_AT * 1ms), bytes: (raise-frame 0 --stamp) }
+        { at: ($STAMP_AT * 1ms), bytes: (console raise 0 --stamp) }
         { at: ($HELD_AT * 1ms), bytes: (pose pose-frame $SPAWN) }
         { at: (($HELD_AT + $HELD_ONCE_AFTER) * 1ms), bytes: (pool-frame --modes $modes --cold --quota $quota) }
         { at: ($HELD_DUMP_AT * 1ms), bytes: (dump-frame --building) }
@@ -637,7 +640,7 @@ export def held-partial [kernel: path, image: path, disk: path, out: path]: noth
     let e_index = ($sends | enumerate | where {|x| $x.item.at == $ended.at and $x.item.bytes == $ended.bytes } | get 0.index)
     let e = { label: $label, measure: $m, capture: (capture-of $run.screen), from: $from, completed: $run.screen_completed, ended: ($run.send_seconds | get $e_index) }
     assert ($e.capture != null) $"($label)'s screen taken"
-    let stamp = (stamp-of $e.capture)
+    let stamp = (picture stamp $e.capture)
     let window = (picture-window $m $from)
     assert equal $window.last_build ($first_miss + 1) $"($label)'s window from the construction's frame"
     let displayed = (if $stamp == null { null } else { displayed-frame $m $window $stamp })
@@ -682,9 +685,9 @@ export def slot-reuse [kernel: path, image: path, disk: path, out: path]: nothin
     let at = {|ms: int, bytes: binary| { at: ($ms * 1ms), bytes: $bytes } }
     let knobs = {|held: bool| [
         (do $at $REUSE_LEVEL_AT (level-frame true $held))
-        (do $at $REUSE_WORKERS_AT (gauge workers-frame 2 0))
+        (do $at $REUSE_WORKERS_AT (console workers 2 0))
         (do $at $REUSE_HOLD_AT (jobs-frame 2 0 false 0 --hold))
-        (do $at $STAMP_AT (raise-frame 0 --stamp))
+        (do $at $STAMP_AT (console raise 0 --stamp))
     ] }
     let stale = ($LIFTED + $STALE)
     let once = ($LIFTED + $STALE + $ONCE)
@@ -744,7 +747,7 @@ export def slot-reuse [kernel: path, image: path, disk: path, out: path]: nothin
     let ref_evidence = { label: $"($label)'s reference", measure: $ref_m, capture: (capture-of $ref_run.screen), from: $ref_placed.frame, published: false, completed: $ref_run.screen_completed, ended: ($ref_run.send_seconds | get $ref_index) }
     let ref_refused = (picture-refusals $ref_evidence)
     assert (($ref_refused | where kind != "unsettled") | is-empty) $"($label)'s reference's picture bound from its spawn placement, refused for nothing but unsettled: ($ref_refused | each {|r| $'($r.kind): ($r.detail)' } | str join '; ')"
-    let ref_shown = (displayed-frame $ref_m (picture-window $ref_m $ref_placed.frame) (stamp-of $ref_evidence.capture))
+    let ref_shown = (displayed-frame $ref_m (picture-window $ref_m $ref_placed.frame) (picture stamp $ref_evidence.capture))
     let tiled = ($ref_m.rows | where {|r| $r.frame >= $ref_placed.frame and $r.frame <= $ref_shown and ($r.tiled_pixels != 0 or $r.tiles_built != 0 or $r.building != 0) })
     assert ($tiled | is-empty) $"($label)'s reference held off its tiles from its placement, frame ($ref_placed.frame), through its displayed one, ($ref_shown): ($tiled | first 3 | select frame tiled_pixels tiles_built building)"
 
@@ -752,7 +755,7 @@ export def slot-reuse [kernel: path, image: path, disk: path, out: path]: nothin
     let a = (stamp-written $evidence.capture 0)
     let b = (stamp-written $ref_evidence.capture 0)
     if $a != $b {
-        let rows_apart = (rows-differ $a $b [0 0 1920 1080])
+        let rows_apart = (picture rows-differ $a $b [0 0 1920 1080])
         let first_row = ($rows_apart | get -o 0)
         let pixels = (if $first_row == null { [] } else { pixels-differ $a $b $first_row 5 })
         assert false $"($label): the screen the bright spawn view held off its tiles outside the stamp's cells, ($rows_apart | length) rows differing from row ($first_row), its first pixels apart ($pixels)"
@@ -765,7 +768,7 @@ export def slot-reuse [kernel: path, image: path, disk: path, out: path]: nothin
     assert ($published == [{ frame: ($first_miss + 1), tiles_built: $REUSE_TILES }]) $"($label): one construction since the ONCE, at the frame after the spawn's first miss, ($first_miss + 1), publishing ($REUSE_TILES): ($published | first 3)"
     let unheld = ($m.rows | where {|r| $r.frame > $first_miss and $r.building != 1 })
     assert ($unheld | is-empty) $"($label): BUILDING 1 on every frame from ($first_miss + 1) through the end marker's, ($m.final): ($unheld | first 3 | select frame building tiles_built)"
-    let displayed = (displayed-frame $m (picture-window $m ($placed + 1)) (stamp-of $evidence.capture))
+    let displayed = (displayed-frame $m (picture-window $m ($placed + 1)) (picture stamp $evidence.capture))
     let shown = ($m.rows | where frame == $displayed | get 0)
     assert ($shown.building == 1 and $shown.missed_blocks > 0) $"($label): the displayed frame ($displayed)'s records BUILDING 1 and blocks missed: ($shown | select frame building missed_blocks)"
 

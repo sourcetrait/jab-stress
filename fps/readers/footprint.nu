@@ -18,8 +18,9 @@ use ../../../jab/nu/mod/target
 use ../../../jab/nu/mod/build
 use ../../../jab/nu/mod/launch
 use ../../../jab/kit/fierce/test/pose.nu
-use ../../../jab/kit/fierce/test/gauge.nu
-use ../../../jab/kit/fierce/test/test.nu [raise-frame stamp-of]
+use ../../../jab/kit/fierce/nu/mod/console
+use ../../../jab/kit/fierce/nu/mod/gauge
+use ../../../jab/kit/fierce/nu/mod/picture
 use ../../../jab/kit/fierce/nu/map.nu
 use ./export.nu [symbols-of provenance-of]
 use ./workerparity.nu [disk-of answered-frames]
@@ -63,8 +64,8 @@ def placement [p: record]: nothing -> binary {
 # and the E at SCREEN_AT.
 def sends-of [p: record]: nothing -> list<any> {
     [
-        { at: $STAMP_AT, bytes: (raise-frame 0 --stamp) }
-        { at: $STAMP_AT, bytes: (gauge workers-frame 0 0) }
+        { at: $STAMP_AT, bytes: (console raise 0 --stamp) }
+        { at: $STAMP_AT, bytes: (console workers 0 0) }
         { at: 1900ms, bytes: (pose command-frame "L") }
         { at: 2000ms, bytes: (placement $p) }
         { at: 8000ms, bytes: (placement $p) }
@@ -81,11 +82,11 @@ def sends-of [p: record]: nothing -> list<any> {
 def bind [run: record, p: record, levels: bool]: nothing -> record<stamp: any, from: any, frame: any, state: any, problems: list<string>> {
     let placed = (answered-frames $run.api $CONSOLE_P)
     if $run.screen == "" { return { stamp: null, from: ($placed | get -o 1), frame: null, state: null, problems: ["no screen was taken"] } }
-    let stamp = (stamp-of (open --raw $run.screen | into binary))
+    let stamp = (picture stamp (open --raw $run.screen | into binary))
     if ($placed | length) < 2 { return { stamp: $stamp, from: null, frame: null, state: null, problems: [$"the second placement unanswered: ($placed | length) answered"] } }
     let measured = (gauge measure $run.api [{ name: "start", places: [], pad: [] }, { name: "placed", places: [$p $p], pad: [] }])
     let expect = { pose: ($p | select x y z yaw pitch roll), workers: 0, grain: 0, masks: null, witness: null }
-    let b = (gauge screen-frame $measured $stamp ($placed | get 1) $expect)
+    let b = (gauge measure screen-frame $measured $stamp ($placed | get 1) $expect)
     let row = (if $b.frame == null { null } else { $measured.rows | where frame == $b.frame | get -o 0 })
     let flushed = (if $levels and $row != null and $row.flushes != 0 { [$"frame ($b.frame) drawn from ($row.flushes + 1) packets, where a LEVELS frame must be drawn from one"] } else { [] })
     { stamp: $stamp, from: ($placed | get 1), frame: $b.frame, state: (if $row == null { null } else { $row | select x y z yaw pitch roll }), problems: ($b.problems ++ $flushed) }

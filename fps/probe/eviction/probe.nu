@@ -7,7 +7,7 @@
 # moment, read by tiles.nu's keys in a nu of its own.
 use ../../../../jab/nu/mod/launch
 use ../../../../jab/kit/fierce/test/pose.nu
-use ../../../../jab/kit/fierce/test/gauge.nu
+use ../../../../jab/kit/fierce/nu/mod/gauge
 
 const TILES = (path self | path dirname | path join .. .. .. .. jab kit fierce test tiles.nu)
 const RECORD = 64

@@ -6,8 +6,7 @@
 # untrimmed. Run from a scratch justfile under the real nu: `nu lane.nu
 # <base> <out.nuon> <label>...`, or `use` it and call `analyse`.
 
-const GAUGE = "../../../jab/kit/fierce/test/gauge.nu"
-use $GAUGE [run-request]
+use ../../../jab/kit/fierce/nu/mod/gauge
 
 const PERIOD = (1000000 / 60)
 # the ceiling in microseconds, judged on the critical path's median; the
@@ -45,7 +44,7 @@ export def analyse [base: string, labels: list<string>]: nothing -> record {
         let file = ($base | path join $l "gauge.nuon")
         let g = (open $file)
         let runs = ($g.runs | each {|r|
-            let request = (run-request $file $r ($g | get -o identity))
+            let request = (gauge identity request $file $r ($g | get -o identity))
             let rows = (started ($g.rows | where run == $r.run))
             {
                 label: $l, cadence: $request.cadence, run: $r.run, rows: $rows,
