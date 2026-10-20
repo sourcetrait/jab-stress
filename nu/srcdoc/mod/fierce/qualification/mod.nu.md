@@ -19,6 +19,9 @@ hold the code, and this file re-exports them for a consumer.
 - `report` writes the document for its reader, a section a target.
 - `matrix` holds what they share: the targets, the cases, the diagnostics,
   the limits, and the acceptance's rules.
+- `package` makes the candidate's host package for a target.
+- `disks` makes a bench's disk copies again from today's content and holds
+  them to the bench's records, its removal gate's check of the copies.
 
-Its bin: `nu/bin/nuance/fierce/qualification.nu candidate|record|check|report`,
-each verb the child's `main`.
+Its bin: `nu/bin/nuance/fierce/qualification.nu
+candidate|record|check|report|package|disks`, each verb the child's `main`.

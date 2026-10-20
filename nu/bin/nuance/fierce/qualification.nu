@@ -23,6 +23,11 @@ def "main report" [...paths: path, --compared: string = ""] {
     qualification report ...$paths --compared $compared
 }
 
+# A bench's disk copies made again from today's content and held to its records
+def "main disks" [bench: path, inventory: path, out: path] {
+    qualification disks $bench $inventory $out
+}
+
 # The candidate's host package for a target, one tar from its export
 def "main package" [candidate: path, export: path, target: string, out: path, --stage: string = ""] {
     qualification package $candidate $export $target $out --stage $stage

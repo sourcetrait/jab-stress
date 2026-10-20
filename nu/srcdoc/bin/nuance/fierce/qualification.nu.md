@@ -27,6 +27,12 @@ ledger checked.
 --compared: string = ""`: The report over checks, the last path its Markdown
 file.
 
+## def main disks
+
+`nu/bin/nuance/fierce/qualification.nu disks`, its parameters `bench: path,
+inventory: path, out: path`: A bench's disk copies made again from today's
+content and held to its records.
+
 ## def main package
 
 `nu/bin/nuance/fierce/qualification.nu package`, its parameters `candidate:

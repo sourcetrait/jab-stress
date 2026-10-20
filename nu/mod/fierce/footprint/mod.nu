@@ -8,6 +8,7 @@ use (path self ../../../../../jab/kit/fierce/nu/mod/picture)
 use (path self ../../../../../jab/kit/fierce/nu/mod/map)
 use (path self ../../../../../jab/kit/fierce/nu/mod/tree)
 use (path self ../freeze) [symbols-of provenance-of]
+use (path self ../tilesources)
 use (path self ../workerparity) [disk-of answered-frames]
 
 # The game's directory in jab, checked out beside the workbench
@@ -496,8 +497,7 @@ def remade-still [disk: record, c: record, into: path]: nothing -> record<conten
     mkdir $into
     cp -r ($disk.disk | path dirname | path join "tree") ($into | path join "tree")
     let tree = ($into | path join ($disk.tree | path relative-to ($disk.disk | path dirname)))
-    let tiles = ($tree | path join "tile.nuon")
-    open $tiles | each {|t| $t | update source (if $t.source == "" { "" } else { $content | path join $t.source }) } | to nuon | save -f $tiles
+    tilesources rooted $tree $content
     let made = (^genromfs -d $tree -f ($into | path join ($disk.disk | path basename)) -V "fps" | complete)
     if $made.exit_code != 0 { error make { msg: $"genromfs over ($tree): ($made.stderr)" } }
     { content: $content, problems: [] }

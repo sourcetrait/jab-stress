@@ -287,7 +287,8 @@ file of another SHA-256, and every file the capture's rows do not name.
 A still copy remade in `into` as a checkout compiled it before jab c804ccb:
 its tree copied whole, the variant's source beside the map's tree, its
 `tile.nuon` naming each source under the content where the capture's
-checkout held it, and the disk made over it with the volume `fps`. The
+checkout held it (tilesources), and the disk made over it with the volume
+`fps`. The
 content's place is the map source's in the checkout at the capture's
 commit, `game/fps/content` before the game moved to `kit/fierce`; a commit
 holding no single source of the map is a problem.
