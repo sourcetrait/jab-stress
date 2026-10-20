@@ -1,4 +1,20 @@
 use (path self ../../../../../jab/nu/mod/identity)
+use (path self ../../../../../jab/nu/mod/supervise)
+
+# The timing domain a launch under the supervisor measures in, as a freeze records it
+const TIMING = "the supervisor's monotonic clock: the go's Instant, as the supervisor lets QEMU run, the origin of every receipt time, in nanoseconds; QEMU's CPU read by the supervisor every cpu_ns; a result's times in seconds from the go and its wall_seconds from the go to the reap; the caller's realtime clock gives dates alone. A run captured before this freeze keeps the timing it was captured under, its times from the caller's realtime start."
+
+# The launcher a freeze's measurements run under: the supervisor's binary, its
+# checkout, its bounds, and its timing domain
+export def launcher-of [repo: string]: nothing -> record {
+    let bin = (supervise binary)
+    {
+        supervisor: { path: $bin, sha256: (open --raw $bin | into binary | hash sha256) },
+        built_from: (identity reader [$repo]).repos.0,
+        bounds: (supervise bounds),
+        timing: $TIMING,
+    }
+}
 
 # The build symbols a set names: screaming snake case, each once, sorted
 export def symbols-of [set: string]: nothing -> list<string> {

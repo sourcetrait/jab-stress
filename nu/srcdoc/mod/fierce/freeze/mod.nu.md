@@ -25,6 +25,24 @@ the symbols, a measured image being a release build and `release` the build's
 own. Its bin: `nu/bin/nuance/fierce/freeze.nu <repo> <commit> <cands> <expected>
 [--set <symbols>] [--program <path>]`, the symbols comma separated.
 
+## const TIMING
+
+The timing domain a launch under the supervisor measures in, as a freeze
+records it: the go's `Instant` the origin of every receipt time, in
+nanoseconds, QEMU's CPU read by the supervisor, a result's times in seconds
+from the go and its `wall_seconds` from the go to the reap, the caller's
+realtime clock giving dates alone; a run captured before the freeze keeps
+the timing it was captured under.
+
+## def launcher-of
+
+The launcher a freeze's measurements run under (FrameCeiling's fix pass,
+RelaySupervision): the supervisor's binary as jab's `supervise binary`
+builds it from the SDK's own checkout, its path and SHA-256; the checkout's
+commit and state (`identity reader`); the supervisor's bounds (`supervise
+bounds`); and the timing domain. Its bin's `launcher <repo> <out>` writes
+it once.
+
 ## def symbols-of
 
 The build symbols a set names as the tool makes them: screaming snake

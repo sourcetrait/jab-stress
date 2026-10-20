@@ -8,3 +8,8 @@ so its closures run in a nu that loads no other module.
 `nu/bin/nuance/fierce/freeze.nu`, its parameters `repo: string, commit: string,
 cands: string, expected: string, --set: string = "", --program: string = ""`: A
 commit's program exported and built release, gated, its provenance kept.
+
+## def main launcher
+
+`nu/bin/nuance/fierce/freeze.nu launcher`, its parameters `repo: string, out:
+path`: The launcher a freeze's measurements run under, written once to `out`.
