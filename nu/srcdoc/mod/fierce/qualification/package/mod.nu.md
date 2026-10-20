@@ -13,6 +13,17 @@ The export's program directory, the one holding its manifest.
 
 ## def held
 
+## def named-artifacts
+
+A named build's artifacts from its own export (freeze.nu with its set, or
+`--debug` for the debug build), the export of the candidate's commit: its
+image held to the candidate's build of that name, its ELF to its export's
+provenance, which must name the candidate's commit and that image, its
+flags, demand, provenance, and source record, and the kernel its tree's
+builds run, held to the candidate's build's, laid at `build/<name>`, where
+a packaged bench's `{build:<name>}` reads them; and its identity for the
+manifest.
+
 ## def main
 
 The package: the export of the candidate's commit (freeze.nu), its
@@ -27,6 +38,9 @@ beside the tree build's; the kernel the export's build ran with, its ELF and its
 loaded flat image's SHA-256 both named, each for the check that uses it;
 the asset tree, the checkout's shard's, held to the candidate's digest;
 the factory route at the candidate's commit; and the bench, the
-candidate's bench file at its commit as packaged-bench writes it. The
-inputs written once beside the stage, the stage a fresh directory beside
-`out` unless `--stage` names one, nothing deleted.
+candidate's bench file at its commit as packaged-bench writes it; and each
+named build of the candidate's from its export, `--exports` a NUON record
+of name to export directory, every build given one and none foreign
+(named-artifacts), the manifest's identities naming each. The inputs
+written once beside the stage, the stage a fresh directory beside `out`
+unless `--stage` names one, nothing deleted.

@@ -36,5 +36,6 @@ content and held to its records.
 ## def main package
 
 `nu/bin/nuance/fierce/qualification.nu package`, its parameters `candidate:
-path, export: path, target: string, out: path, --stage: string = ""`: The
-candidate's host package for a target, one tar from its export.
+path, export: path, target: string, out: path, --stage: string = "",
+--exports: string = "{}"`: The candidate's host package for a target, one
+tar from its export and each named build's.

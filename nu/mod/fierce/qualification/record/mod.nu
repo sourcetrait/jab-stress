@@ -4,13 +4,16 @@ use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge)
 use (path self ../../observer)
 use (path self ../../proberuns)
 use (path self ../matrix)
-use (path self ../matrix) [CASES DIAGNOSTICS JAB LIMITS RECORD STRESS TARGETS]
+use (path self ../matrix) [CASES DIAGNOSTICS GFX_FLOOR JAB LIMITS RECORD STRESS TARGETS]
 
 # The runs a step's words ask for, the gauge's defaults where none named
 export def expected-of [words: list<string>]: nothing -> record<kind: string, runs: list<any>> {
     let verb = (matrix step-verb $words)
     if $verb == "play" {
         return { kind: "play", runs: [{ run: 1, seed: (matrix flag-of $words "--seed" | default "1" | into int) }] }
+    }
+    if $verb == "audio" {
+        return { kind: "audio", runs: [{ run: 1, seed: null }] }
     }
     let count = (matrix flag-of $words "--runs" | default "3" | into int)
     let seeds = (matrix flag-of $words "--seeds" | default "[]" | from nuon)
@@ -43,10 +46,16 @@ def step-words [label: string, listed: record, definition: any]: nothing -> list
     if $defined != null { $defined } else { $listed.steps | where label == $label | get -o 0.run | default [] }
 }
 
-# A bench step's runs as the record keeps them
-def step-runs [step: record, doc: record, candidate: record, target: string, spec: record, words: list<string>]: nothing -> list<any> {
+# A step's named build, from the candidate's definition before its words are resolved
+def step-role [label: string, raw: any]: nothing -> any {
+    matrix role-of ($raw | get -o steps | default [] | where label == $label | get -o 0.run | default [])
+}
+
+# A bench step's runs as the record keeps them, each held to its step's build
+def step-runs [step: record, doc: record, candidate: record, target: string, spec: record, words: list<string>, role: any]: nothing -> list<any> {
     if $step.file == null { return [] }
     let g = (open $step.file)
+    let build = (matrix build-of $candidate $role $words)
     $g.runs | each {|r|
         let req = (gauge identity request $step.file $r ($g | get -o identity))
         let classed = ($doc.runs | where {|x| $x.label == $step.label and $x.run == $r.run } | get -o 0)
@@ -55,13 +64,13 @@ def step-runs [step: record, doc: record, candidate: record, target: string, spe
         let bundle = (if $dir == null { null } else { $dir | path join "bundle" })
         let ran = ($r | get -o ran | default {})
         {
-            step: $step.label, run: $r.run, seed: ($r | get -o seed),
+            step: $step.label, run: $r.run, seed: ($r | get -o seed), build: $role,
             kind: ($classed | get -o kind), selection: $req.selection, cadence: $req.cadence, workers: $req.workers, grain: $req.grain,
             standing: ($classed | get -o standing | default "unclassified"), reasons: ($classed | get -o reasons | default []),
             probed: $req.probed, dir: $dir, bundle: (if $bundle != null and ($bundle | path type) == "dir" { $bundle } else { null }),
-            identity: $id, agreement: (matrix agreement-of $id $candidate $target $spec), conditions: (matrix conditions-of $id $ran $words),
+            identity: $id, agreement: (matrix agreement-of $id $candidate $build $target $spec), conditions: (matrix conditions-of $id $ran $words),
             backend: { window: ($ran | get -o window), audio: ($ran | get -o audio | default "" | split row "," | first) },
-            measured: ($r | get -o measured), cpu: ($r | get -o cpu),
+            measured: ($r | get -o measured), cpu: ($r | get -o cpu), audio: ($r | get -o audio),
         }
     }
 }
@@ -165,6 +174,60 @@ def presentation-reading [runs: list<any>, missing: list<any>, target: string]: 
     }
 }
 
+# The service active's reading: its runs' verdicts, each window's offered
+# rate, quotas skipped, apply phase, and oldest age beside its median
+def service-reading [runs: list<any>]: nothing -> record {
+    {
+        passed: ($runs | where {|r| $r.verdict.pass } | length),
+        runs: ($runs | length),
+        windows: ($runs | each {|r|
+            let sv = ($r.measured | get -o service)
+            let w = ($sv | get -o windows | default [] | get -o 0)
+            {
+                name: (matrix run-name $r), started: ($sv | get -o started), offered: ($w | get -o offered), per_frame: ($w | get -o per_frame),
+                applied: ($w | get -o applied), dropped: ($w | get -o dropped), skipped: ($w | get -o skipped), valid: ($w | get -o valid),
+                apply_median_us: ($w | get -o apply.median), apply_max_us: ($w | get -o apply.max), age_median_us: ($w | get -o age.median),
+                median_us: $r.verdict.median_us,
+            }
+        }),
+    }
+}
+
+# The feature unavailable's reading: the start refused under the floor, no
+# window opened, and the play valid past it, its median reported, never judged
+def refusal-reading [runs: list<any>, missing: list<any>, target: string]: nothing -> record {
+    let read = ($runs | each {|r|
+        let sv = ($r.measured | get -o service)
+        let name = (matrix run-name $r)
+        let problems = (if $sv == null { [$"($name)'s capture holds no service record, so its image is no SERVICE build's"] } else {
+            [
+                (if $sv.started { $"($name)'s service started, where ($target)'s harts refuse it" })
+                (if $sv.refusals != [$GFX_FLOOR] { $"($name)'s start answered (if ($sv.refusals | is-empty) { 'no refusal' } else { $sv.refusals | each {|v| $v | into string } | str join ', ' }), where the floor's refusal is ($GFX_FLOOR)" })
+                (if not ($sv.windows | is-empty) { $"($name) closed ($sv.windows | length) service windows, where none opens" })
+                (if $sv.running > 0 { $"($name) recorded ($sv.running) frames with the service running" })
+            ] | compact
+        })
+        { name: $name, refusals: ($sv | get -o refusals), running: ($sv | get -o running), median_us: ($r.measured | get -o whole.critical.median), problems: ($problems ++ ($r.conditions | each {|c| $"($name): ($c)" })) }
+    })
+    let problems = ((control-problems $runs $missing $target) ++ ($read | each {|x| $x.problems } | flatten))
+    { met: ($problems | is-empty), runs: $read, problems: $problems }
+}
+
+# The audio's reading: each debug run's driver counters and QEMU log, and its
+# continuity where its sound was recorded, its standing beside and never judged
+def audio-reading [runs: list<any>, missing: list<any>, target: string]: nothing -> record {
+    let absent = ($missing | each {|m| $"($m.step) run ($m.run) is missing" })
+    let foreign = ($runs | where {|r| not ($r.agreement | is-empty) } | each {|r| $"(matrix run-name $r) is not the candidate's debug run on ($target): ($r.agreement | str join '; ')" })
+    let read = ($runs | each {|r|
+        let a = ($r | get -o audio)
+        let name = (matrix run-name $r)
+        let problems = (if $a == null { [$"($name) holds no audio reading"] } else { $a.problems | each {|p| $"($name): ($p)" } })
+        { name: $name, standing: $r.standing, reading: $a, problems: ($problems ++ ($r.conditions | each {|c| $"($name): ($c)" })) }
+    })
+    let problems = ($absent ++ $foreign ++ ($read | each {|x| $x.problems } | flatten))
+    { met: ($problems | is-empty), runs: $read, live: ($read | where {|x| $x.reading != null and (not $x.reading.recorded) } | each {|x| $x.name }), problems: $problems }
+}
+
 # A diagnostic's readings from the normal play runs, a missing leg named
 def diagnostic-reading [d: record, runs: list<any>]: nothing -> record {
     let readings = ($runs | each {|r|
@@ -194,21 +257,39 @@ def watch-of [bench: path]: nothing -> any {
     if ($file | path exists) { open $file } else { null }
 }
 
-# A packaged bench's freeze: the candidate holding its package's ELF
+# A packaged bench's freeze: the candidate holding its package's ELFs, its
+# own and each named build's
 def frozen-of [bench: path, cand: record, candidate: path]: nothing -> record<cand: record, manifest: any, problems: list<string>> {
     let file = ($bench | path join "preflight" "package.nuon")
     if not ($file | path exists) { return { cand: $cand, manifest: null, problems: [$"the packaged bench carries no package manifest at ($file), so the freeze's ELF is unknown"] } }
     let ids = (open $file | get -o identities | default {})
     let elf = ($ids | get -o image.elf_sha256)
+    let builds = ($cand | get -o builds | default {})
+    let packed = ($ids | get -o builds | default {})
+    let named = ($builds | columns | each {|n|
+        let b = ($builds | get $n)
+        let p = ($packed | get -o $n)
+        if $p == null { $"the package's manifest names no build ($n)" } else {
+            [
+                (if $p.sha256 != $b.image_sha256 { $"the package's ($n) image is ($p.sha256), where the candidate's is ($b.image_sha256)" })
+                (if $p.kernel_sha256 != $b.kernel_sha256 { $"the package's ($n) kernel is ($p.kernel_sha256), where the candidate's is ($b.kernel_sha256)" })
+                (if ($p | get -o elf_sha256) == null { $"the package's manifest names no ELF of its ($n) build" })
+            ] | compact
+        }
+    } | flatten)
     let problems = ([
         (if ($ids | get -o candidate.file_sha256) != (matrix sha-of $candidate) { $"the package was made for the candidate file of SHA-256 ($ids | get -o candidate.file_sha256 | default 'unrecorded'), where this record's is (matrix sha-of $candidate)" })
         (if ($ids | get -o image.sha256) != $cand.image_sha256 { $"the package's image is ($ids | get -o image.sha256 | default 'unrecorded'), where the candidate's is ($cand.image_sha256)" })
         (if ($ids | get -o kernel.elf_sha256.value) != $cand.kernel_sha256 { $"the package's kernel is ($ids | get -o kernel.elf_sha256.value | default 'unrecorded'), where the candidate's is ($cand.kernel_sha256)" })
         (if ($ids | get -o assets.digest) != $cand.assets.digest { $"the package's asset tree is ($ids | get -o assets.digest | default 'unrecorded'), where the candidate's is ($cand.assets.digest)" })
         (if $elf == null { "the package's manifest names no ELF" })
-    ] | compact)
+    ] | compact) ++ $named
     let manifest = { file: $file, sha256: (matrix sha-of $file), elf_sha256: $elf }
-    { cand: (if ($problems | is-empty) { $cand | update elf_sha256 $elf } else { $cand }), manifest: $manifest, problems: $problems }
+    let held = (if not ($problems | is-empty) { $cand } else {
+        let frozen = ($builds | columns | reduce --fold $builds {|n, acc| $acc | update $n ($acc | get $n | update elf_sha256 ($packed | get $n | get elf_sha256)) })
+        $cand | update elf_sha256 $elf | upsert builds $frozen
+    })
+    { cand: $held, manifest: $manifest, problems: $problems }
 }
 
 # The readers' identity, taken as a command starts and its code is read
@@ -230,25 +311,37 @@ export def record-of [bench: path, candidate: path, target: string, --readers: a
     let defined = (matrix jab-file $cand.jab $"kit/fierce/bench/qual_($target).nuon"
         | default (matrix jab-file $cand.jab $"game/fps/bench/qual_($target).nuon"))
     let package = ($listed | get -o package)
-    let definition = (if $defined == null { null } else if $package == null { $defined | from nuon } else { matrix packaged-in (matrix packaged-bench ($defined | from nuon) $target) $package })
+    let raw = (if $defined == null { null } else if $package == null { $defined | from nuon } else { matrix packaged-bench ($defined | from nuon) $target })
+    let definition = (if $raw == null { null } else { matrix resolved-in $raw $package ($listed | get -o build_root) })
     let frozen = (if $package == null { { cand: $cand, manifest: null, problems: [] } } else { frozen-of $bench $cand $candidate })
     let doc = (gauge bench doc $bench)
-    let runs = ($doc.steps | each {|s| step-runs $s $doc $frozen.cand $target $spec (step-words $s.label $listed $definition) } | flatten)
+    let runs = ($doc.steps | each {|s| step-runs $s $doc $frozen.cand $target $spec (step-words $s.label $listed $definition) (step-role $s.label $raw) } | flatten)
     let runs = ($runs | each {|r|
-        let acceptance = ($CASES | where kind == acceptance | any {|c| $r.step in ($c.steps | get $target) })
-        if $acceptance { $r | insert verdict (matrix verdict-of $r) } else { $r }
+        let held = ($CASES | where {|c| $r.step in ($c.steps | get $target) })
+        let acceptance = ($held | any {|c| $c.kind == "acceptance" })
+        let serviced = ($held | any {|c| $c.reading == "service" })
+        if $acceptance { $r | insert verdict (matrix verdict-of $r --service=$serviced) } else { $r }
     })
     let cases = ($CASES | each {|c|
         let labels = ($c.steps | get $target)
         let these = ($runs | where {|r| $r.step in $labels })
         let e = (expected-runs $labels $listed $definition $these)
-        let reading = (match $c.reading {
-            "verdicts" => ({ passed: ($these | where {|r| $r.verdict.pass } | length), runs: ($these | length) })
-            "presentation" => (presentation-reading $these $e.missing $target)
-            "shim" => (shim-reading $these $e.missing $target)
-            "scaling" => (scaling-reading $these $e.missing $target)
+        let applicable = not ($labels | is-empty)
+        let reading = (if not $applicable { null } else {
+            match $c.reading {
+                "verdicts" => ({ passed: ($these | where {|r| $r.verdict.pass } | length), runs: ($these | length) })
+                "service" => (service-reading $these)
+                "refusal" => (refusal-reading $these $e.missing $target)
+                "audio" => (audio-reading $these $e.missing $target)
+                "presentation" => (presentation-reading $these $e.missing $target)
+                "shim" => (shim-reading $these $e.missing $target)
+                "scaling" => (scaling-reading $these $e.missing $target)
+            }
         })
-        { case: $c.case, kind: $c.kind, steps: $labels, runs: ($these | each {|r| { step: $r.step, run: $r.run } }), expected: $e.expected, missing: $e.missing, problems: $e.problems, reading: $reading }
+        {
+            case: $c.case, kind: $c.kind, steps: $labels, runs: ($these | each {|r| { step: $r.step, run: $r.run } }), expected: $e.expected, missing: $e.missing, problems: $e.problems, reading: $reading,
+            applicable: $applicable, why: (if $applicable { "" } else { $c.absent | get -o $target | default "" }),
+        }
     })
     let normal = ($CASES | where case == "normal play" | get 0.steps | get $target)
     let routed = ($runs | where {|r| $r.step in $normal and $r.kind == "route" })

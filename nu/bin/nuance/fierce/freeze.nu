@@ -3,9 +3,9 @@
 const FREEZE = path self ../../../mod/fierce/freeze
 use $FREEZE
 
-# A commit's program exported and built release, gated, its provenance kept
-def main [repo: string, commit: string, cands: string, expected: string, --set: string = "", --program: string = ""] {
-    freeze $repo $commit $cands $expected --set $set --program $program
+# A commit's program exported and built release, or debug with `--debug`, gated, its provenance kept
+def main [repo: string, commit: string, cands: string, expected: string, --set: string = "", --program: string = "", --debug] {
+    freeze $repo $commit $cands $expected --set $set --program $program --debug=$debug
 }
 
 # The launcher a freeze's measurements run under, written once to `out`

@@ -57,14 +57,15 @@ def game-place [repo: string, full: string]: nothing -> list<string> {
     if (do $has "kit/fierce") { ["kit" "fierce"] } else if (do $has "game/fps/1k") { ["game" "fps" "1k"] } else { ["game" "fps"] }
 }
 
-# A commit's program exported and built release, gated, its provenance kept
-export def main [repo: string, commit: string, cands: string, expected: string, --set: string = "", --program: string = ""] {
+# A commit's program exported and built release, or debug with `--debug`,
+# gated, its provenance kept
+export def main [repo: string, commit: string, cands: string, expected: string, --set: string = "", --program: string = "", --debug] {
     let full = (^git -C $repo rev-parse $commit | complete | get stdout | str trim)
     if $full == "" { error make { msg: $"($commit) names no commit in ($repo)" } }
     let short = ($full | str substring 0..<7)
     let names = (symbols-of $set)
     let refused = ($names | where {|n| $n in [DEBUG RELEASE] })
-    if not ($refused | is-empty) { error make { msg: $"an export is a release build with `release` its own symbol; ($refused | str join ', ') cannot be among --set's" } }
+    if not ($refused | is-empty) { error make { msg: $"an export's tree is its own: release with `release` its symbol, or debug by `--debug`; ($refused | str join ', ') cannot be among --set's" } }
     let place = (if $program == "" { game-place $repo $full } else { $program | split row "/" | where {|s| $s != "" } })
     let rel = ($place | str join "/")
     let shown = (^git -C $repo show $"($full):($rel)/program.jab.toml" | complete)
@@ -73,7 +74,7 @@ export def main [repo: string, commit: string, cands: string, expected: string, 
     let declared = ($original | get -o assets | default "")
     let assets_rel = (if $declared == "" { null } else { $repo | path join $rel $declared | path expand | path relative-to ($repo | path expand) })
     if $assets_rel != null and ($original.name | str length) > 127 { error make { msg: $"($original.name) is past the 127 bytes a romfs volume's name holds" } }
-    let label = (if ($names | is-empty) { "" } else { "-" + ($names | str lowercase | str join "-") })
+    let label = (if $debug { "-debug" } else { "" }) + (if ($names | is-empty) { "" } else { "-" + ($names | str lowercase | str join "-") })
     let dir = ($cands | path join $"export_($short)($label)")
     if ($dir | path exists) { error make { msg: $"($dir) exists; an export is made once" } }
     mkdir $dir
@@ -96,8 +97,9 @@ export def main [repo: string, commit: string, cands: string, expected: string, 
         symbols: $names,
         exported_from: $"git archive of ($carried) at ($full), ($redirected) and its workspace the checkout's for the kernel and the target, its declaration and run shape kept, (if ($kept | is-empty) { 'none' } else { $kept | columns | str join ', ' }), and its fields naming the program's own tree dropped",
     } | to nuon --indent 2 | save --raw ($program_dir | path join "source.nuon")
-    let built = (^($repo | path join "do") build $program_dir --set (["release"] ++ ($names | str lowercase) | str join ",") | complete)
-    if $built.exit_code != 0 { error make { msg: $"the release build of ($program_dir): ($built.stdout + $built.stderr | lines | last 6 | str join ' | ')" } }
+    let tree = (if $debug { "debug" } else { "release" })
+    let built = (^($repo | path join "do") build $program_dir --set ([$tree] ++ ($names | str lowercase) | str join ",") | complete)
+    if $built.exit_code != 0 { error make { msg: $"the ($tree) build of ($program_dir): ($built.stdout + $built.stderr | lines | last 6 | str join ' | ')" } }
     let image = (glob ($program_dir | path join "**" $"($original.name).jab") | get -o 0)
     if $image == null { error make { msg: $"no ($original.name).jab under ($program_dir)" } }
     if $assets_rel != null {
@@ -106,10 +108,10 @@ export def main [repo: string, commit: string, cands: string, expected: string, 
         if $made.exit_code != 0 { error make { msg: $"genromfs over ($assets_rel): ($made.stdout + $made.stderr | str trim)" } }
     }
     let flags = (open --raw ($image | path dirname | path join "flags") | decode | lines | first)
-    if ($flags =~ '--defsym DEBUG=') { error make { msg: $"the export built with DEBUG: ($flags)" } }
+    if $debug != ($flags =~ '--defsym DEBUG=') { error make { msg: $"the ($tree) export built (if $debug { 'without' } else { 'with' }) DEBUG: ($flags)" } }
     let missing = ($names | where {|n| not ($flags | str contains $"--defsym ($n)=1") })
     if not ($missing | is-empty) { error make { msg: $"the export's flags lack ($missing | str join ', '): ($flags)" } }
-    let provenance = (provenance-of $repo $full $image $names)
+    let provenance = (provenance-of $repo $full $image (if $debug { ["DEBUG"] ++ $names } else { $names }))
     if $expected != "" and $provenance.image_sha256 != $expected {
         error make { msg: $"the export's image has SHA-256 ($provenance.image_sha256) where ($expected) was expected" }
     }

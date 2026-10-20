@@ -8,8 +8,8 @@ use (path self ../matrix) [CASES JAB RECORD TARGETS]
 # The check's own file beside the record it derives again
 const CHECK = "check.nuon"
 
-# The files a kept run's reading reopens
-const RUN_FILES = ["api.out" "identity.nuon" "route.nuon" "run.nuon"]
+# The files a kept run's reading reopens, an audio run's reading among them
+const RUN_FILES = ["api.out" "audio.nuon" "identity.nuon" "route.nuon" "run.nuon"]
 
 # The fields a value lacks of those named, each named where it sits
 def lacking [value: any, keys: list<string>, at: string]: nothing -> list<string> {
@@ -109,7 +109,7 @@ def history-of [stored: record, fresh: record]: nothing -> list<any> {
     let gone = ($stored.runs | where {|s| ($fresh.runs | where {|x| $x.step == $s.step and $x.run == $s.run } | is-empty) } | each {|s| { item: (matrix run-name $s), stored: "present", derived: null } })
     let cases = ($fresh.cases | each {|f|
         let s = ($stored.cases | where case == $f.case | get -o 0)
-        let met = {|c: any| if $c == null { null } else if $c.kind == "control" { $c.reading.met } else if $c.kind == "acceptance" { $c.reading.passed } else { $c.reading.read } }
+        let met = {|c: any| if $c == null or ($c | get -o reading) == null { null } else if $c.kind == "control" { $c.reading.met } else if $c.kind == "acceptance" { $c.reading.passed } else { $c.reading.read } }
         [
             (if (do $met $s) != (do $met $f) { { item: $"($f.case)'s reading", stored: (do $met $s), derived: (do $met $f) } })
             (if ($s | get -o missing | default [] | length) != ($f.missing | length) { { item: $"($f.case)'s missing runs", stored: ($s | get -o missing | default [] | length), derived: ($f.missing | length) } })

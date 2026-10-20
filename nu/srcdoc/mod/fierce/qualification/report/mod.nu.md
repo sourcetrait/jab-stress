@@ -39,9 +39,10 @@ verdict its opening sentence, the preparation subset's beside it and
 never in its place (ObligationLedger), the obligations a table, every
 acceptance run's verdict, the route by leg, the tails, the presentation
 and its shim control, the CPU beside the guest's waits, the tile pool,
-the host, the worker scaling control, the problems the check names, the
-record's stored answers that differ from those derived again, and the
-limits. The presentation states
+the host, the worker scaling control, the service active's windows, the
+feature unavailable's refusal, the audio's debug runs, each where its
+target holds it, the problems the check names, the record's stored
+answers that differ from those derived again, and the limits. The presentation states
 the bundles, then a row for each probed run read whole, its pairing's
 verdict, its frames shown with their share, superseded with the longest
 run of them, the repeats, and the age's and the presented interval's
@@ -51,8 +52,8 @@ left unread, whose reasons are among the problems.
 ## def report-text
 
 The report for TheUser over the targets' checks (Qualification.md's
-reports), public-production writing: the candidate, then a section a
-target in the checks' order; with `compared` a comparison `gauge
+reports), public-production writing: the candidate with each named
+build's image and kernel, then a section a target in the checks' order; with `compared` a comparison `gauge
 compare` wrote, its table rendered as the comparison with the first
 baseline.
 

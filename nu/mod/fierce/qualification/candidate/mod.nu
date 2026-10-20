@@ -1,7 +1,32 @@
+use (path self ../../../../../../jab/nu/mod/bench)
 use (path self ../../../../../../jab/nu/mod/build)
 use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge)
 use (path self ../matrix)
-use (path self ../matrix) [JAB MAP STRESS]
+use (path self ../matrix) [JAB MAP STRESS TARGETS]
+
+# The named builds the qualification's bench files declare at jab's HEAD,
+# each name one set in every file
+def named-builds []: nothing -> list<any> {
+    let declared = ($TARGETS | each {|t| open ($JAB | path join "kit" "fierce" "bench" $"qual_($t).nuon") | get -o builds | default [] } | flatten)
+    $declared | each {|x| $x.name } | uniq | each {|n|
+        let sets = ($declared | where name == $n | each {|x| $x.set } | uniq)
+        if ($sets | length) != 1 { error make { msg: $"the bench files build ($n) with the sets ($sets | str join ' and '), where a name is one build" } }
+        { name: $n, set: ($sets | first) }
+    }
+}
+
+# A named build made in its tree at the candidate's commit, as a bench makes
+# it, its image's, ELF's, and kernel's SHA-256 and its flags
+def named-build [x: record]: nothing -> record {
+    let b = (bench build-set $JAB ($JAB | path join kit fierce) $x.set)
+    let flags = (open --raw ($b.out | path join "flags") | decode | lines | first)
+    {
+        set: $x.set, tree: $b.tree, flags: $flags,
+        image_sha256: (matrix sha-of ($b.out | path join $"($b.stem).jab")),
+        elf_sha256: (matrix sha-of ($b.out | path join $"($b.stem).elf")),
+        kernel_sha256: (matrix sha-of $b.kernel),
+    }
+}
 
 # A repository's HEAD in full, and whether its tree holds changes
 def head-of [repo: path]: nothing -> record<commit: string, dirty: bool> {
@@ -10,7 +35,8 @@ def head-of [repo: path]: nothing -> record<commit: string, dirty: bool> {
     { commit: $commit, dirty: $dirty }
 }
 
-# The candidate at its freeze: the release build and every digest
+# The candidate at its freeze: the release build, each named build the bench
+# files declare made before it, and every digest
 export def candidate-of [tag: string]: nothing -> record {
     let repos = [[repo, dir]; [jab $JAB] [stress $STRESS]]
     let heads = ($repos | each {|r|
@@ -29,6 +55,7 @@ export def candidate-of [tag: string]: nothing -> record {
         { repo: $r.repo, commit: $h.commit }
     })
     let game = ($JAB | path join kit fierce)
+    let builds = (named-builds | reduce --fold {} {|x, acc| $acc | insert $x.name (named-build $x) })
     let built = (^nu ($JAB | path join nu bin do.nu) build $game | complete)
     if $built.exit_code != 0 { error make { msg: $"the release build of ($game): ($built.stdout + $built.stderr | lines | last 6 | str join ' | ')" } }
     let out = (build program-out $game release)
@@ -55,6 +82,7 @@ export def candidate-of [tag: string]: nothing -> record {
             tools: { as: (gauge identity resolved-file $"($prefix)as"), ld: (gauge identity resolved-file $"($prefix)ld"), objcopy: (gauge identity resolved-file $"($prefix)objcopy") },
         },
         assets: { map: $MAP, digest: (gauge identity tree-digest (build program-shard $game asset | path join $MAP)) },
+        builds: $builds,
     }
 }
 

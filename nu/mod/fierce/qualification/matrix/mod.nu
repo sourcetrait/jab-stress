@@ -1,5 +1,7 @@
+use (path self ../../../../../../jab/nu/mod/bench)
 use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge)
 use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge/report) [CEILING_US]
+use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge/audio) [QUEUE_FULL]
 
 # jab, checked out beside the workbench
 export const JAB = (path self ../../../../../../jab | path expand)
@@ -16,15 +18,25 @@ export const MAP = "render_0"
 # A target's record's file in its directory
 export const RECORD = "qualification.nuon"
 
-# The matrix's cases: kind, reading, and each target's steps
+# The matrix's cases: kind, reading, each target's steps, and why a target
+# holding none of a case's steps leaves it not applicable
 export const CASES = [
-    [case, kind, reading, steps];
-    ["normal play", acceptance, verdicts, {"1ka1": [auto_1 auto_2], "1kb1": [auto_1 auto_2]}]
-    ["free play", acceptance, verdicts, {"1ka1": [free], "1kb1": [free]}]
-    ["presentation", diagnostic, presentation, {"1ka1": [probed_1 probed_2], "1kb1": [probed_1 probed_2]}]
-    ["presentation's shim control", control, shim, {"1ka1": [probed_1 auto_3 auto_4 probed_2], "1kb1": [probed_1 auto_3 auto_4 probed_2]}]
-    ["worker scaling", control, scaling, {"1ka1": [forced1_1 auto_5 auto_6 forced1_2], "1kb1": [forced2_1 auto_5 auto_6 forced2_2]}]
+    [case, kind, reading, steps, absent];
+    ["normal play", acceptance, verdicts, {"1ka1": [auto_1 auto_2], "1kb1": [auto_1 auto_2]}, {}]
+    ["free play", acceptance, verdicts, {"1ka1": [free], "1kb1": [free]}, {}]
+    ["presentation", diagnostic, presentation, {"1ka1": [probed_1 probed_2], "1kb1": [probed_1 probed_2]}, {}]
+    ["presentation's shim control", control, shim, {"1ka1": [probed_1 auto_3 auto_4 probed_2], "1kb1": [probed_1 auto_3 auto_4 probed_2]}, {}]
+    ["worker scaling", control, scaling, {"1ka1": [forced1_1 auto_5 auto_6 forced1_2], "1kb1": [forced2_1 auto_5 auto_6 forced2_2]}, {}]
+    ["service active", acceptance, service, {"1ka1": [], "1kb1": [service_1 service_2]}, {"1ka1": "1KA1's three harts hold the main hart and the two reserved graphics harts, so no feature is admitted there (TheUser's spec model); its refusal is the feature unavailable's row"}]
+    ["feature unavailable", control, refusal, {"1ka1": [unavailable], "1kb1": []}, {"1kb1": "1KB1's seven harts admit the feature, so its refusal is 1KA1's row"}]
+    ["audio", control, audio, {"1ka1": [audio], "1kb1": [audio]}, {}]
 ]
+
+# The QEMU words the audio's step carries, its dropped reports' trace
+export const AUDIO_WORDS = ["-trace" $QUEUE_FULL]
+
+# The service's start refused under the floor, the take's GFX_FLOOR
+export const GFX_FLOOR = -1
 
 # The diagnostics read from the normal play runs, their legs and fields
 export const DIAGNOSTICS = [
@@ -42,9 +54,6 @@ export const DIAGNOSTICS = [
 # Every final obligation past the bench's cases: its kind, and by target its dependency or its reason
 export const OBLIGATIONS = [
     [row, kind, state, why];
-    ["service active", acceptance, {"1ka1": "not applicable", "1kb1": pending}, {"1ka1": "1KA1's three harts hold the main hart and the two reserved graphics harts, so no feature is admitted there (TheUser's spec model)", "1kb1": "SceneOwnership's service and its load"}]
-    ["feature unavailable", control, {"1ka1": pending, "1kb1": "not applicable"}, {"1ka1": "SceneOwnership's service, its refusal on 1KA1's harts", "1kb1": "1KB1's seven harts admit the feature, so its refusal is 1KA1's row"}]
-    ["audio", control, {"1ka1": pending, "1kb1": pending}, {"1ka1": "RegressionSuite's service-holds and TheUser's host", "1kb1": "RegressionSuite's service-holds and TheUser's host"}]
     ["the parity", correctness, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the parity tool on both maps' still copies at the freeze", "1kb1": "the parity tool on both maps' still copies at the freeze"}]
     ["the OWNER captures", correctness, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the OWNER captures at the freeze", "1kb1": "the OWNER captures at the freeze"}]
     ["the fps suite on the target", correctness, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the fps suite on 1KA1 at the freeze", "1kb1": "the fps suite on 1KB1 at the freeze"}]
@@ -55,9 +64,14 @@ export const OBLIGATIONS = [
     ["the reports and the evidence package", reports, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the reports from the final records and the evidence package landed (EvidenceRetention)", "1kb1": "the reports from the final records and the evidence package landed (EvidenceRetention)"}]
 ]
 
-# The bench's verb in a step's words, play or run, whatever script names it
+# The bench's verb in a step's words, play, run, or audio, whatever script names it
 export def step-verb [words: list<string>]: nothing -> any {
-    $words | skip 1 | where {|w| $w in [play run] } | get -o 0
+    $words | skip 1 | where {|w| $w in [play run audio] } | get -o 0
+}
+
+# The named build a step's words run, its first `{build:<name>}`, null for the tree's own
+export def role-of [words: list<string>]: nothing -> any {
+    $words | each {|w| $w | parse --regex '\{build:(?P<name>[a-z][a-z0-9_]*)\}' | each {|p| $p.name } } | flatten | get -o 0
 }
 
 # The guest inputs every packaged step takes, by their places in the package
@@ -65,21 +79,31 @@ export const PACKAGED = {
     image: "fierce/fierce.jab", kernel: "kernel/jab.elf", assets: "asset/render_0", route: "route/route_render_0.nuon",
 }
 
-# The candidate's bench as its package runs it: the preflight, packaged inputs
+# The candidate's bench as its package runs it: the preflight, packaged inputs;
+# a step naming its image keeps it, a named build's that the package lays
 export def packaged-bench [definition: record, target: string]: nothing -> record {
     let at = {|rel: string| $"{package}/($rel)" }
-    let inputs = ["--image" (do $at $PACKAGED.image) "--kernel" (do $at $PACKAGED.kernel) "--assets" (do $at $PACKAGED.assets)]
+    let images = ["--image" (do $at $PACKAGED.image) "--kernel" (do $at $PACKAGED.kernel)]
+    let assets = ["--assets" (do $at $PACKAGED.assets)]
     let route = ["--route" (do $at $PACKAGED.route)]
     let preflight = {
         label: "preflight", gate: true,
         run: ["../../nu/bin/nuance/package.nu" "preflight" "{package}" "--spec" $target "--image" $PACKAGED.image "--kernel" $PACKAGED.kernel "--tree" $PACKAGED.assets "--serial" "fps" "--bench" $"bench/qual_($target).nuon"],
     }
-    $definition | upsert build "none" | update steps ([$preflight] ++ ($definition.steps | each {|s| $s | update run ($s.run ++ $inputs ++ (if (step-verb $s.run) == "run" { $route } else { [] })) }))
+    $definition | upsert build "none" | update steps ([$preflight] ++ ($definition.steps | each {|s|
+        let own = ("--image" in $s.run)
+        $s | update run ($s.run ++ (if $own { [] } else { $images }) ++ $assets ++ (if (step-verb $s.run) == "run" { $route } else { [] }))
+    }))
 }
 
-# A packaged bench's words as a run of it at `package` reads them
-export def packaged-in [definition: record, package: string]: nothing -> record {
-    $definition | update steps ($definition.steps | each {|s| $s | update run ($s.run | each {|w| $w | str replace --all "{package}" $package }) })
+# A bench's definition as a run of it read its words: every `{package}` the
+# package's directory and every `{build:<name>}` that build's directory under
+# `root`, the bench run's record of where its builds lay
+export def resolved-in [definition: record, package: any, root: any]: nothing -> record {
+    $definition | update steps ($definition.steps | each {|s|
+        let placed = (if $package == null { $s.run } else { $s.run | each {|w| $w | str replace --all "{package}" $package } })
+        $s | update run (if $root == null { $placed } else { bench built-words $placed $root })
+    })
 }
 
 # The value after a flag among a step's words, null where it is absent
@@ -94,6 +118,7 @@ export const LIMITS = [
     "A thread's CPU comes from its host's counters, hundredths of a second read every 100 ms, so only an interval of seconds resolves. One less a thread's utilization is everything it did not run, descheduling included, and is never the guest's idle time; the guest's own waits come from its records."
     "Upload and render selection come from the probed runs alone. They stand for the unprobed program's presentation only where the shim control finds every effect within its noise."
     "A release run carries no sound counters. The audio's evidence comes from separate debug runs, labelled diagnostic."
+    "The audio's counters show no exhaustion of the guest's queue to the device, observed after each service's drain, which is not output underrun past QEMU's backend. Its 50 ms windows are a coarse continuity check a shorter gap passes, read only where the sound was recorded; a run on live audio reads the driver's counters alone."
 ]
 
 # A file's SHA-256, null where there is none
@@ -122,17 +147,31 @@ def same-commit [recorded: any, candidate: string]: nothing -> bool {
     $recorded != null and ($recorded | str length) >= 7 and ($candidate | str starts-with $recorded)
 }
 
-# Where a run's identity disagrees with the candidate and target, named
-export def agreement-of [id: record, candidate: record, target: string, spec: record]: nothing -> list<string> {
+# The build a step's runs are held to: the candidate's release build, or the
+# named build its words run, each with its tree and the QEMU words its step carries
+export def build-of [candidate: record, role: any, words: list<string>]: nothing -> record {
+    let overrides = (if (step-verb $words) == "audio" { $AUDIO_WORDS } else { [] })
+    if $role == null {
+        return { name: "the candidate's", image_sha256: $candidate.image_sha256, elf_sha256: $candidate.elf_sha256, kernel_sha256: $candidate.kernel_sha256, tree: "release", overrides: $overrides, missing: null }
+    }
+    let b = ($candidate | get -o builds | default {} | get -o $role)
+    if $b == null { return { name: $"the candidate's ($role) build's", image_sha256: null, elf_sha256: null, kernel_sha256: null, tree: null, overrides: $overrides, missing: $"the candidate records no build ($role), which its step runs" } }
+    { name: $"the candidate's ($role) build's", image_sha256: $b.image_sha256, elf_sha256: $b.elf_sha256, kernel_sha256: $b.kernel_sha256, tree: $b.tree, overrides: $overrides, missing: null }
+}
+
+# Where a run's identity disagrees with its build, the candidate, and the target, named
+export def agreement-of [id: record, candidate: record, build: record, target: string, spec: record]: nothing -> list<string> {
     let m = ($id.machine | default {})
     let named = ($m | get -o spec)
     let program = ($id.program | default {})
     let workspace = ($id.workspace | default {})
     let program_commit = ($program | get -o commit)
+    let words = ($id.overrides | default [])
+    if $build.missing != null { return [$build.missing] }
     [
-        (if $id.image_sha256 != $candidate.image_sha256 { $"its image's SHA-256 is ($id.image_sha256 | default 'unrecorded') where the candidate's is ($candidate.image_sha256)" })
-        (if $id.elf_sha256 != $candidate.elf_sha256 { $"its ELF's SHA-256 is ($id.elf_sha256 | default 'unrecorded') where the candidate's is ($candidate.elf_sha256)" })
-        (if $id.kernel_sha256 != $candidate.kernel_sha256 { $"its kernel's SHA-256 is ($id.kernel_sha256 | default 'unrecorded') where the candidate's is ($candidate.kernel_sha256)" })
+        (if $id.image_sha256 != $build.image_sha256 { $"its image's SHA-256 is ($id.image_sha256 | default 'unrecorded') where ($build.name) is ($build.image_sha256)" })
+        (if $id.elf_sha256 != $build.elf_sha256 { $"its ELF's SHA-256 is ($id.elf_sha256 | default 'unrecorded') where ($build.name) is ($build.elf_sha256)" })
+        (if $id.kernel_sha256 != $build.kernel_sha256 { $"its kernel's SHA-256 is ($id.kernel_sha256 | default 'unrecorded') where ($build.name) is ($build.kernel_sha256)" })
         (if $id.assets.map != $candidate.assets.map { $"it played the map ($id.assets.map | default 'unrecorded') where the candidate's is ($candidate.assets.map)" })
         (if $id.assets.digest != $candidate.assets.digest { $"its asset tree's digest is ($id.assets.digest | default 'unrecorded') where the candidate's is ($candidate.assets.digest)" })
         (if not (same-commit ($workspace | get -o commit) $candidate.jab) { $"its workspace is at ($workspace | get -o commit | default 'an unrecorded commit') where the candidate is at (short $candidate.jab)" })
@@ -146,12 +185,12 @@ export def agreement-of [id: record, candidate: record, target: string, spec: re
             if $named.name != $target { $"it was launched as ($named.name), not the target ($target)" }
         } else { "its machine is no named spec's: a custom or unrecorded machine is never a qualification run" })
         (if ($m | get -o diagnostic) != null { "its machine is a custom machine, diagnostic" })
-        (if not (($id.overrides | default []) | is-empty) { $"its launch carried QEMU words of its own: ($id.overrides | str join ' ')" })
+        (if $words != $build.overrides { $"its launch carried the QEMU words (if ($words | is-empty) { 'none' } else { $words | str join ' ' }) where its step carries (if ($build.overrides | is-empty) { 'none' } else { $build.overrides | str join ' ' })" })
         (if ($m | get -o harts) != $spec.cores { $"its machine has ($m | get -o harts | default 'unrecorded') harts where ($target) has ($spec.cores)" })
         (if ($m | get -o ram_gib) != ($spec.ram / 1GiB | into int) { $"its machine has ($m | get -o ram_gib | default 'unrecorded') GiB where ($target) has ($spec.ram / 1GiB | into int)" })
         (if ($named | get -o display) != $spec.display { $"its display is ($named | get -o display | to nuon) where ($target)'s is ($spec.display | to nuon)" })
         (if $id.cap != $spec.fps { $"its cap is ($id.cap | default 'unrecorded') where ($target)'s frame rate is ($spec.fps)" })
-        (if $id.tree != "release" { $"its build is the ($id.tree | default 'unrecorded') tree, not release" })
+        (if $id.tree != $build.tree { $"its build is the ($id.tree | default 'unrecorded') tree, not ($build.tree)" })
     ] | compact
 }
 
@@ -166,16 +205,21 @@ def finite [v: any]: nothing -> bool {
 
 # Where a run's identity and record differ from its step's words, each named
 export def conditions-of [id: record, ran: any, words: list<string>]: nothing -> list<string> {
-    let play = ((step-verb $words) == "play")
+    let verb = (step-verb $words)
+    let play = ($verb == "play")
+    let audio = ($verb == "audio")
     let host = ($play or ("--host" in $words))
     let forced = (flag-of $words "--workers")
     let workers = (if $forced == null { null } else { $forced | into int })
-    let cadence = (flag-of $words "--cadence" | default "1" | into int)
+    let cadence = (if $audio { null } else { flag-of $words "--cadence" | default "1" | into int })
     let probed = ("--sdl-probe" in $words)
     let mode = ($id.mode | default {})
-    let pad = (if $play { "host" } else { "route" })
+    let pad = (if $play { "host" } else if $audio { "table" } else { "route" })
     let sound = (if $host { "host" } else { "recorded" })
+    let quota = (flag-of $words "--service" | default "-1" | into int)
+    let service = (if $quota < 0 { null } else { $quota })
     [
+        (if ($mode | get -o service) != $service { $"it asked (if ($mode | get -o service) == null { 'no service' } else { $'the service at ($mode.service) a frame' }) where its step asks (if $service == null { 'none' } else { $'($service) a frame' })" })
         (if ($mode | get -o workers) != $workers { $"it asked (if ($mode | get -o workers) == null { 'the automatic workers' } else { $'($mode.workers) workers' }) where its step asks (if $workers == null { 'the automatic ones' } else { $'($workers)' })" })
         (if ($mode | get -o cadence) != $cadence { $"it played cadence ($mode | get -o cadence | default 'unrecorded') where its step asks ($cadence)" })
         (if ($mode | get -o window) != $host { $"its window was (if ($mode | get -o window) == true { 'on' } else { 'off' }) where its step asks it (if $host { 'on' } else { 'off' })" })
@@ -195,8 +239,22 @@ export def tag-state [tag: any, commit: string]: nothing -> record<state: string
     { state: "met", why: $"($tag) names the candidate's commit in jab" }
 }
 
-# An acceptance run's verdict: valid, the candidate's, under the ceiling
-export def verdict-of [run: record]: nothing -> record {
+# Why a run cannot certify the steady service load, each named: its capture
+# holding the service's records, a start answered, one window closed, no quota
+# skipped; a window's own breaks stand in the run's standing
+export def service-problems [run: record]: nothing -> list<string> {
+    let sv = ($run.measured | get -o service)
+    if $sv == null { return ["its capture holds no service record, so its image is no SERVICE build's"] }
+    if not $sv.started { return [$"its service never started: (if ($sv.refusals | is-empty) { 'no start answered' } else { $'refused, status ($sv.refusals | each {|v| $v | into string } | str join ', ')' })"] }
+    [
+        (if ($sv.windows | length) != 1 { $"($sv.windows | length) service windows closed where its route runs one" })
+        (if $sv.reduced { $"($sv.skipped) quotas skipped, a reduced load reported at its offered rate and never certifying the steady load" })
+    ] | compact
+}
+
+# An acceptance run's verdict: valid, its build's, under the ceiling; with
+# `--service`, its steady service load admissible as well
+export def verdict-of [run: record, --service]: nothing -> record {
     let whole = ($run.measured | get -o whole)
     let median = ($whole | get -o critical.median)
     let under = (if $run.standing == "valid" and (finite $median) { gauge report under-ceiling $median } else { null })
@@ -205,6 +263,7 @@ export def verdict-of [run: record]: nothing -> record {
         (if $run.standing == "valid" and not (finite $median) { "it holds no play median, a finite median over a valid play window" })
         ...$run.agreement
         ...($run | get -o conditions | default [])
+        ...(if $service { service-problems $run } else { [] })
         (if $under == false { $"its critical path's median, (ms $median) ms, is at or over the ($CEILING_US // 1000) ms ceiling" })
     ] | compact)
     { pass: ($problems | is-empty), median_us: $median, ceiling_us: $CEILING_US, under: $under, over: ($run.measured | get -o over), frames: ($run.measured | get -o frames), problems: $problems }
@@ -241,7 +300,13 @@ export def ledger-of [r: record, tag: record, held: list<string>]: nothing -> li
     let row = {|name: string, kind: string, carried: bool, problems: list<string>, evidence: list<string>|
         { row: $name, kind: $kind, carried: $carried, state: (if ($problems | is-empty) { "met" } else { "failed" }), evidence: $evidence, why: "", problems: $problems }
     }
-    let cases = ($r.cases | each {|c| do $row $c.case $c.kind true (case-problems $r $c) ($c.runs | each {|x| $"($x.step) run ($x.run)" }) })
+    let cases = ($r.cases | each {|c|
+        if ($c | get -o applicable | default true) {
+            do $row $c.case $c.kind true (case-problems $r $c) ($c.runs | each {|x| $"($x.step) run ($x.run)" })
+        } else {
+            { row: $c.case, kind: $c.kind, carried: true, state: "not applicable", evidence: [], why: ($c | get -o why | default ""), problems: [] }
+        }
+    })
     let diagnostics = ($r.diagnostics | each {|d| do $row $d.case "diagnostic" true (diagnostic-problems $d) ($d.readings | each {|x| $x.name } | uniq) })
     let bench = (do $row "the bench held to its definition" "freeze" true $held [$"the bench file at ($r.candidate.jab | str substring 0..<10)"])
     let tagged = { row: "the tagged candidate", kind: "freeze", carried: false, state: $tag.state, evidence: (if $tag.state == "met" { [$r.candidate.tag] } else { [] }), why: (if $tag.state == "met" { "" } else { $tag.why }), problems: (if $tag.state == "failed" { [$tag.why] } else { [] }) }

@@ -31,8 +31,9 @@ repositories, under the session's scratch directory or
     `fault` its faults, and `judge <out>` judges a parity again from its
     recorded launches.
   - `freeze.nu <repo> <commit> <cands> <expected> [--set <symbols>]
-    [--program <dir>]` exports a commit's program and builds it release,
-    the export named after its symbols (`export_<commit>-footprint`).
+    [--program <dir>] [--debug]` exports a commit's program and builds it
+    release, or debug with `--debug`, the export named after its symbols
+    (`export_<commit>-footprint`, `export_<commit>-debug`).
   - `footprint.nu` runs FootprintEstimate's level comparison. `images
     <export>` builds eight debug images of one export, each in a copy of
     the export's program named `<export>_<label>`: for a view, `picture`
@@ -62,7 +63,9 @@ repositories, under the session's scratch directory or
   - `qualification.nu`: `candidate <out> [--tag <tag>]` builds jab's
     release tree and writes the candidate's record, jab's checkout clean
     and the tag, when given, on its HEAD, this repository's changes and
-    tag recorded; `record <bench> <candidate> <target> <out>` writes a
+    tag recorded, each named build the bench files declare, the service
+    build and the debug build, made first and recorded by name;
+    `record <bench> <candidate> <target> <out>` writes a
     target's `qualification.nuon` from a bench run of
     `kit/fierce/bench/qual_<target>.nuon`, its own ledger and verdicts
     in it; `check <record> [--bench <dir>] [--inventory <file>]
@@ -76,9 +79,12 @@ repositories, under the session's scratch directory or
     the final one, failing on a problem; `report <checks> <out.md>` writes
     the report from checks, `--compared <file>` rendering a `nuance.nu
     gauge compare` output as the comparison with the first baseline;
-    `package <candidate> <export> <target> <out>` writes the candidate's
-    host package for a target, one tar a host runs with `./do bench
-    kit/fierce/qual_<target> --package <dir>`; `disks <bench> <inventory>
+    `package <candidate> <export> <target> <out> [--exports <record>]`
+    writes the candidate's host package for a target, one tar a host runs
+    with `./do bench kit/fierce/qual_<target> --package <dir>`, each named
+    build from its own export, `--exports` a NUON record such as
+    `{service: <export>, debug: <export>}`, laid at `build/<name>`;
+    `disks <bench> <inventory>
     <out>` makes a restored bench's disk copies again from today's content,
     each step's asset tree held to the digest its runs' identities record,
     rooted as the bench's checkout compiled it where it differs, and each
@@ -184,9 +190,15 @@ repositories, under the session's scratch directory or
   and the manifest named in the bench's row. An acceptance verdict needs a
   finite play median, a float judged by its text, since nushell 0.115.1
   reads every finite number equal to `inf`. Every run is held to
-  its step's conditions, the workers, the cadence, the window and the
-  sound, the pad, and the probe; the bench to one host and one QEMU; each
-  case to one backend. The readers that wrote a record are its
+  its step's conditions, the service, the workers, the cadence, the window
+  and the sound, the pad, and the probe; to its step's build, the
+  candidate's release build or the named build its words run as
+  `{build:<name>}`; the bench to one host and one QEMU; each case to one
+  backend. The service active's verdicts judge each run's service window,
+  one closed whole with no quota skipped; the feature unavailable reads the
+  start's refusal under the floor; the audio reads each debug run's driver
+  counters and, where its sound was recorded, its 50 ms windows. A case a
+  target holds no step of is not applicable there. The readers that wrote a record are its
   provenance, never a refusal: the check judges the evidence under the
   current readers and keeps a stored answer that differs as history. Its
   presentation row is `proberuns analyse-runs` over the probed runs, each

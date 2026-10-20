@@ -22,8 +22,12 @@ writes with its `home`, `flags`, and `<name>.elf`, `provenance.nuon`
 (provenance-of). A gate before anything measures it: the image's SHA-256 the one
 `expected` names, unless `expected` is "". DEBUG and RELEASE are refused among
 the symbols, a measured image being a release build and `release` the build's
-own. Its bin: `nu/bin/nuance/fierce/freeze.nu <repo> <commit> <cands> <expected>
-[--set <symbols>] [--program <path>]`, the symbols comma separated.
+own. `--debug` exports the debug build instead, the qualification's audio
+runs' (RegressionSuite): its set `debug` and the symbols, DEBUG required of
+its flags and named among its provenance's symbols, `-debug` after the
+commit in its name. Its bin: `nu/bin/nuance/fierce/freeze.nu <repo> <commit>
+<cands> <expected> [--set <symbols>] [--program <path>] [--debug]`, the
+symbols comma separated.
 
 ## const TIMING
 

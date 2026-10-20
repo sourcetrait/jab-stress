@@ -106,6 +106,57 @@ def target-section [c: record]: nothing -> list<string> {
         let of = {|selection: string, field: string| $l.runs | where selection == $selection | get $field }
         [$l.leg (ms-cell (do $of "forced" "critical_us")) (ms-cell (do $of "automatic" "critical_us")) (ms-cell (do $of "forced" "raster_us")) (ms-cell (do $of "automatic" "raster_us"))]
     }))
+    let service_case = ($r.cases | where case == "service active" | get -o 0)
+    let service_section = (if $service_case == null or ($service_case | get -o reading) == null { [] } else {
+        let rows = ($service_case.reading.windows | each {|w|
+            [$w.name $"($w.offered | default '-')" (if $w.per_frame == null { "-" } else { $"($w.per_frame | math round --precision 2)" }) $"($w.dropped | default '-')" $"($w.skipped | default '-')" (if $w.apply_median_us == null { "-" } else { $"($w.apply_median_us) us" }) (if $w.age_median_us == null { "-" } else { $"($w.age_median_us) us" }) $"(matrix ms $w.median_us) ms"]
+        })
+        [
+            ""
+            "### The service active"
+            ""
+            "These runs play the factory route while a synthetic service sends two messages a frame from a hart of its own. The game applies the messages at the start of each frame, inside the 15 ms. A run counts only when every message is accounted for and no frame's messages were skipped."
+            ""
+        ] ++ (md-table ["Run" "Messages offered" "Offered a frame" "Dropped" "Frames skipped" "Apply time at the median" "Oldest message's age at the median" "Median frame"] $rows)
+    })
+    let refusal_case = ($r.cases | where case == "feature unavailable" | get -o 0)
+    let refusal_section = (if $refusal_case == null or ($refusal_case | get -o reading) == null { [] } else {
+        let held = (if $refusal_case.reading.met { "The refusal held, and play went on untouched." } else { "The refusal did not hold as it should. The problems below say why." })
+        let rows = ($refusal_case.reading.runs | each {|x|
+            let refused = ($x.refusals | default [] | each {|v| $v | into string } | str join ", ")
+            [$x.name (if $refused == "" { "-" } else { $refused }) $"($x.running | default '-')" $"(matrix ms $x.median_us) ms"]
+        })
+        [
+            ""
+            "### The feature unavailable"
+            ""
+            $"On ($name) the game asks for the synthetic service, and the kernel refuses it, because the target's harts are all in use. ($held)"
+            ""
+        ] ++ (md-table ["Run" "Refusal code" "Frames with the service running" "Median frame"] $rows)
+    })
+    let audio_case = ($r.cases | where case == "audio" | get -o 0)
+    let audio_section = (if $audio_case == null or ($audio_case | get -o reading) == null { [] } else {
+        let rows = ($audio_case.reading.runs | each {|x|
+            let a = $x.reading
+            if $a == null { [$x.name "-" "-" "-" "-" "-"] } else {
+                [
+                    $x.name
+                    (if $a.pad == null { "-" } else { $"($a.pad.taken) of ($a.sent)" })
+                    (if $a.pad == null { "-" } else { $"($a.pad.dropped)" })
+                    (if $a.sound == null { "-" } else { $"($a.sound.exhausted)" })
+                    $"($a.queue_full)"
+                    (if $a.windows == null { "not recorded" } else if ($a.windows.quiet | is-empty) { "every window heard" } else { $"($a.windows.quiet | length) quiet windows" })
+                ]
+            }
+        })
+        [
+            ""
+            "### Audio"
+            ""
+            "These runs use a debug build, because only a debug build counts the sound driver's work. Each plays ten seconds with a table of pad reports and live sound. They are a diagnostic, never an acceptance run."
+            ""
+        ] ++ (md-table ["Run" "Pad events taken" "Pad events dropped" "Times the sound queue ran empty" "Pad reports QEMU dropped" "Continuity"] $rows)
+    })
     let host = ($r.hosts.hosts | each {|h| $"($h | get -o name | default 'an unnamed host') ($h | get -o os_version | default ''), ($h | get -o cpu | default 'an unrecorded CPU'), ($h | get -o cores | default '-') cores" })
     let qemus = ($r.hosts.qemus | each {|q| $"($q | get -o version | default 'an unrecorded QEMU') at ($q | get -o binary | default '-'), SHA-256 ($q | get -o sha256 | default 'unrecorded')" })
     let window = (if $r.ram.window_bytes == null { "unread" } else { $"($r.ram.window_bytes / 1048576 | math round) MiB" })
@@ -174,7 +225,7 @@ def target-section [c: record]: nothing -> list<string> {
         ""
         "The forced runs are judged by this comparison alone. Each cell is the median over the arm's runs."
         ""
-    ] ++ $scaling_table ++ [
+    ] ++ $scaling_table ++ $service_section ++ $refusal_section ++ $audio_section ++ [
         ""
         "### Problems"
         ""
@@ -204,6 +255,7 @@ export def report-text [checks: list<record>, compared: any]: nothing -> string 
         $"- Tag: ($cand.tag | default 'none, so this is no qualification')."
         $"- jab at ($cand.jab), jab-stress at ($cand.stress)."
         $"- The image's SHA-256 is ($cand.image_sha256). The kernel's is ($cand.kernel_sha256)."
+    ] ++ ($cand | get -o builds | default {} | transpose name build | each {|x| $"- The ($x.name) build, the same source with ($x.build.set) set, has the image ($x.build.image_sha256) and the kernel ($x.build.kernel_sha256)." }) ++ [
         $"- The asset tree, ($cand.assets.map), has the digest ($cand.assets.digest)."
         $"- The toolchain is ($cand.toolchain.version | default 'unrecorded')."
         ""

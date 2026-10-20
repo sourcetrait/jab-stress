@@ -13,8 +13,8 @@ check derives them again from the reopened inputs.
 
 The runs a step's words ask for, the gauge's defaults where they name
 none: `run` its `--runs`, 3 unless given, each run n played at its n of
-`--seeds`, else n; `play` one run at its `--seed`, else 1. The verb is
-matrix's step-verb, in either word shape.
+`--seeds`, else n; `play` one run at its `--seed`, else 1; `audio` one
+run, unseeded. The verb is matrix's step-verb, in either word shape.
 
 ## def identity-summary
 
@@ -33,15 +33,21 @@ A run's directory as its report's run-dirs find it, null where none is.
 A step's words: the definition's at the candidate's commit, a packaged
 run's as its package reads them, else the bench run's own.
 
+## def step-role
+
+A step's named build, read from the candidate's definition before its
+words are resolved (matrix's role-of), null for the tree's own.
+
 ## def step-runs
 
 A bench step's runs as the record keeps them (record-of): each run of
 its gauge.nuon read through run-request, its standing and reasons as the
-bench-doc classified it, its identity (identity-summary) and that
-identity's agreement with the candidate and the target (agreement-of),
-its conditions against its step's words (conditions-of), its backend,
-the window and the audio driver its run record names, whether it was
-probed, its bundle, its measurement, and its CPU windows.
+bench-doc classified it, its build, its identity (identity-summary) and
+that identity's agreement with its build, the candidate, and the target
+(build-of, agreement-of), its conditions against its step's words
+(conditions-of), its backend, the window and the audio driver its run
+record names, whether it was probed, its bundle, its measurement, its CPU
+windows, and an audio run's reading.
 
 ## def condition-problems
 
@@ -102,6 +108,33 @@ bundled, and read whole, each problem named once: a run the control's
 rules or its missing bundle already name is not named again for the stage
 that leaves it unread.
 
+## def service-reading
+
+The service active's reading (SceneOwnership on 1KB1): its runs passing
+and run, every verdict judging the service besides the ceiling
+(service-problems), and each run's window, whether its service started,
+its offered count and rate a frame, its applied, dropped, and skipped,
+its handoff, its apply phase's median and most, its oldest message's age
+at the median, and the run's median frame.
+
+## def refusal-reading
+
+The feature unavailable's reading (1KA1): each run's start refused under
+the floor (GFX_FLOOR), no window closed, no frame with the service
+running, the run's conditions its step's, its median frame reported and
+never judged; met once every expected run is there, valid, and its
+build's (control-problems), with nothing else named.
+
+## def audio-reading
+
+The audio's reading (RegressionSuite's play as a bench step): each debug
+run's reading, gauge/audio's, its counters, its QEMU log, and its
+continuity where its sound was recorded, beside its standing, which is
+diagnostic and never judged; met once every expected run is there, the
+candidate's debug build with the audio's QEMU words, and its reading and
+conditions name nothing; the runs on live sound, their continuity unread,
+listed.
+
 ## def diagnostic-reading
 
 A diagnostic's readings from the normal play runs (DIAGNOSTICS): per
@@ -124,11 +157,12 @@ watch.nuon in its directory, null where the bench ran unwatched.
 A packaged bench's freeze, from the manifest its preflight copied into the
 run (`preflight/package.nuon`): the manifest held to the candidate, the
 candidate file's SHA-256 it was made for, the image, the kernel, and the
-asset tree's digest, each mismatch a problem of the bench; then the
-candidate holding the manifest's ELF, the export's, whose symbol table
-carries RELEASE where the candidate's tree build's does not, the image's
-bytes the same. A bench without the manifest keeps the candidate's ELF
-and says the freeze's is unknown.
+asset tree's digest, and each named build's image and kernel, each
+mismatch a problem of the bench; then the candidate holding the
+manifest's ELFs, the exports', whose symbol tables carry RELEASE where the
+candidate's tree builds' do not, the images' bytes the same, its own and
+each named build's. A bench without the manifest keeps the candidate's
+ELFs and says the freeze's is unknown.
 
 ## def readers-of
 
@@ -145,7 +179,12 @@ One target's qualification record from a bench run (the file header):
 `target` its named spec. A bench run from a host package (bench.nuon's
 `package`) is held to the candidate's bench file as its package runs it
 (packaged-bench at the package's directory), and its runs to the freeze
-(frozen-of), the manifest kept under the bench's `package`. Its ledger is matrix's
+(frozen-of), the manifest kept under the bench's `package`; every bench's
+definition is read with its words resolved where the run's builds lay
+(resolved-in, bench.nuon's `build_root`), and each step's build from the
+words before (step-role). An acceptance run's verdict judges its service
+in the service active's case; a case whose steps the target holds none of
+is not applicable, its reading null and its reason kept. Its ledger is matrix's
 ledger-of over the record, the tag's state, and the bench's and the
 conditions' problems; its verdicts verdicts-of's. Its `readers` the
 identity `--readers` gives, else readers-of's taken as it starts.

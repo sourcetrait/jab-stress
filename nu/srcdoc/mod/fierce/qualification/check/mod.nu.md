@@ -12,7 +12,8 @@ derived record and `check.nuon` beside it and fails on a problem.
 
 ## const RUN_FILES
 
-The files a kept run's reading opens, which the inventory's SHA-256 holds.
+The files a kept run's reading opens, which the inventory's SHA-256 holds,
+an audio run's reading, audio.nuon, among them.
 
 ## def lacking
 
@@ -64,8 +65,9 @@ and the check says so, since a stored copy is not a reopened input.
 ## def history-of
 
 Where a record's stored answers differ from those derived again: each
-run's standing, verdict, and median, each case's reading and missing
-runs, and the bench's problems, both values kept. The stored answer is
+run's standing, verdict, and median, each case's reading, null for a case
+not applicable, and missing runs, and the bench's problems, both values
+kept. The stored answer is
 its own reader's at its revision, the record's `readers`, and fails
 nothing: the current evidence is judged under the current rules (Astra's
 review 15).
