@@ -68,7 +68,9 @@ repositories, under the session's scratch directory or
     in it; `check <record> [--bench <dir>] [--inventory <file>]
     [--candidate <file>] [--out <dir>]` derives the record again from the
     bench's kept inputs, each step's report made again by jab's `gauge
-    read batch`, every reopened input held to the inventory, and writes
+    read batch`, a probed run whose bench kept no bundle bundled again in
+    its work by jab's bundler, every reopened input held to the inventory,
+    and writes
     the derived record and `check.nuon`, printing the record's differing
     stored answers, every problem, the preparation subset's verdict, and
     the final one, failing on a problem; `report <checks> <out.md>` writes
