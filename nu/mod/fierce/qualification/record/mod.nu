@@ -184,7 +184,7 @@ def diagnostic-reading [d: record, runs: list<any>]: nothing -> record {
 def ram-of [commit: string, spec: record]: nothing -> record {
     let inc = (matrix jab-file $commit "sdk/src/jab.inc")
     let size = (if $inc == null { null } else { $inc | lines | parse --regex '^\s*\.set JAB_PROGRAM_SIZE, 0x(?P<v>[0-9a-fA-F]+)' | get -o 0.v })
-    let window = (if $size == null { null } else { $size | into int --radix 16 })
+    let window = (if $size == null { null } else { $"0x($size)" | into int })
     { installed_bytes: ($spec.ram | into int), window_bytes: $window }
 }
 

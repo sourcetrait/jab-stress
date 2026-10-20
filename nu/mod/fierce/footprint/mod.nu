@@ -122,7 +122,7 @@ def iz-min-of [elf: path, prefix: string]: nothing -> int {
     if $listed.exit_code != 0 { error make { msg: $"nm of ($elf): ($listed.stderr)" } }
     let found = ($listed.stdout | lines | parse "{value} {type} {name}" | where name == "IZ_MIN")
     if ($found | length) != 1 { error make { msg: $"($elf) carries ($found | length) IZ_MIN symbols, where an image carries one" } }
-    $found | first | get value | into int --radix 16
+    $"0x($found | first | get value)" | into int
 }
 
 # The export's program directory, the one holding a manifest
