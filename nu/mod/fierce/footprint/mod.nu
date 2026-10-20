@@ -419,7 +419,7 @@ export def read [out: path, poses: path] {
     let secant = ($whole and ($views | all {|v| $v.secant.holds }))
     let departures = ($whole and ($views | all {|v| $v.departure.holds }))
     let revised = ($secant and $departures)
-    let own = ($views | get blocks.own_sharper | math sum)
+    let own = ($views | reduce --fold 0 {|v, acc| $acc + $v.blocks.own_sharper })
     for v in $views {
         let b = $v.blocks
         let pictures = (if $v.pictures == null { "no pictures" } else { $"the pictures ($v.pictures.pixels) pixels in ($v.pictures.regions) regions, at most ($v.pictures.largest) apart" })
@@ -460,6 +460,31 @@ def floor-of [tree: path, image: record]: nothing -> int {
     iz-min-of ($elfs | first) ($image.flags | split row " " | last)
 }
 
+# The files of a still copy the crate's reference reads: its map and its images
+const REFERENCE_READS = ['\.jabfps\.map$' '\.png$']
+
+# A still copy made again, held file by file to the capture's inventory: a
+# file the reference reads that differs is a problem, any other a limit
+def still-held [disk: record, out: path, inventory: list<any>]: nothing -> record<problems: list<string>, limits: list<string>> {
+    let base = ($disk.disk | path dirname)
+    let rel = ($base | path relative-to $out | path split)
+    let record = ($rel | append "disk.nuon" | path join)
+    let rows = ($inventory | where {|r| ($r.path | path split | first ($rel | length)) == $rel and $r.path != $record })
+    let built = (glob ($base | path join "**" "*") --no-dir | each {|f| $rel | append ($f | path relative-to $base | path split) | path join } | where {|p| $p != $record })
+    let differ = ($rows | each {|r|
+        let at = ($out | path join $r.path)
+        if not ($at | path exists) { { path: $r.path, how: "is absent from the copy made again" } } else {
+            let sha = (open --raw $at | hash sha256)
+            if $sha != $r.sha256 { { path: $r.path, how: $"is made again at SHA-256 ($sha), the capture's ($r.sha256)" } }
+        }
+    } | compact) ++ ($built | where {|p| $p not-in ($rows | get path) } | each {|p| { path: $p, how: "is in the copy made again and not the capture's" } })
+    let reads = {|p: string| $REFERENCE_READS | any {|re| $p =~ $re } }
+    {
+        problems: ($differ | where {|d| do $reads $d.path } | each {|d| $"($d.path), which the reference reads, ($d.how)" }),
+        limits: ($differ | where {|d| not (do $reads $d.path) } | each {|d| $"($d.path) ($d.how); the reference reads no such file" }),
+    }
+}
+
 # One captured pose read again from a restoration: disk, bindings, reference
 def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>, c: record, tool: record]: nothing -> record {
     let name = $c.pose.name
@@ -468,7 +493,8 @@ def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>,
     let dir = ($out | path join $name)
     mkdir $dir
     let disk = (disk-for $c.pose.map ($c.pose | get -o keep | default []) $out)
-    let disk_problems = (if $disk.sha256 != $c.disk.sha256 { [$"the still path's disk has SHA-256 ($disk.sha256) where the capture's had ($c.disk.sha256)"] } else { [] })
+    let held = (still-held $disk $out $inventory)
+    let disk_problems = $held.problems
     let launches = ($labels | each {|label|
         let r = ($c.rows | where label == $label | first)
         let screen = (restored-file $tree ($name | path join $label "screen.ppm") $r.screen_sha256)
@@ -487,7 +513,7 @@ def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>,
         { label: $label, row: ($r | update screen $screen.path), api: $api.path, missing: [], differences: $differences }
     })
     let missing = ($launches | get missing | flatten)
-    let limits = ($kind.levels | enumerate | where {|e| ($c.reference | get -o captures | default [] | get -o $e.index | get -o snapshot) == null } | each {|e| $"($e.item): its capture carries no span table, so each block's end is read from its pixels" })
+    let limits = ($kind.levels | enumerate | where {|e| ($c.reference | get -o captures | default [] | get -o $e.index | get -o snapshot) == null } | each {|e| $"($e.item): its capture carries no span table, so each block's end is read from its pixels" }) ++ $held.limits
     let reference = (if not (($missing ++ $disk_problems) | is-empty) or $c.reference == null { null } else {
         let launch = {|label: string| $launches | where label == $label | first }
         let exported = {|label: string, has: bool| if $has { ["--export" (do $launch $label | get api) $"(do $launch $label | get row.binding.frame)"] } else { [] } }

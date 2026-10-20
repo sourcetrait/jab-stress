@@ -109,8 +109,9 @@ error of theirs is raised after.
 ## def remade-disk
 
 The disk's tree copied, every NUON record of it naming the program's
-absolute directory rewritten to name the old one, the map compiler's
-`tile.nuon` the one that does, and genromfs run over the copy under the
+absolute directory rewritten to name the old one, the `tile.nuon` of a
+tree compiled before jab c804ccb the one that does, and genromfs run over
+the copy under the
 old name. A copied tree makes the same image as the original, since
 genromfs reads it in the same order.
 

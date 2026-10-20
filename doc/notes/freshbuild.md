@@ -77,11 +77,11 @@ why rather than passed:
   `fierce.o` after; the ELF is built again under the old name in a
   worktree of the later commit, the checkout's toolchain linked in, and
   must hash to the earlier row;
-- its disk takes the program's name as its volume's, and the map
-  compiler's `tile.nuon` names each material's source by its absolute
-  path; the tree is copied, its records' paths moved back to the old
-  place, the image made under the old name, and it must hash to the
-  earlier row.
+- its disk takes the program's name as its volume's, and a tree
+  compiled before jab c804ccb names each material's source in
+  `tile.nuon` by its absolute path; the tree is copied, its records'
+  paths moved back to the old place, the image made under the old
+  name, and it must hash to the earlier row.
 
 A row with no counterpart either way, a path that is not the move's, and
 any other difference are refused. `compare.nuon` beside the later

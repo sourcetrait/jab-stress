@@ -271,18 +271,34 @@ the archived ELF of the image's recorded SHA-256 in the tree's exports by its
 flags' nm (iz-min-of); an images' record written before ClampedReference holds
 none.
 
+## const REFERENCE_READS
+
+The files of a still copy the crate's reference reads: the map and the images,
+a material's and a sprite frame's.
+
+## def still-held
+
+A still copy made again, held file by file to the capture's inventory rows
+under its directory, its disk and the copy's tree, `disk.nuon` apart since the
+still path writes its own: a file absent, of another SHA-256, or not the
+capture's is a problem where the reference reads it and a limit where it does
+not. A copy compiled before jab c804ccb names each material's source in
+`tile.nuon` by the checkout's absolute path, so its `tile.nuon` and its disk
+are made again at another digest, both limits.
+
 ## def reread-pose
 
-One pose read again from the restored tree into `out`. Its disk rebuilt by the
-still path (disk-for) and held to the digest the capture recorded, a disk of
-another digest leaving the reference unread. Each launch's screen held to its
+One pose read again from the restored tree into `out`. Its still copy made
+again by the still path (disk-for) and held to the capture's (still-held), a
+problem leaving the reference unread. Each launch's screen held to its
 recorded SHA-256, its stream and UART log restored; each screen bound again
 (bind) and each UART's fault lines read again, every difference from the
 recorded row named, the recorded row standing. The reference taken anew at
 today's revision on the recorded bindings, its words as `capture` gives them,
 a capture's export passed only where its recorded tally holds a snapshot: a
 capture taken before the console's X carries no span table, and that limit is
-named rather than filled, the crate then reading a block's end from its pixels.
+named rather than filled, the crate then reading a block's end from its pixels;
+the still copy's limits named beside it.
 The block table's SHA-256 beside the first's from the run's inventory; the
 pictures differed again and held to the recorded pixels and regions. The pose's
 record written as `capture` writes one, its rows' screens the restored paths,
