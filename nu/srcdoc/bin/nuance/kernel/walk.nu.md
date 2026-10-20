@@ -24,3 +24,9 @@ saved as `<name>.guest.nuon`.
 
 `nu/bin/nuance/kernel/walk.nu replay-of`, its parameters `run: path, stream:
 path`: A replay stream written from a run's own records.
+
+## def main controls
+
+`nu/bin/nuance/kernel/walk.nu controls`, its parameters `base: path, out: path,
+--expected: string = "{}"`: A box series read whole: every run, each control's
+effects, the images.

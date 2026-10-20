@@ -1,7 +1,10 @@
 #!/usr/bin/env nu
 # The walk module's path, bound at parse time
 const WALK = path self ../../../mod/kernel/walk
+# The box series' controls' module's path, bound at parse time
+const CONTROLS = path self ../../../mod/kernel/walk/controls
 use $WALK
+use $CONTROLS
 
 # A probed run read paired, saved
 def main [probe: path, out: path, --eps: int = 10000, --replay: path] {
@@ -21,4 +24,9 @@ def "main guest-runs" [tree: path, out: path, --eps: int = 10000] {
 # A replay stream written from a run's own records
 def "main replay-of" [run: path, stream: path] {
     walk replay-of $run $stream
+}
+
+# A box series read whole: every run, each control's effects, the images
+def "main controls" [base: path, out: path, --expected: string = "{}"] {
+    controls $base $out --expected $expected
 }
