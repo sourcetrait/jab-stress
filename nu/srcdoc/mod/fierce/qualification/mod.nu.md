@@ -12,13 +12,13 @@ hold the code, and this file re-exports them for a consumer.
   bench against the candidate's bench file, every run with its standing,
   its identity, and that identity's agreement with the candidate and the
   target, each case of the matrix with its runs, every acceptance run's
-  verdict, the controls' readings and the diagnostics' apart, the host, and
-  the limits stated.
+  verdict, the controls' readings and the diagnostics' apart, and the host.
 - `check` holds a record to the schema and the acceptance, every problem
   named.
-- `report` writes the document for its reader, a section a target.
+- `report` writes the document for its reader, a section a target, the
+  limits last.
 - `matrix` holds what they share: the targets, the cases, the diagnostics,
-  the limits, and the acceptance's rules.
+  and the acceptance's rules.
 - `package` makes the candidate's host package for a target.
 - `disks` makes a bench's disk copies again from today's content and holds
   them to the bench's records, its removal gate's check of the copies.

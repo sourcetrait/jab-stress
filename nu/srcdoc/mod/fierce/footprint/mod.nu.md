@@ -212,21 +212,6 @@ A view's verdict by one reference, `prefix` "" the declared one and
 "secant_" the secant's: outside the bands the candidate's disagreements,
 sharper and coarser, at most today's, and none sharper.
 
-## const REVISION
-
-The revised criterion's statement, SecantCriterion's: the property it now
-tests, the along term the engine's own step and the down term the
-analytic derivative at the block's start on the engine's mapping, what it
-leaves to AlongSpanFootprint, and the declared result standing as
-recorded.
-
-## const LIMIT
-
-The clamp's limit, ClampedReference's: the release floor, IZ_MIN 4096, a
-depth of 16,384 m, reached by no surface of the inventoried content at the
-inventoried poses, so the clamp stands proved at the test threshold alone,
-IZ_TEST's on the clamp pose.
-
 ## def departure-of
 
 A view's no-new-departure check by its blocks: the candidate never off
@@ -251,10 +236,20 @@ the criteria (verdict-of), its blocks read one by one (blocks-of), its
 no-new-departure check (departure-of), and the pictures' differing pixels
 and regions. A view holds only resolved; the criteria hold only when the
 reading is whole and every view holds. reading.nuon holds it, the declared
-criteria's whole verdict as recorded, the revised criterion's
+criteria's whole verdict as recorded, and the revised criterion's
 (SecantCriterion), the secant's verdicts and no new departure on every
-view together, the statement of the revision, and the clamp's limit
-(LIMIT), the last two printed with the reading too.
+view together.
+
+The revised criterion tests whether the candidate's row estimate gives
+the level a block's footprint asks when the along term is the engine's own
+step, the secant over the block's true length, and the down term the
+analytic derivative at the block's start on the engine's mapping; whether
+the engine's along stepping matches the analytic derivative is
+AlongSpanFootprint's. The declared criteria's result stands as recorded.
+The clamp's limit (ClampedReference): the release floor, IZ_MIN 4096, a
+depth of 16,384 m, is reached by no surface of the inventoried content at
+the inventoried poses, so the clamp stands proved at the test threshold
+alone, IZ_TEST's on the clamp pose.
 
 ## def restored-run
 
@@ -318,8 +313,10 @@ differs only elsewhere is remade (remade-still), and holds when the remade
 copy's every file and its disk are the capture's: a copy compiled after jab
 c804ccb names its sources relative to the content, where the capture's
 named them by the checkout's absolute path, so its `tile.nuon` and its disk
-are made again otherwise. The result names the first disk's SHA-256, the
-copy's, the remade one's, the content's place, and whether it held.
+are made again otherwise. The result names the files that differ, those
+that differ after the remaking and the remaking's problems, the first
+disk's SHA-256, the copy's, the remade one's, the content's place, and
+whether it held.
 
 ## def reread-pose
 
@@ -331,14 +328,14 @@ recorded SHA-256, its stream and UART log restored; each screen bound again
 recorded row named, the recorded row standing. The reference taken anew at
 today's revision on the recorded bindings, its words as `capture` gives them,
 a capture's export passed only where its recorded tally holds a snapshot: a
-capture taken before the console's X carries no span table, and that limit is
-named rather than filled, the crate then reading a block's end from its pixels;
-the still copy's limits named beside it, and its hold kept as `still`.
+capture taken before the console's X carries no span table, and its level is
+named in `no_span_table` rather than filled, the crate then reading a block's
+end from its pixels; the still copy's hold kept as `still`.
 The block table's SHA-256 beside the first's from the run's inventory; the
 pictures differed again and held to the recorded pixels and regions. The pose's
 record written as `capture` writes one, its rows' screens the restored paths,
-with `reread`: the record read, the first tool, the differences, the limits, and
-both tables' digests.
+with `reread`: the record read, the first tool, the differences, the levels
+without a span table, and both tables' digests.
 
 ## def reread
 

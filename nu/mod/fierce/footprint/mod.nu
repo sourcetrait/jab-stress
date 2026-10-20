@@ -361,12 +361,6 @@ def verdict-of [today: record, cand: record, prefix: string]: nothing -> record 
     { today: $today_off, candidate: $cand_off, candidate_sharper: (do $field $cand sharper), holds: ($cand_off <= $today_off and (do $field $cand sharper) == 0) }
 }
 
-# The revised criterion as SecantCriterion states it, printed with every reading
-const REVISION = "The criterion is revised after the first measurement (SecantCriterion): it now tests whether the candidate's row estimate gives the level a block's footprint asks when the along term is the engine's own step, the secant over the block's true length, and the down term the analytic derivative at the block's start on the mapping the engine uses there; it does not test whether the engine's along stepping matches the analytic derivative (AlongSpanFootprint). The declared criteria's result stands as recorded."
-
-# The clamp's limit as ClampedReference states it, printed with every reading
-const LIMIT = "The release threshold, IZ_MIN 4096 in 6.26, a depth of 16,384 m, is not exercised by the inventoried content and poses; the clamp is proved at the test threshold, IZ_TEST's, on the clamp pose (ClampedReference)."
-
 # A view's no-new-departure check against the declared reference, by its blocks
 def departure-of [b: record]: nothing -> record<new_off: int, own_sharper: int, holds: bool> {
     { new_off: $b.new_off, own_sharper: $b.own_sharper, holds: ($b.new_off == 0 and $b.own_sharper == 0) }
@@ -431,10 +425,8 @@ export def read [out: path, poses: path] {
     }
     for r in $refused { print $"($r.pose): refused, ($r.problems | str join '; ')" }
     for m in $missing { print $"($m): missing, the pose set's but never captured" }
-    { views: $views, refused: $refused, missing: $missing, whole: $whole, declared_holds: $declared, secant_holds: $secant, departures_hold: $departures, revised_holds: $revised, revision: $REVISION, limit: $LIMIT, own_sharper: $own } | to nuon --indent 2 | save --raw -f ($out | path join "reading.nuon")
+    { views: $views, refused: $refused, missing: $missing, whole: $whole, declared_holds: $declared, secant_holds: $secant, departures_hold: $departures, revised_holds: $revised, own_sharper: $own } | to nuon --indent 2 | save --raw -f ($out | path join "reading.nuon")
     print $"footprint read: ($views | length) views, ($refused | length) refused, ($missing | length) missing; (if $whole { 'every view accounted for' } else { 'incomplete: a view refused, missing, or unresolved' }); the declared criteria (if $declared { 'hold' } else { 'fail' }), as recorded; the revised criterion (if $revised { 'holds' } else { 'fails' }), the secant's verdicts (if $secant { 'holding' } else { 'failing' }) and no new departure (if $departures { 'holding' } else { 'failing' }); the candidate's own sharper blocks by the declared reference ($own)"
-    print $REVISION
-    print $LIMIT
 }
 
 # The run a restored tree came from, named by the receipt beside the tree
@@ -511,9 +503,10 @@ def remade-still [disk: record, c: record, into: path]: nothing -> record<conten
 
 # A still copy made again, held file by file to the capture's inventory, once
 # a copy, `held.nuon` beside it: a file the reference reads that differs is a
-# problem, any other a limit. A copy that differs is remade as the capture's
-# checkout compiled it, and the copy holds when either is the capture's whole
-def still-held [disk: record, out: path, inventory: list<any>, c: record]: nothing -> record<problems: list<string>, limits: list<string>, disk: record> {
+# problem, and every differing file's path is kept. A copy that differs is
+# remade as the capture's checkout compiled it, and the copy holds when either
+# is the capture's whole
+def still-held [disk: record, out: path, inventory: list<any>, c: record]: nothing -> record<problems: list<string>, differ: list<string>, remade_problems: list<string>, remade_differ: list<string>, disk: record> {
     let base = ($disk.disk | path dirname)
     let kept = ($base | path join "held.nuon")
     if ($kept | path exists) { return (open $kept) }
@@ -528,12 +521,7 @@ def still-held [disk: record, out: path, inventory: list<any>, c: record]: nothi
     let after = (if $remade == null or not ($remade.problems | is-empty) { null } else { still-differ $into $rel $rows $name })
     let remade_sha = (if ($into | path join $name | path exists) { open --raw ($into | path join $name) | hash sha256 } else { null })
     let held = (if $remade == null { $disk.sha256 == $c.disk.sha256 } else { $after != null and ($after | is-empty) and $remade_sha == $c.disk.sha256 })
-    let limits = (if $remade == null { [] } else if $held {
-        [$"the copy names its sources relative to the content; remade naming them under ($remade.content), as the capture's checkout did, its every file and its disk are the capture's, where ($differ | get path | str join ', ') differ made again"]
-    } else {
-        ($differ | where {|d| not (do $reads $d.path) } | each {|d| $"($d.path) ($d.how); the reference reads no such file" }) ++ $remade.problems ++ ($after | default [] | each {|d| $"remade, ($d.path) ($d.how)" })
-    })
-    let result = { problems: $problems, limits: $limits, disk: { first: $c.disk.sha256, again: $disk.sha256, remade: $remade_sha, content: ($remade | get -o content), held: $held } }
+    let result = { problems: $problems, differ: ($differ | each {|d| $d.path }), remade_problems: ($remade | get -o problems | default []), remade_differ: ($after | default [] | each {|d| $d.path }), disk: { first: $c.disk.sha256, again: $disk.sha256, remade: $remade_sha, content: ($remade | get -o content), held: $held } }
     $result | to nuon --indent 2 | save --raw $kept
     $result
 }
@@ -566,7 +554,7 @@ def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>,
         { label: $label, row: ($r | update screen $screen.path), api: $api.path, missing: [], differences: $differences }
     })
     let missing = ($launches | get missing | flatten)
-    let limits = ($kind.levels | enumerate | where {|e| ($c.reference | get -o captures | default [] | get -o $e.index | get -o snapshot) == null } | each {|e| $"($e.item): its capture carries no span table, so each block's end is read from its pixels" }) ++ $held.limits
+    let no_span = ($kind.levels | enumerate | where {|e| ($c.reference | get -o captures | default [] | get -o $e.index | get -o snapshot) == null } | each {|e| $e.item })
     let reference = (if not (($missing ++ $disk_problems) | is-empty) or $c.reference == null { null } else {
         let launch = {|label: string| $launches | where label == $label | first }
         let exported = {|label: string, has: bool| if $has { ["--export" (do $launch $label | get api) $"(do $launch $label | get row.binding.frame)"] } else { [] } }
@@ -593,12 +581,12 @@ def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>,
         pose: $c.pose, disk: $disk, export: $c.export, commit: $c.commit, tool: $tool, launch: ($c | get -o launch), rows: ($launches | get row),
         reference: ($reference | get -o value), pictures: $pictures, problems: $problems,
         reread: {
-            from: ($tree | path join $name "pose.nuon"), first_tool: $c.tool, differences: ($launches | get differences | flatten), limits: $limits, still: $held.disk,
+            from: ($tree | path join $name "pose.nuon"), first_tool: $c.tool, differences: ($launches | get differences | flatten), no_span_table: $no_span, still: $held.disk,
             rows_sha256: $rows_sha, first_rows_sha256: $recorded_rows, rows_same: ($rows_sha != null and $rows_sha == $recorded_rows),
             pictures_same: (if $pictures == null { null } else { not $picture_differs }),
         },
     } | to nuon --indent 2 | save --raw ($dir | path join "pose.nuon")
-    { pose: $name, problems: $problems, differences: ($launches | get differences | flatten), limits: $limits, still: $held.disk, rows_same: ($rows_sha != null and $rows_sha == $recorded_rows), pictures_same: (if $pictures == null { null } else { not $picture_differs }) }
+    { pose: $name, problems: $problems, differences: ($launches | get differences | flatten), no_span_table: $no_span, still: $held.disk, rows_same: ($rows_sha != null and $rows_sha == $recorded_rows), pictures_same: (if $pictures == null { null } else { not $picture_differs }) }
 }
 
 # A restored footprint run read again: every pose, its reading, the first's beside it
@@ -618,7 +606,7 @@ export def reread [tree: path, out: path] {
     for r in $read {
         let rows = (if $r.rows_same { "its block table the first's byte for byte" } else { "its block table another than the first's" })
         let still = (if $r.still.held { "its still copy the capture's" } else { "its still copy not the capture's" })
-        print $"($r.pose): (if ($r.problems | is-empty) { 'read again' } else { $r.problems | str join '; ' }); ($rows); ($still); ($r.differences | length) differences from the first reading, ($r.limits | length) limits"
+        print $"($r.pose): (if ($r.problems | is-empty) { 'read again' } else { $r.problems | str join '; ' }); ($rows); ($still); ($r.differences | length) differences from the first reading"
     }
     read $out $poses
     let first = (open ($tree | path join "reading.nuon"))

@@ -117,7 +117,7 @@ phase rising that far, it says the rise was spread across the phases.
 A run without the phase stamps reports its stretches with their
 intervals and names no phase.
 
-Every reading states its limits. The guest's clock measures elapsed
+The reading has three limits. The guest's clock measures elapsed
 time, so a host stall inside a phase reads as that phase. The pairing
 gives intervals, not the absolute delay from the guest to the window.
 A stretch is judged only against its own run.

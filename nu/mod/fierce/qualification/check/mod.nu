@@ -19,7 +19,7 @@ def lacking [value: any, keys: list<string>, at: string]: nothing -> list<string
 
 # A record's schema: every field it lacks, named
 def schema-problems [r: any]: nothing -> list<string> {
-    let top = (lacking $r [target written readers candidate spec bench hosts ram runs cases diagnostics limits] "the record")
+    let top = (lacking $r [target written readers candidate spec bench hosts ram runs cases diagnostics] "the record")
     if not ($top | is-empty) { return $top }
     let cand = (lacking $r.candidate [tag jab stress image_sha256 elf_sha256 kernel_sha256 assets] "the candidate")
     let runs = ($r.runs | enumerate | each {|e| lacking $e.item [step run seed kind standing reasons identity agreement measured] $"run ($e.index)" } | flatten)

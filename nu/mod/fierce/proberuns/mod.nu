@@ -138,7 +138,7 @@ export def run-reading [dir: path, --eps: int = 10000]: nothing -> record {
     let k = (present k-violations $accepted $period $eps)
     let pairing = {
         verdict: $pair.verdict, refusals: $pair.refusals, bracket: $pair.bracket, shifts: $pair.shifts,
-        window: $pair.window, fit: $pair.fit, stalls: (stalls-of $pair.stalls $flips.flips), limits: $pair.limits,
+        window: $pair.window, fit: $pair.fit, stalls: (stalls-of $pair.stalls $flips.flips),
     }
     let after = ($base | merge { bundle: $bundle, flips: { source: $flips.source, origin: $flips.origin }, pairing: $pairing, k: { eps: $eps, period: $period, violations: ($k | length), first: ($k | first 8) } })
     if not $pair.ok { return ($after | merge { stage: "pairing", refusals: ($pair.refusals | each {|r| $"($r.refusal): ($r.count)" }) }) }
@@ -176,7 +176,6 @@ export def analyse-runs [runs: list<any>, --eps: int = 10000]: nothing -> record
             }
         }),
         unread: ($runs | where stage != null | each {|r| { label: $r.label, run: $r.run, stage: $r.stage, refusals: $r.refusals } }),
-        limits: ($read | get -o 0.pairing.limits),
     }
 }
 
@@ -321,6 +320,5 @@ export def main [base: string, out: string, ...labels: string, --eps: int = 1000
         print $"proberuns: cadence ($c.cadence), ($c.runs | length) runs: (line-of $c.whole)"
         for l in $c.legs { print $"proberuns:   ($l.leg): (line-of $l)" }
     }
-    if $reading.limits != null { print $"proberuns: limits: ($reading.limits)" }
     print $"proberuns: ($out)"
 }

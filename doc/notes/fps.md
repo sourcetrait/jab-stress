@@ -90,7 +90,7 @@ repositories, under the session's scratch directory or
     rooted as the bench's checkout compiled it where it differs, and each
     disk to its inventory row, writing `disks.nuon`. Its module splits into
     `matrix`, the targets, the cases, the diagnostics, the other
-    obligations, the packaged bench, the limits, the acceptance's and the
+    obligations, the packaged bench, the acceptance's and the
     conditions' rules, the ledger, and the helpers the others share, then
     `candidate`, `record`, `check`, `report`, `package`, and `disks`.
     `tilesources` holds how a tree compiled before jab c804ccb named its

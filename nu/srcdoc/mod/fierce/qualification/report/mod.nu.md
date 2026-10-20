@@ -8,6 +8,11 @@ the problems, the record's own answers that differ, and the limits. Every
 section reads the record the check derived, never a stored one. `main` writes it
 to the last path given.
 
+## const LIMITS
+
+What a qualification cannot claim (Qualification.md's presentation, CPU,
+and audio), every target section's last.
+
 ## def median-of
 
 A list's median by nearest rank, the gauge's statistics' rule; null for

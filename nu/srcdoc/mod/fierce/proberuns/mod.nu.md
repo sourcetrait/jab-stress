@@ -94,7 +94,7 @@ One probed run's directory read whole: its seed, cadence, identity source,
 and capture's schema and standing; then, as far as it reads, its `stage`
 (null where it reads whole) and refusals, its bundle's profile, run, reader,
 and trace, its flips' source and origin, its pairing (verdict, refusals,
-bracket, shifts, window, fit, stalls by bound, limits), K's violations over
+bracket, shifts, window, fit, stalls by bound), K's violations over
 its presented frames' acceptance stamps at the period of its cap, its
 renders' count, the load's presents, and its frames.
 
@@ -105,9 +105,9 @@ run with no directory unread at its `run` stage, the read ones pooled per
 cadence and leg. Returned: the runs, each without its frames and with its
 whole and per-leg pools; the cadences, each with its runs, their verdicts,
 and its whole and per-leg pools, a pool's longest superseded run the
-longest any one run holds; the unread runs with their stages and refusals;
-and the pairing's limits. The qualification's presentation row reads its
-probed runs through it, each by the directory its record found.
+longest any one run holds; and the unread runs with their stages and
+refusals. The qualification's presentation row reads its probed runs
+through it, each by the directory its record found.
 
 ## def analyse
 
@@ -171,4 +171,4 @@ medians in milliseconds.
 
 `nu/bin/nuance/fierce/proberuns.nu <base> <out.nuon> <label>... [--eps
 ticks]`: the reading saved to `out` as NUON, a line a run and a line a
-cadence and leg printed, the limits last.
+cadence and leg printed.

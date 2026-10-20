@@ -3,7 +3,7 @@
 The qualification's matrix and what its parts share: the targets, the map every
 run plays, the record's file, the cases a bench run holds, the diagnostics read
 from the normal play runs, every other final obligation, the packaged bench, the
-limits every reading states, the acceptance's rules, a run's agreement with the
+acceptance's rules, a run's agreement with the
 candidate and its conditions against its step, its verdict, and the ledger and
 its two verdicts, which the record writes and the check derives again, and the
 helpers the candidate, the record, the check, the report, and the package all
@@ -99,11 +99,6 @@ record compares the words that ran with the definition's.
 ## def flag-of
 
 The value after a flag among a step's words, null where it is absent.
-
-## const LIMITS
-
-What a qualification record cannot claim (Qualification.md's presentation,
-CPU, and audio), stated with every reading.
 
 ## def sha-of
 

@@ -5,7 +5,7 @@ bench: every run with its standing, its identity, that identity's agreement
 with the candidate and the target, and its conditions against its step; each
 case of the matrix with its runs; every acceptance run's verdict; the controls'
 and the diagnostics' readings; the bench's one host and one QEMU and each case's
-one backend; the host; the limits; and its own ledger and verdicts. `main`
+one backend; the host; and its own ledger and verdicts. `main`
 writes it as qualification.nuon and prints the record's own verdicts; the
 check derives them again from the reopened inputs.
 
@@ -102,7 +102,7 @@ by each run's directory (`proberuns analyse-runs`): each run's bundle;
 each run's reading, its capture, bundle, flips, and pairing in turn, with
 its shown, superseded, and repeated frames pooled whole and per leg; the
 pools per cadence; the runs left unread, each at its stage with its
-refusals; and the pairing's limits. Admissible as the shim control finds.
+refusals. Admissible as the shim control finds.
 Read once every expected run is there, valid, the candidate's, probed,
 bundled, and read whole, each problem named once: a run the control's
 rules or its missing bundle already name is not named again for the stage

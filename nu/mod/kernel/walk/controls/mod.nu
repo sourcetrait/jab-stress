@@ -39,15 +39,6 @@ export const MEASURES = {
     ]
 }
 
-# What the controls' readings cannot claim, stated with them
-export const LIMITS = [
-    "The instrumentation's effect is TIMING's four stamps alone: both arms run CADENCE with its seed, window, anchors, buffered events, receipts, and export, so the effect stands for no other policy, loop order, target, backend, or build."
-    "End to end sets ordinary walk against CADENCE without TIMING on the host's side alone, ordinary walk holding no receipts; it shows how the measurement build's protocol differs and supports no causal claim."
-    "The API port sets ordinary walk with its port against it without, both generic, on the host's side alone."
-    "The probe takes no thread readings, so no thread's CPU is read."
-    "An arm's statistic is the median of its runs', the effect the first arm's less the second's, the noise half the larger arm's range, three runs an arm."
-]
-
 # A run's arm, its label less a trailing `_<n>`
 def arm-of [label: string]: nothing -> string {
     $label | str replace --regex '_[0-9]+$' ""
@@ -184,8 +175,8 @@ def images-of [runs: list<any>, expected: record]: nothing -> list<any> {
     }
 }
 
-# The box series read: every run, each control's effects, the oracle, the
-# images, and the limits, written to `out` with each paired reading beside it
+# The box series read: every run, each control's effects, the oracle, and
+# the images, written to `out` with each paired reading beside it
 export def main [base: path, out: path, --expected: string = "{}"] {
     let base = ($base | path expand)
     let runs_file = ($base | path join "runs.nuon")
@@ -197,7 +188,7 @@ export def main [base: path, out: path, --expected: string = "{}"] {
     let controls = ($CONTROLS | each {|c| control-of $c $runs })
     let oracle = ($runs | where label == "oracle" | get -o 0)
     let images = (images-of $runs ($expected | from nuon))
-    let record = { reader: "walk controls", base: $base, runs: $runs, controls: $controls, oracle: $oracle, images: $images, limits: $LIMITS }
+    let record = { reader: "walk controls", base: $base, runs: $runs, controls: $controls, oracle: $oracle, images: $images }
     $record | to nuon --indent 1 | save --raw -f $out
     for r in $runs {
         let p = (if $r.paired == null { "host side alone" } else if $r.paired.valid { $"paired, ($r.paired.verdict)" } else { $"paired reading stopped at its ($r.paired.stage | default 'stream')" })

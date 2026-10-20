@@ -4,7 +4,7 @@ use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge)
 use (path self ../../observer)
 use (path self ../../proberuns)
 use (path self ../matrix)
-use (path self ../matrix) [CASES DIAGNOSTICS GFX_FLOOR JAB LIMITS RECORD STRESS TARGETS]
+use (path self ../matrix) [CASES DIAGNOSTICS GFX_FLOOR JAB RECORD STRESS TARGETS]
 
 # The runs a step's words ask for, the gauge's defaults where none named
 export def expected-of [words: list<string>]: nothing -> record<kind: string, runs: list<any>> {
@@ -169,7 +169,6 @@ def presentation-reading [runs: list<any>, missing: list<any>, target: string]: 
         runs: $reading.runs,
         cadences: $reading.cadences,
         unread: $reading.unread,
-        limits: $reading.limits,
         problems: $problems,
     }
 }
@@ -373,7 +372,6 @@ export def record-of [bench: path, candidate: path, target: string, --readers: a
         runs: $runs,
         cases: $cases,
         diagnostics: ($DIAGNOSTICS | each {|d| diagnostic-reading $d $routed }),
-        limits: $LIMITS,
     }
     let ledger = (matrix ledger-of $r (matrix tag-state $cand.tag $cand.jab) ($bench_problems ++ $conditions.problems))
     $r | insert ledger $ledger | insert verdicts (matrix verdicts-of $ledger)

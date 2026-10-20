@@ -1,5 +1,14 @@
 use (path self ../matrix)
 
+# What a qualification cannot claim, every target section's last
+const LIMITS = [
+    "The physical display is not qualified. TheUser's eye is a qualitative reading and never a measured 60 frames a second."
+    "A thread's CPU comes from its host's counters, hundredths of a second read every 100 ms, so only an interval of seconds resolves. One less a thread's utilization is everything it did not run, descheduling included, and is never the guest's idle time; the guest's own waits come from its records."
+    "Upload and render selection come from the probed runs alone. They stand for the unprobed program's presentation only where the shim control finds every effect within its noise."
+    "A release run carries no sound counters. The audio's evidence comes from separate debug runs, labelled diagnostic."
+    "The audio's counters show no exhaustion of the guest's queue to the device, observed after each service's drain, which is not output underrun past QEMU's backend. Its 50 ms windows are a coarse continuity check a shorter gap passes, read only where the sound was recorded; a run on live audio reads the driver's counters alone."
+]
+
 # A list's median by nearest rank, null for no values
 def median-of [values: list<any>]: nothing -> any {
     let v = ($values | compact)
@@ -239,7 +248,7 @@ def target-section [c: record]: nothing -> list<string> {
         ""
         "### Limits"
         ""
-    ] ++ ($r.limits | each {|l| $"- ($l)" }) ++ [""]
+    ] ++ ($LIMITS | each {|l| $"- ($l)" }) ++ [""]
 }
 
 # The report over the targets' checks, a section a target

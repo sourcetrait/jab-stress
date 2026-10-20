@@ -35,10 +35,6 @@ median and 95th from the receipts, the presented flips' host interval's
 median and 95th, the slow stretches, and the share shown; host, the flips'
 interval's median and 95th, the slow stretches, and the share shown.
 
-## const LIMITS
-
-What the controls' readings cannot claim, stated with them.
-
 ## def arm-of
 
 A run's arm, its label less a trailing `_<n>`.

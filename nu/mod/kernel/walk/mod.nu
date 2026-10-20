@@ -108,21 +108,6 @@ const PHASES = [work wait call]
 # What can end a window, by the header's code
 const ENDS = ["none" "the duration" "the frame buffer" "the event room" "the replay's last frame" "an offset's range"]
 
-# What a guest-only reading cannot claim, stated with it
-const LIMITS = [
-    "rdtime is elapsed time: a host stall inside a phase reads as that phase"
-    "the guest's records give intervals between its own clock's readings, and nothing of when the host showed a frame"
-    "attribution is within a run, by a stretch's own frames against the run's steady medians, never by comparing runs"
-]
-
-# What a paired reading cannot claim, stated with it beside the pairing's own
-const PAIRED_LIMITS = [
-    "rdtime is elapsed time: a host stall inside a phase reads as that phase"
-    "the pairing gives intervals and no absolute guest-to-SDL latency; its own limits are the pairing core's, given with it"
-    "attribution is within a run, by a stretch's own frames against the run's steady medians, never by comparing runs"
-    "a TIMING-off run pairs on its frame's bracket, never a call's, and locates no phase"
-]
-
 # A little-endian word of `size` bytes at `at`, the eight-byte one signed
 def le [b: binary, at: int, size: int]: nothing -> int {
     let w = ($b | bytes at $at..<($at + $size))
@@ -496,7 +481,7 @@ export def guest-side [stream: record, eps: int]: nothing -> record {
 # A stream read on the path both readings take: rules, receipts, binding, build
 def guest-of [bytes: binary, identity: record, eps: int, test: bool, replay: any]: nothing -> record<result: record, stream: record> {
     let stream = (stream-of $bytes --test=$test)
-    let base = { reader: "walk cadence", mode: "guest", guest_only: true, limits: $LIMITS }
+    let base = { reader: "walk cadence", mode: "guest", guest_only: true }
     if not $stream.complete {
         return { result: ($base | merge { complete: false, valid: false, faults: $stream.faults, nonce: null, historical: null, deciding: false, build: null, unchecked: [], reading: null }), stream: $stream }
     }
@@ -617,7 +602,7 @@ export def paired-reading [probe: path, --eps: int = 10000, --replay: path]: not
     let identity = (open --raw ($bundle | path join "identity.nuon") | into binary | decode | from nuon)
     let bytes = (open --raw ($bundle | path join "api.out") | into binary)
     let g = (guest-of $bytes $identity $eps false $replay)
-    let base = ($g.result | merge { mode: "paired", guest_only: false, limits: $PAIRED_LIMITS, stage: null, capture: null, pairing: null, flips: null, stretches: null })
+    let base = ($g.result | merge { mode: "paired", guest_only: false, stage: null, capture: null, pairing: null, flips: null, stretches: null })
     if not $g.result.valid { return ($base | merge { stage: "stream" }) }
     let checked = (try { sdl bundle-check $bundle --guest {|api| header-nonce (open --raw $api | into binary) } } catch {|e| { refusal: $e.msg } })
     if ($checked | get -o refusal) != null {
@@ -634,7 +619,6 @@ export def paired-reading [probe: path, --eps: int = 10000, --replay: path]: not
         verdict: $pair.verdict, refusals: $pair.refusals, bound: (if $timing { "recorded" } else { "frame" }),
         bracket: $pair.bracket, shifts: $pair.shifts, window: $pair.window, fit: $pair.fit,
         stalls: (if $timing { { calls: $pair.stalls, frame: [] } } else { { calls: [], frame: $pair.stalls } }),
-        limits: $pair.limits,
     }
     if not $pair.ok {
         let refused = (fault "the pairing" ($pair.refusals | length) ($pair.refusals | each {|r| $"($r.refusal): ($r.count)" }))
@@ -706,7 +690,6 @@ def show [record: record]: nothing -> nothing {
         let located = (if $s.located == null { "no phase located, TIMING off" } else { $s.located | str join ", " })
         print $"  stretch at ($s.at_s | math round -p 2) s, frames ($s.first.frame) to ($s.last.frame), ($s.flips) flips, host ($s.host_interval.median_ms) ms median: ($located)"
     }
-    for l in $record.limits { print $"  limit: ($l)" }
 }
 
 # A probed run read paired, saved
