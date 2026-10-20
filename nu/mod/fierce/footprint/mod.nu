@@ -464,6 +464,9 @@ def floor-of [tree: path, image: record]: nothing -> int {
 # A reread's own record in its `out`, beside the runner's `reread.nuon`
 const AGAIN = "again.nuon"
 
+# A reading's whole verdicts, each null in a reading whose reader held none
+const VERDICTS = [whole declared_holds secant_holds departures_hold revised_holds own_sharper]
+
 # The files of a still copy the crate's reference reads: its map and its images
 const REFERENCE_READS = ['\.jabfps\.map$' '\.png$']
 
@@ -621,12 +624,17 @@ export def reread [tree: path, out: path] {
     let first = (open ($tree | path join "reading.nuon"))
     let again = (open ($out | path join "reading.nuon"))
     let fields = [judged sensitive clamped declared secant departure today_levels candidate_levels]
+    let held = ($fields | where {|k| $first.views | all {|v| $k in ($v | columns) } })
     let changed = ($again.views | each {|v|
         let f = ($first.views | where pose == $v.pose | get -o 0)
         if $f == null { return { pose: $v.pose, fields: ["absent from the first reading"] } }
-        { pose: $v.pose, fields: ($fields | where {|k| ($v | get -o $k) != ($f | get -o $k) }) }
+        { pose: $v.pose, fields: ($held | where {|k| ($v | get -o $k) != ($f | get -o $k) }) }
     } | where {|x| not ($x.fields | is-empty) })
-    { run: $run, tool: $tool, poses: $read, reading_changed: $changed, first: { whole: $first.whole, declared_holds: $first.declared_holds }, again: { whole: $again.whole, declared_holds: $again.declared_holds, revised_holds: ($again | get -o revised_holds) } } | to nuon --indent 2 | save --raw ($out | path join $AGAIN)
+    let verdicts = {|r: record| $VERDICTS | reduce --fold {} {|k, acc| $acc | insert $k ($r | get -o $k) } }
+    {
+        run: $run, tool: $tool, poses: $read, reading_changed: $changed, compared: $held, first_lacks: ($fields | where {|k| $k not-in $held }),
+        first: (do $verdicts $first), again: (do $verdicts $again),
+    } | to nuon --indent 2 | save --raw ($out | path join $AGAIN)
     print $"footprint reread: ($read | length) poses from ($run); ($read | where rows_same | length) block tables the first's byte for byte; ($read | where {|r| $r.still.held } | length) still copies the capture's; the reading's views changed from the first in ($changed | length)"
 }
 

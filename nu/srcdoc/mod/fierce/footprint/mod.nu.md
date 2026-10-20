@@ -276,6 +276,12 @@ none.
 A reread's own record in its `out`, `again.nuon`, beside the `reread.nuon`
 that `runner reread` writes there.
 
+## const VERDICTS
+
+A reading's whole verdicts, as `again.nuon` keeps both readings': whole,
+the declared, the secant, no new departure, the revised criterion, and the
+candidate's own sharper blocks.
+
 ## const REFERENCE_READS
 
 The files of a still copy the crate's reference reads: the map and the images,
@@ -338,9 +344,12 @@ inventory, the images' record, every captured pose; the crate built
 read again (reread-pose), then `read` over them, so the reading is today's
 reader's on today's reference. Beside it the first reading, the restored `reading.nuon`,
 each view's fields that changed from it named, old and new apart, neither
-replacing the other. `again.nuon` holds the run, the tool, every pose's
-result, and both readings' whole verdicts, apart from the `reread.nuon`
-that `runner reread` writes beside it. Its own outputs only: the restored
+replacing the other; the fields compared are those every view of the first
+reading holds, and those it lacks, a reading made before its reader read
+them, are named. `again.nuon` holds the run, the tool, every pose's result,
+the fields compared and lacked, and both readings' whole verdicts, a verdict
+the first reader held none of null, apart from the `reread.nuon` that
+`runner reread` writes beside it. Its own outputs only: the restored
 tree is read and never written.
 
 ## def crops

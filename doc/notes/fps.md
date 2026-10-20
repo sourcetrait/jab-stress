@@ -51,7 +51,14 @@ repositories, under the session's scratch directory or
     <dir> <surface>` plans the clamp pose's threshold and witnesses over a
     pose captured at the release floor. `read <out> <poses>` judges the
     pose set whole, and `crops <out> <pose>` cuts each region where a
-    view's two pictures differ out of both, side by side.
+    view's two pictures differ out of both, side by side. `reread <tree>
+    <out>` reads a landed run again from its restoration, through `runner
+    reread` with the reader `fps footprint`: each still copy made again
+    and held file by file to the run's inventory, and remade as a checkout
+    compiled it before jab c804ccb where it differs only outside the
+    files the reference reads; each launch bound again and its UART read;
+    the reference made anew; the reading made again beside the first, its
+    record `again.nuon`.
   - `qualification.nu`: `candidate <out> [--tag <tag>]` builds jab's
     release tree and writes the candidate's record, jab's checkout clean
     and the tag, when given, on its HEAD, this repository's changes and
@@ -69,11 +76,17 @@ repositories, under the session's scratch directory or
     gauge compare` output as the comparison with the first baseline;
     `package <candidate> <export> <target> <out>` writes the candidate's
     host package for a target, one tar a host runs with `./do bench
-    kit/fierce/qual_<target> --package <dir>`. Its module splits into
+    kit/fierce/qual_<target> --package <dir>`; `disks <bench> <inventory>
+    <out>` makes a restored bench's disk copies again from today's content,
+    each step's asset tree held to the digest its runs' identities record,
+    rooted as the bench's checkout compiled it where it differs, and each
+    disk to its inventory row, writing `disks.nuon`. Its module splits into
     `matrix`, the targets, the cases, the diagnostics, the other
     obligations, the packaged bench, the limits, the acceptance's and the
     conditions' rules, the ledger, and the helpers the others share, then
-    `candidate`, `record`, `check`, `report`, and `package`.
+    `candidate`, `record`, `check`, `report`, `package`, and `disks`.
+    `tilesources` holds how a tree compiled before jab c804ccb named its
+    tiles' sources, for `disks` and footprint's reread alike.
 - The probes are modules under `nu/mod/nuance/fierce/probe/`, one a
   probe, each run by its own bin under `nu/bin/nuance/fierce/probe/`:
   - `eviction.nu` runs the tile eviction probe: views' key sets at first

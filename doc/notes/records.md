@@ -50,8 +50,10 @@ every kept original held to its inventory row, with the receipt
 `restoration.nuon` beside it. `reread` restores the run, holds the reader's
 required inputs, and runs `nu <bin> <words>` with `{tree}` the restored tree
 and `{out}` the reread's own directory, which holds `reread.nuon` and the
-command's output and is what lands as the reread's run. Every consumer of
-landed data reads a restoration, never the data checkout's files.
+command's output, `reread.stdout` and `reread.stderr`, and is what lands as
+the reread's run; a reader that writes one of those three names is refused.
+Every consumer of landed data reads a restoration, never the data
+checkout's files.
 
 ## Checking a record
 
