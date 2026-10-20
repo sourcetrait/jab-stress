@@ -49,7 +49,7 @@ def class-of [file: path]: nothing -> record<role: string, lands: string> {
     if $name in [name title] and ($file | path dirname | path basename) == "map" { return { role: asset, lands: raw } }
     if ($name =~ '\.jabstage\.[A-Za-z0-9]+$') { return { role: fixture, lands: raw } }
     match $ext {
-        "log" | "stdout" | "stderr" | "txt" | "nm" | "disas" => { role: log, lands: container }
+        "log" | "stdout" | "stderr" | "err" | "txt" | "nm" | "disas" => { role: log, lands: container }
         "out" | "in" | "wrpl" | "wav" => { role: stream, lands: raw }
         "nuon" | "nuonl" | "toml" => { role: record, lands: raw }
         "ppm" | "png" => { role: picture, lands: raw }
@@ -69,7 +69,7 @@ def source-of [path: string, run: string]: nothing -> string {
 
 # A log's stream by its name: a command's stdout or stderr, else a file
 def stream-of [path: string]: nothing -> string {
-    match ($path | path parse | get extension) { "stdout" => "stdout", "stderr" => "stderr", _ => "file" }
+    match ($path | path parse | get extension) { "stdout" => "stdout", "stderr" | "err" => "stderr", _ => "file" }
 }
 
 # An original's disposition by the retention rules, the first that matches

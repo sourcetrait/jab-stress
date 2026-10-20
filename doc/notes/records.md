@@ -27,7 +27,7 @@ a NUON file of the record's own fields: `task`, `scope`, `builds` (each
 part's `part`, `build`, `source`, one of `checkout`, `export`, and
 `synthetic`, an export's provenance beside it, and `record`), and `kept`.
 The run lands at `runs/<subject>/<set>/<stamp>/`, which must not exist.
-Each file is classed by its name: a log (`.log`, `.stdout`, `.stderr`,
+Each file is classed by its name: a log (`.log`, `.stdout`, `.stderr` and `.err`,
 `.txt`, `.nm`, `.disas`) is wrapped as `<name>.nuonl`, and a stream, a
 record, a picture, a build, a source, or a fixture is copied as written. A
 control file or a kind the table does not list refuses the landing by

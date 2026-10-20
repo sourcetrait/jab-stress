@@ -41,7 +41,7 @@ wires are told apart before anything is read.
 ## def class-of
 
 The landing's class table, a file's class by its name: a log (`.log`,
-`.stdout`, `.stderr`, `.txt`, `.nm`, `.disas`) lands as a container; a
+`.stdout`, `.stderr` and `.err`, `.txt`, `.nm`, `.disas`) lands as a container; a
 stream (`.out`, `.in`, `.wrpl`, `.wav`), a record (`.nuon`, `.nuonl`,
 `.toml`, `flags`, a build's `home`), a picture (`.ppm`, `.png`), a build
 (`.jab`, `.elf`, `.romfs`, a flat `.bin`, an object `.o`, or any file
