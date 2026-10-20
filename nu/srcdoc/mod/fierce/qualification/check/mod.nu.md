@@ -90,8 +90,9 @@ once, the readers' identity taken first (record's readers-of), so the
 derived record names the code that read it: the derived record as
 qualification.nuon and `check.nuon`, the
 record checked and its SHA-256, the bench read, the problems, the ledger,
-the verdicts, the history, and the inputs reopened; each history item,
-each problem, and both verdicts printed; an error naming the problems'
-count when there is one. `--bench` a relocated bench, a restoration's,
+the verdicts, the history, the inputs reopened, and the runs bundled again
+(`rebundled`, relative to the check's `bench`); each history item, each run
+bundled, each problem, and both verdicts printed; an error naming the
+problems' count when there is one. `--bench` a relocated bench, a restoration's,
 in place of the one the record names; `--inventory` the landed run's
 inventory; `--candidate` the candidate's record reopened.
