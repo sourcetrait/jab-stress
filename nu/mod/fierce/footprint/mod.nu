@@ -56,6 +56,9 @@ const SECONDS = 11
 # The status of a run its bound ends, jab launch's
 const BOUND_STATUS = 124
 
+# A capture's launch condition, recorded with it: the API on, no sound recorded
+const LAUNCH = { api: true, sound: false }
+
 # The console's P frame with the pose's roll
 def placement [p: record]: nothing -> binary {
     let floats = ([$p.x $p.y $p.z $p.yaw $p.pitch $p.roll] | each {|f| $f | into float })
@@ -263,7 +266,7 @@ export def capture [export: path, poses: path, out: path, --only: string = ""] {
         if ($floors | length) != 1 { error make { msg: $"($p.name)'s OWNER and LEVELS images were assembled at IZ_MIN ($floors | str join ' and '), where one threshold binds them" } }
         let disk = (disk-for $p.map ($p | get -o keep | default []) $out)
         let rows = ($used | each {|i|
-            let run = (launch --kernel $i.kernel --image $i.image --out ($dir | path join $i.label) --set $i.set --sound --api --disk $disk.disk --serial "fps" --send (sends-of $p) --screen $SCREEN_AT --seconds $SECONDS)
+            let run = (launch --kernel $i.kernel --image $i.image --out ($dir | path join $i.label) --set $i.set --api --disk $disk.disk --serial "fps" --send (sends-of $p) --screen $SCREEN_AT --seconds $SECONDS)
             row-of $run $i $p
         })
         let launched = ($rows | each {|r|
@@ -287,7 +290,7 @@ export def capture [export: path, poses: path, out: path, --only: string = ""] {
             if $d.exit_code != 0 { error make { msg: $"the pictures at ($p.name): ($d.stderr)" } }
             $d.stdout | from nuon
         })
-        { pose: $p, disk: $disk, export: $export, commit: $made.commit, tool: $tool, rows: $rows, reference: $reference, pictures: $pictures, problems: $problems } | to nuon --indent 2 | save --raw ($dir | path join "pose.nuon")
+        { pose: $p, disk: $disk, export: $export, commit: $made.commit, tool: $tool, launch: $LAUNCH, rows: $rows, reference: $reference, pictures: $pictures, problems: $problems } | to nuon --indent 2 | save --raw ($dir | path join "pose.nuon")
         if ($problems | is-empty) {
             let today = ($reference.captures | get 0)
             let cand = ($reference.captures | get 1)

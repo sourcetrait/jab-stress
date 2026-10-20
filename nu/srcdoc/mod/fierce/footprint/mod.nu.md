@@ -69,6 +69,14 @@ the picture contract (workerparity.nu's): the stamp from STAMP_AT, the screen
 at SCREEN_AT while the run goes on, the X and the E after it, the bound at
 SECONDS so the final records land, a run the bound ends reading BOUND_STATUS
 
+## const LAUNCH
+
+A capture's launch condition beyond the picture contract's, recorded in its
+`pose.nuon`: the API on, the sound not recorded (EvidenceRetention's drop at
+the source, since nothing reads a capture's sound). A capture taken before it
+recorded its sound and carries no `launch`; it keeps its own condition, and
+no reader takes it under this one.
+
 ## def placement
 
 The console's P frame with the pose's roll, which pose's pose-frame
@@ -162,8 +170,8 @@ OWNER capture and the LEVELS captures, each with its export and its bound
 frame, the camera the bound LEVELS frame's state, its rows to rows.nuon;
 every launch's bake held to the crate's (bake-problems); and for a view
 the two pictures' differing regions. `<out>/<pose>/pose.nuon` holds the
-pose, the disk, the export and its commit, the crate, every row, the
-reference, the pictures, and the problems.
+pose, the disk, the export and its commit, the crate, the launch condition
+(LAUNCH), every row, the reference, the pictures, and the problems.
 
 ## def clamp-plan
 
