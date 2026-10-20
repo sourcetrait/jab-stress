@@ -30,3 +30,10 @@ clamp's threshold and witnesses planned over a captured pose.
 `nu/bin/nuance/fierce/footprint.nu crops`, its parameters `out: path, pose:
 string, --pad: int = 16`: Each region where a pose's pictures differ cut out of
 both as PNGs.
+
+## def main reread
+
+`nu/bin/nuance/fierce/footprint.nu reread`, its parameters `tree: path, out:
+path`: A restored run's poses read again, its reading set beside the first's.
+The "fps footprint" reader of `nuance.nu runner reread`, its words `reread
+{tree} {out}`.

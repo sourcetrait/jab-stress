@@ -58,6 +58,7 @@ the data checkout beside this repository, `../jab-stress-data`, under
 | Descriptor | What it runs |
 |---|---|
 | `jab_do.nuon` | a root driver's verb in the jab checkout, `bin` `do` or `nuance`, under the environment `env` names, a table of `name` and `value`; its whole output saved to `log`, its exit and last lines returned, a non-zero exit an error, `max_quiet_min` its quiet limit in minutes. A bench and its watch are one launch each, the watch first: `nuance` `watch` `[bench <program>/<bench>]`, then `do` `bench` `[<program>/<bench>]` |
+| `stress_bin.nuon` | a workbench bin's verb in this checkout, `bin` its path under `nu/bin` less `.nu`, as `jab_do.nuon` takes its arguments otherwise: the qualification's `check` past the run tool's bound among them |
 
 ## Measurement
 

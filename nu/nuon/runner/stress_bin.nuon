@@ -1,0 +1,7 @@
+{
+ nonce: "239DBkPqJCG",
+ title: "A workbench bin's verb in the jab-stress checkout under an environment, logged",
+ args_type: "record<stress: string, bin: string, verb: string, words: list<string>, env: table<name: string, value: string>, log: string, label: string, mcp_nom: string, max_quiet_min: int>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long\nlet a = $args\nlet bin = ($a.stress | path join nu bin nuance.nu)\nlet given = ($a | to nuon)\nlet ready = (^$bin runner ready stress_bin $given | complete)\nif $ready.exit_code != 0 { error make { msg: $\"stress_bin is not ready: ($ready.stderr | str trim)\" } }\nlet r = ($ready.stdout | from nuon)\nlet handle = (long launch {\n    label: $a.label,\n    mcp_nom: $a.mcp_nom,\n    interval: 120sec,\n    max_quiet: ($a.max_quiet_min * 1min),\n    check: {|state| { log: ($a.log | path exists) } },\n    teardown: null,\n    work: {\n        let w = (^$bin runner work stress_bin $given | complete)\n        if $w.exit_code != 0 { error make { msg: $\"stress_bin: ($w.stderr | str trim)\" } }\n        $w.stdout | from nuon\n    },\n})\n{ label: $handle.label, nonce: $handle.nonce }"
+}

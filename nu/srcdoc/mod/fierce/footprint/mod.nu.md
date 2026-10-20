@@ -16,8 +16,11 @@ pictures differ. `clamp-plan` plans the clamp pose's threshold and witnesses
 from a capture at the release floor. `read` judges the pose set whole, every
 view's blocks accounted for by class before any count, by the declared criteria
 and the revised one; `crops` cuts each region where a view's pictures differ out
-of both. Its bin: `nu/bin/nuance/fierce/footprint.nu
-images|capture|read|clamp-plan|crops`.
+of both. `reread` reads a landed run again from its restoration, each pose's
+disk rebuilt, its launches bound again, its reference taken anew at today's
+revision, the first reading kept beside the new (EvidenceRetention's removal
+gate). Its bin: `nu/bin/nuance/fierce/footprint.nu
+images|capture|read|clamp-plan|crops|reread`.
 
 ## const GAME
 
@@ -248,6 +251,55 @@ criteria's whole verdict as recorded, the revised criterion's
 (SecantCriterion), the secant's verdicts and no new departure on every
 view together, the statement of the revision, and the clamp's limit
 (LIMIT), the last two printed with the reading too.
+
+## def restored-run
+
+The run a restored tree came from: the `run` its restoration's receipt,
+`restoration.nuon` beside the tree, names; a tree with no receipt is no
+restoration's and refused.
+
+## def restored-file
+
+A capture's file at its path inside the run, laid in the restored tree: one
+missing named, and one whose SHA-256 is not the capture's recorded digest named,
+where the capture recorded one.
+
+## def floor-of
+
+An image's IZ_MIN: the images' record's own where it holds one, else read from
+the archived ELF of the image's recorded SHA-256 in the tree's exports by its
+flags' nm (iz-min-of); an images' record written before ClampedReference holds
+none.
+
+## def reread-pose
+
+One pose read again from the restored tree into `out`. Its disk rebuilt by the
+still path (disk-for) and held to the digest the capture recorded, a disk of
+another digest leaving the reference unread. Each launch's screen held to its
+recorded SHA-256, its stream and UART log restored; each screen bound again
+(bind) and each UART's fault lines read again, every difference from the
+recorded row named, the recorded row standing. The reference taken anew at
+today's revision on the recorded bindings, its words as `capture` gives them,
+a capture's export passed only where its recorded tally holds a snapshot: a
+capture taken before the console's X carries no span table, and that limit is
+named rather than filled, the crate then reading a block's end from its pixels.
+The block table's SHA-256 beside the first's from the run's inventory; the
+pictures differed again and held to the recorded pixels and regions. The pose's
+record written as `capture` writes one, its rows' screens the restored paths,
+with `reread`: the record read, the first tool, the differences, the limits, and
+both tables' digests.
+
+## def reread
+
+A restored run read again: the run from the restoration's receipt, its
+inventory, the images' record, every captured pose; the crate built
+(footprint-tool); the pose set the run took written as `poses.nuon`, each pose
+read again (reread-pose), then `read` over them, so the reading is today's
+reader's on today's reference. Beside it the first reading, the restored `reading.nuon`,
+each view's fields that changed from it named, old and new apart, neither
+replacing the other. `reread.nuon` holds the run, the tool, every pose's
+result, and both readings' whole verdicts. Its own outputs only: the restored
+tree is read and never written.
 
 ## def crops
 

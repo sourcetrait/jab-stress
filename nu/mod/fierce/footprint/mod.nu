@@ -436,6 +436,123 @@ export def read [out: path, poses: path] {
     print $LIMIT
 }
 
+# The run a restored tree came from, named by the receipt beside the tree
+def restored-run [tree: path]: nothing -> string {
+    let receipt = ($tree | path dirname | path join "restoration.nuon")
+    if not ($receipt | path exists) { error make { msg: $"($tree) has no restoration.nuon beside it, so it is no restoration's tree" } }
+    open $receipt | get run
+}
+
+# A capture's file in a restored tree, held to the SHA-256 its capture recorded
+def restored-file [tree: path, rel: string, sha: any]: nothing -> record<path: string, problems: list<string>> {
+    let at = ($tree | path join $rel)
+    if not ($at | path exists) { return { path: $at, problems: [$"($rel) is not in the restoration"] } }
+    if $sha != null and (open --raw $at | hash sha256) != $sha { return { path: $at, problems: [$"($rel) has another SHA-256 than its capture recorded"] } }
+    { path: $at, problems: [] }
+}
+
+# An image's IZ_MIN: the images' record's, else its archived ELF's symbol
+def floor-of [tree: path, image: record]: nothing -> int {
+    let recorded = ($image | get -o iz_min)
+    if $recorded != null { return $recorded }
+    let elfs = (glob ($tree | path join "exports" "**" "*.elf") | where {|f| (open --raw $f | hash sha256) == $image.elf_sha256 })
+    if ($elfs | is-empty) { error make { msg: $"no ELF of SHA-256 ($image.elf_sha256) in ($tree)'s exports, so ($image.label)'s IZ_MIN is unread" } }
+    iz-min-of ($elfs | first) ($image.flags | split row " " | last)
+}
+
+# One captured pose read again from a restoration: disk, bindings, reference
+def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>, c: record, tool: record]: nothing -> record {
+    let name = $c.pose.name
+    let kind = ($KINDS | get ($c.pose | get -o images | default "view"))
+    let labels = ([$kind.owner] ++ $kind.levels ++ $kind.pictures)
+    let dir = ($out | path join $name)
+    mkdir $dir
+    let disk = (disk-for $c.pose.map ($c.pose | get -o keep | default []) $out)
+    let disk_problems = (if $disk.sha256 != $c.disk.sha256 { [$"the still path's disk has SHA-256 ($disk.sha256) where the capture's had ($c.disk.sha256)"] } else { [] })
+    let launches = ($labels | each {|label|
+        let r = ($c.rows | where label == $label | first)
+        let screen = (restored-file $tree ($name | path join $label "screen.ppm") $r.screen_sha256)
+        let api = (restored-file $tree ($name | path join $label "api.out") null)
+        let serial = (restored-file $tree ($name | path join $label "serial.log") null)
+        let missing = ($screen.problems ++ $api.problems ++ $serial.problems)
+        if not ($missing | is-empty) { return { label: $label, row: $r, api: $api.path, missing: $missing, differences: [] } }
+        let image = ($images | where label == $label | first)
+        let binding = (bind { api: (open --raw $api.path), screen: $screen.path } $c.pose ("LEVELS" in $image.symbols))
+        let faults = (open --raw $serial.path | decode | lines | where {|l| ($l starts-with "jab: ") and (($l =~ "fault") or ($l =~ "shutdown")) })
+        let fields = [stamp from frame state]
+        let differences = ([
+            (if ($binding | select ...$fields) != ($r.binding | select -o ...$fields) { $"($label)'s binding read again as frame ($binding.frame) at stamp ($binding.stamp), recorded as frame ($r.binding.frame) at stamp ($r.binding.stamp)" })
+            (if $faults != $r.faults { $"($label)'s UART faults read again differ from those recorded" })
+        ] | compact)
+        { label: $label, row: ($r | update screen $screen.path), api: $api.path, missing: [], differences: $differences }
+    })
+    let missing = ($launches | get missing | flatten)
+    let limits = ($kind.levels | enumerate | where {|e| ($c.reference | get -o captures | default [] | get -o $e.index | get -o snapshot) == null } | each {|e| $"($e.item): its capture carries no span table, so each block's end is read from its pixels" })
+    let reference = (if not (($missing ++ $disk_problems) | is-empty) or $c.reference == null { null } else {
+        let launch = {|label: string| $launches | where label == $label | first }
+        let exported = {|label: string, has: bool| if $has { ["--export" (do $launch $label | get api) $"(do $launch $label | get row.binding.frame)"] } else { [] } }
+        let floors = ($images | where {|i| $i.label in ([$kind.owner] ++ $kind.levels) } | each {|i| floor-of $tree $i } | uniq)
+        if ($floors | length) != 1 { error make { msg: $"($name)'s OWNER and LEVELS images were assembled at IZ_MIN ($floors | str join ' and ')" } }
+        let s = (do $launch ($kind.levels | first) | get row.binding.state)
+        let owner_has = (($c.reference | get -o owner) != null)
+        let levels = ($kind.levels | enumerate | each {|e| ["--levels" (do $launch $e.item | get row.screen) ...(do $exported $e.item (($c.reference.captures | get -o $e.index | get -o snapshot) != null))] } | flatten)
+        let words = (["--iz-min" $"($floors | first)" "--owner" (do $launch $kind.owner | get row.screen) ...(do $exported $kind.owner $owner_has)] ++ $levels)
+        let ran = (^$tool.path reference $disk.map $disk.tree $s.x $s.y $s.z $s.yaw $s.pitch ($s | get -o roll | default 0) ...$words --rows ($dir | path join "rows.nuon") | complete)
+        if $ran.exit_code != 0 { { problems: [$"the reference: ($ran.stderr | str trim)"], value: null } } else { { problems: [], value: ($ran.stdout | from nuon) } }
+    })
+    let rows_sha = (if ($dir | path join "rows.nuon" | path exists) { open --raw ($dir | path join "rows.nuon") | hash sha256 } else { null })
+    let recorded_rows = ($inventory | where path == ($name | path join "rows.nuon") | get -o 0.sha256)
+    let pictures = (if ($kind.pictures | is-empty) or not ($missing | is-empty) { null } else {
+        let pic = {|label: string| $launches | where label == $label | first | get row.screen }
+        let d = (^$tool.path differ (do $pic ($kind.pictures | get 0)) (do $pic ($kind.pictures | get 1)) | complete)
+        if $d.exit_code != 0 { error make { msg: $"the pictures at ($name): ($d.stderr)" } }
+        $d.stdout | from nuon
+    })
+    let picture_differs = ($c.pictures != null and $pictures != null and (($pictures | select pixels regions) != ($c.pictures | select pixels regions)))
+    let problems = ($missing ++ $disk_problems ++ ($reference | get -o problems | default []))
+    {
+        pose: $c.pose, disk: $disk, export: $c.export, commit: $c.commit, tool: $tool, launch: ($c | get -o launch), rows: ($launches | get row),
+        reference: ($reference | get -o value), pictures: $pictures, problems: $problems,
+        reread: {
+            from: ($tree | path join $name "pose.nuon"), first_tool: $c.tool, differences: ($launches | get differences | flatten), limits: $limits,
+            rows_sha256: $rows_sha, first_rows_sha256: $recorded_rows, rows_same: ($rows_sha != null and $rows_sha == $recorded_rows),
+            pictures_same: (if $pictures == null { null } else { not $picture_differs }),
+        },
+    } | to nuon --indent 2 | save --raw ($dir | path join "pose.nuon")
+    { pose: $name, problems: $problems, differences: ($launches | get differences | flatten), limits: $limits, rows_same: ($rows_sha != null and $rows_sha == $recorded_rows), pictures_same: (if $pictures == null { null } else { not $picture_differs }) }
+}
+
+# A restored footprint run read again: every pose, its reading, the first's beside it
+export def reread [tree: path, out: path] {
+    let tree = ($tree | path expand)
+    let out = ($out | path expand)
+    let run = (restored-run $tree)
+    let inventory = (open ($run | path join "inventory.nuon"))
+    let images = (open ($tree | path join "images" $IMAGES) | get images)
+    let captured = (glob ($tree | path join "*" "pose.nuon") | sort | each {|f| open $f })
+    if ($captured | is-empty) { error make { msg: $"no pose captured in ($tree)" } }
+    mkdir $out
+    let tool = (footprint-tool)
+    let poses = ($out | path join "poses.nuon")
+    $captured | get pose | to nuon --indent 2 | save --raw $poses
+    let read = ($captured | each {|c| reread-pose $tree $out $inventory $images $c $tool })
+    for r in $read {
+        let rows = (if $r.rows_same { "its block table the first's byte for byte" } else { "its block table another than the first's" })
+        print $"($r.pose): (if ($r.problems | is-empty) { 'read again' } else { $r.problems | str join '; ' }); ($rows); ($r.differences | length) differences from the first reading, ($r.limits | length) limits"
+    }
+    read $out $poses
+    let first = (open ($tree | path join "reading.nuon"))
+    let again = (open ($out | path join "reading.nuon"))
+    let fields = [judged sensitive clamped declared secant departure today_levels candidate_levels]
+    let changed = ($again.views | each {|v|
+        let f = ($first.views | where pose == $v.pose | get -o 0)
+        if $f == null { return { pose: $v.pose, fields: ["absent from the first reading"] } }
+        { pose: $v.pose, fields: ($fields | where {|k| ($v | get -o $k) != ($f | get -o $k) }) }
+    } | where {|x| not ($x.fields | is-empty) })
+    { run: $run, tool: $tool, poses: $read, reading_changed: $changed, first: { whole: $first.whole, declared_holds: $first.declared_holds }, again: { whole: $again.whole, declared_holds: $again.declared_holds, revised_holds: ($again | get -o revised_holds) } } | to nuon --indent 2 | save --raw ($out | path join "reread.nuon")
+    print $"footprint reread: ($read | length) poses from ($run); ($read | where rows_same | length) block tables the first's byte for byte; the reading's views changed from the first in ($changed | length)"
+}
+
 # Each region where a pose's pictures differ cut out of both as PNGs
 export def crops [out: path, pose: string, --pad: int = 16] {
     let c = (open ($out | path join $pose "pose.nuon"))

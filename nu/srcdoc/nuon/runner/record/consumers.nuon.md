@@ -14,5 +14,7 @@ and identity at any depth; `kernel walk paired`, a probed run read paired,
 its bundle's manifest, stream, identity, shim log, and classification; and
 `kernel walk launches`, the CADENCE_TEST launches' recorded cases, each
 case's stream and identity under `runs/` and the replay's stream beside
-them. Each reader that comes to read through a restoration adds its rows
-here.
+them. The footprint reader's reread, `fps footprint`, requires each view's
+capture record, each launch's screen, stream, and UART log, the still
+copies' disk records, the images' record, and the first reading. Each reader
+that comes to read through a restoration adds its rows here.
