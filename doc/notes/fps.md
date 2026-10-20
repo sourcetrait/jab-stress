@@ -161,7 +161,14 @@ repositories, under the session's scratch directory or
   route legs and the summary fields it reads. The bench is held to the
   candidate's bench file read from jab's git at the candidate's commit,
   so a record can be made from a bench run copied off another host; a
-  packaged run to that file as its package runs it. Every run is held to
+  packaged run to that file as its package runs it. A packaged run's
+  record reads the manifest its preflight kept beside the run,
+  `preflight/package.nuon`: the candidate's file, image, kernel, and
+  assets held to it, the image's ELF taken from it, the export's, whose
+  symbol table carries RELEASE where the candidate's tree build's does not,
+  and the manifest named in the bench's row. An acceptance verdict needs a
+  finite play median, a float judged by its text, since nushell 0.115.1
+  reads every finite number equal to `inf`. Every run is held to
   its step's conditions, the workers, the cadence, the window and the
   sound, the pad, and the probe; the bench to one host and one QEMU; each
   case to one backend. The readers that wrote a record are its
