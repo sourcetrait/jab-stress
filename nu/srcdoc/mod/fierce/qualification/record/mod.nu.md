@@ -130,6 +130,14 @@ carries RELEASE where the candidate's tree build's does not, the image's
 bytes the same. A bench without the manifest keeps the candidate's ELF
 and says the freeze's is unknown.
 
+## def readers-of
+
+The readers' identity, jab-stress's and jab's checkouts and the nu that
+runs them (jab's `identity reader`), taken as a command starts, just after
+its code is read. A record names the code that read it: a check runs for
+most of an hour, and a checkout that moves meanwhile would otherwise be
+named in place of the one read.
+
 ## def record-of
 
 One target's qualification record from a bench run (the file header):
@@ -139,9 +147,11 @@ One target's qualification record from a bench run (the file header):
 (packaged-bench at the package's directory), and its runs to the freeze
 (frozen-of), the manifest kept under the bench's `package`. Its ledger is matrix's
 ledger-of over the record, the tag's state, and the bench's and the
-conditions' problems; its verdicts verdicts-of's.
+conditions' problems; its verdicts verdicts-of's. Its `readers` the
+identity `--readers` gives, else readers-of's taken as it starts.
 
 ## def main
 
-A target's record (record-of), written as qualification.nuon in `out`,
-the record's own verdicts printed after it.
+A target's record (record-of), the readers' identity taken first
+(readers-of), written as qualification.nuon in `out`, the record's own
+verdicts printed after it.

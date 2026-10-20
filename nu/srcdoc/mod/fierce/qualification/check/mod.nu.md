@@ -69,11 +69,14 @@ each case to one backend; the tag resolved (tag-state); the ledger over
 the derived record with every problem of the bench, its conditions, its
 inputs, and its candidate; the verdicts; every failed row's problems the
 check's problems. A pending row is no problem: the final verdict names it.
+`--readers` the readers' identity the derived record names, main's.
 
 ## def main
 
 A record checked into `out`, beside the record unless given, written
-once: the derived record as qualification.nuon and `check.nuon`, the
+once, the readers' identity taken first (record's readers-of), so the
+derived record names the code that read it: the derived record as
+qualification.nuon and `check.nuon`, the
 record checked and its SHA-256, the bench read, the problems, the ledger,
 the verdicts, the history, and the inputs reopened; each history item,
 each problem, and both verdicts printed; an error naming the problems'

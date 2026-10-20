@@ -102,7 +102,7 @@ def history-of [stored: record, fresh: record]: nothing -> list<any> {
 }
 
 # A record derived again from its reopened inputs, checked, its ledger recomputed
-export def check-of [r: any, bench: path, work: path, --inventory: string = "", --candidate: string = ""]: nothing -> record {
+export def check-of [r: any, bench: path, work: path, --inventory: string = "", --candidate: string = "", --readers: any = null]: nothing -> record {
     let schema = (schema-problems $r)
     if not ($schema | is-empty) { return { problems: $schema, ledger: [], verdicts: null, history: [], reopened: null, record: null } }
     let spec = (try { spec row $JAB $r.target } catch { null })
@@ -112,7 +112,7 @@ export def check-of [r: any, bench: path, work: path, --inventory: string = "", 
     let held = (reopened $bench $inventory)
     rebuilt $bench $work
     let cand = (candidate-file $r $candidate $work)
-    let fresh = (record record-of $work $cand.file $r.target)
+    let fresh = (record record-of $work $cand.file $r.target --readers $readers)
     let tag = (matrix tag-state $fresh.candidate.tag $fresh.candidate.jab)
     let ledger = (matrix ledger-of $fresh $tag ($fresh.bench.problems ++ $fresh.conditions.problems ++ $held.problems ++ $cand.problems))
     let verdicts = (matrix verdicts-of $ledger)
@@ -122,11 +122,12 @@ export def check-of [r: any, bench: path, work: path, --inventory: string = "", 
 
 # A record derived again from its bench's kept inputs into `out`, verdicts printed
 export def main [record: path, --bench: string = "", --inventory: string = "", --candidate: string = "", --out: string = ""] {
+    let readers = (record readers-of)
     let r = (open $record)
     let out = (if $out == "" { $record | path expand | path dirname | path join "check" } else { $out | path expand })
     if ($out | path join $CHECK | path exists) { error make { msg: $"($out) holds a check; a check is written once into an out" } }
     let bench_dir = (if $bench == "" { $r.bench.dir } else { $bench })
-    let c = (check-of $r $bench_dir ($out | path join "bench") --inventory $inventory --candidate $candidate)
+    let c = (check-of $r $bench_dir ($out | path join "bench") --inventory $inventory --candidate $candidate --readers $readers)
     if $c.record != null { $c.record | to nuon --indent 1 | save --raw ($out | path join $RECORD) }
     { checked: ($record | path expand), checked_sha256: (open --raw $record | hash sha256), bench: ($bench_dir | path expand), record: (if $c.record == null { null } else { $out | path join $RECORD }), problems: $c.problems, ledger: $c.ledger, verdicts: $c.verdicts, history: $c.history, reopened: $c.reopened } | to nuon --indent 1 | save --raw ($out | path join $CHECK)
     for h in $c.history { print $"qualification: the record's ($h.item) reads ($h.stored | to nuon), derived again ($h.derived | to nuon)" }

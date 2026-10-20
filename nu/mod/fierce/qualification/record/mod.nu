@@ -211,8 +211,14 @@ def frozen-of [bench: path, cand: record, candidate: path]: nothing -> record<ca
     { cand: (if ($problems | is-empty) { $cand | update elf_sha256 $elf } else { $cand }), manifest: $manifest, problems: $problems }
 }
 
+# The readers' identity, taken as a command starts and its code is read
+export def readers-of []: nothing -> record {
+    identity reader [$STRESS $JAB] --launches
+}
+
 # One target's qualification record from a bench run
-export def record-of [bench: path, candidate: path, target: string]: nothing -> record {
+export def record-of [bench: path, candidate: path, target: string, --readers: any = null]: nothing -> record {
+    let readers = (if $readers == null { readers-of } else { $readers })
     let target = ($target | str lowercase)
     if $target not-in $TARGETS { error make { msg: $"($target) is no target of the qualification's matrix, which holds ($TARGETS | str join ', ')" } }
     let bench = ($bench | path expand)
@@ -251,7 +257,7 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
     let r = {
         target: $target,
         written: (date now | format date "%Y-%m-%dT%H:%M:%S%z"),
-        readers: (identity reader [$STRESS $JAB] --launches),
+        readers: $readers,
         candidate: ($cand | insert file ($candidate | path expand) | insert sha256 (matrix sha-of $candidate)),
         spec: { name: $spec.name, cores: $spec.cores, ram_bytes: ($spec.ram | into int), display: $spec.display, fps: $spec.fps },
         bench: {
@@ -282,8 +288,9 @@ export def record-of [bench: path, candidate: path, target: string]: nothing -> 
 
 # A target's record written to `out`, its own verdicts printed
 export def main [bench: path, candidate: path, target: string, out: path] {
+    let readers = (readers-of)
     mkdir $out
-    let r = (record-of $bench $candidate $target)
+    let r = (record-of $bench $candidate $target --readers $readers)
     let file = ($out | path join $RECORD)
     $r | to nuon --indent 1 | save --raw $file
     print $"qualification: ($r.target), ($r.runs | length) runs; the record reads ($r.verdicts.subset.verdict), and ($r.verdicts.final.verdict); `check` derives both again from the reopened inputs; ($file)"
