@@ -3,10 +3,19 @@
     { host: box, targets: [1ka1 1kb1], deciding: { guest: guest, display: display, walk: walk } }
   ],
   legs: [start fight spawn yard up down ramp revisit pressure],
-  calibration: { host: box, battery: guest, kernel: P0 },
+  calibration: { host: box, battery: calibration, kernel: P0 },
   batteries: [
     {
-      battery: guest, host: box, workload: fps, backend: headless, runs: 3, per_condition: 6, seeds: [1 2 3],
+      battery: calibration, host: box, workload: fps, backend: headless, runs: 3, per_condition: 6,
+      seeds: [[1 2 3] [3 2 1]],
+      conditions: [
+        { name: p0, kernel: P0, order: prepare, timing: false, probed: false, image: fps }
+      ],
+      batches: [p0 p0]
+    }
+    {
+      battery: guest, host: box, workload: fps, backend: headless, runs: 3, per_condition: 6,
+      seeds: [[1 2 3] [1 2 3] [1 2 3] [1 2 3]],
       conditions: [
         { name: p0, kernel: P0, order: prepare, timing: false, probed: false, image: fps }
         { name: p2, kernel: P2, order: prepare, timing: false, probed: false, image: fps }
@@ -14,7 +23,8 @@
       batches: [p0 p2 p2 p0]
     }
     {
-      battery: display, host: box, workload: fps, backend: offscreen, runs: 3, per_condition: 6, seeds: [1 2 3],
+      battery: display, host: box, workload: fps, backend: offscreen, runs: 3, per_condition: 6,
+      seeds: [[1 2 3] [1 2 3] [1 2 3] [1 2 3] [1 2 3] [1 2 3] [1 2 3] [1 2 3]],
       conditions: [
         { name: p0_probed, kernel: P0, order: prepare, timing: false, probed: true, image: fps }
         { name: p2_probed, kernel: P2, order: prepare, timing: false, probed: true, image: fps }
@@ -25,7 +35,18 @@
     }
     {
       battery: walk, host: box, workload: walk, backend: headless, runs: 3, per_condition: 6,
-      seeds: [2685821657736338717 2685821657736338717 2685821657736338717],
+      seeds: [
+        [2685821657736338717 2685821657736338717 2685821657736338717]
+        [2685821657736338717 2685821657736338717 2685821657736338717]
+        [2685821657736338717 2685821657736338717 2685821657736338717]
+        [2685821657736338717 2685821657736338717 2685821657736338717]
+        [2685821657736338717 2685821657736338717 2685821657736338717]
+        [2685821657736338717 2685821657736338717 2685821657736338717]
+        [2685821657736338717 2685821657736338717 2685821657736338717]
+        [2685821657736338717 2685821657736338717 2685821657736338717]
+        [2685821657736338717 2685821657736338717 2685821657736338717]
+        [2685821657736338717 2685821657736338717 2685821657736338717]
+      ],
       conditions: [
         { name: p0_await_on, kernel: P0, order: await, timing: true, probed: false, image: walk_await_timing }
         { name: p2_await_on, kernel: P2, order: await, timing: true, probed: false, image: walk_await_timing }

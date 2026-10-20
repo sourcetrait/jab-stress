@@ -5,6 +5,9 @@ use (path self ../../../../../jab/kit/fierce/nu/mod/gauge)
 # The workbench, the checkout a decision's selector names
 const STRESS = (path self ../../../.. | path expand)
 
+# jab beside it, whose gauge measures every capture the selector reads
+const JAB = (path self ../../../../../jab | path expand)
+
 # The comparison as declared, and the model it is held to
 const MATRIX = path self ../../../nuon/kernel/timing/matrix.nuon
 const MODEL = path self ../../../type/kernel/timing/Matrix.nutype
@@ -27,9 +30,6 @@ const EPS_CAP = 10000
 
 # The calibration's states
 const STATES = [calibrated capped short]
-
-# A flip's final status when it presented
-const PRESENTED = 0
 
 # The fields a run is matched to its declared condition by
 const MATCH = [host target battery workload backend kernel order timing probed]
@@ -56,7 +56,11 @@ export def matrix-of [file: path]: nothing -> record<matrix: any, problems: list
             let c = (($b.batches | where {|x| $x == $n } | length) * $b.runs)
             if $c != $b.per_condition { $"($b.host)'s ($b.battery) runs ($n) ($c) times, not ($b.per_condition)" }
         } | compact)
-        let seeds = (if ($b.seeds | length) != $b.runs { [$"($b.host)'s ($b.battery) declares ($b.seeds | length) seeds for ($b.runs) runs a batch"] } else { [] })
+        let seeds = (if ($b.seeds | length) != ($b.batches | length) {
+            [$"($b.host)'s ($b.battery) declares ($b.seeds | length) seed lists for ($b.batches | length) batches"]
+        } else {
+            $b.seeds | enumerate | where {|s| ($s.item | length) != $b.runs } | each {|s| $"($b.host)'s ($b.battery) declares ($s.item | length) seeds for batch ($s.index + 1)'s ($b.runs) runs" }
+        })
         let host = (if $b.host not-in $hosts { [$"($b.battery) runs on ($b.host), a host the matrix does not declare"] } else { [] })
         $stray ++ $counts ++ $seeds ++ $host
     } | flatten)
@@ -71,7 +75,7 @@ def conditions-of [m: record]: nothing -> list<any> {
     $m.batteries | each {|b|
         let targets = ($m.hosts | where host == $b.host | get 0.targets)
         $b.conditions | each {|c|
-            let slots = ($b.batches | enumerate | where item == $c.name | each {|e| 0..<$b.runs | each {|j| { position: ($e.index * $b.runs + $j + 1), seed: ($b.seeds | get $j) } } } | flatten)
+            let slots = ($b.batches | enumerate | where item == $c.name | each {|e| 0..<$b.runs | each {|j| { position: ($e.index * $b.runs + $j + 1), seed: ($b.seeds | get $e.index | get $j) } } } | flatten)
             $targets | each {|t| $c | merge { host: $b.host, battery: $b.battery, workload: $b.workload, backend: $b.backend, target: $t, slots: $slots, key: $"($b.host)/($t)/($b.battery)/($c.name)" } }
         } | flatten
     } | flatten
@@ -99,12 +103,17 @@ def figure-problems [r: record, c: record, legs: list<string>]: nothing -> list<
     }
 }
 
-# A kept run's wake delays over its qualifying frames, s less T in ticks
+# A kept run's wake delays over its qualifying frames, s less T in ticks, its
+# capture complete and valid and its receipt stage passed
 def wake-delays [dir: string]: nothing -> list<int> {
     let read = (gauge identity corrected ($dir | path join "identity.nuon"))
     let legs = (gauge report legs-for $dir $read.identity "" | get legs)
     let m = (gauge measure (open --raw ($dir | path join "api.out") | into binary) $legs --cap ($read.identity | get -o cap | default 60))
-    $m.rows | where {|x| ($x | get -o cadence) == 1 and ($x | get -o wait_us | default 0) > 0 and ($x | get -o flip_status) == $PRESENTED and ($x | get -o receipt_stamp) != null and ($x | get -o receipt_tick) != null } | each {|x| $x.receipt_stamp - $x.receipt_tick }
+    if not ($m.complete and $m.valid and $m.acceptance.available) {
+        let why = (if not $m.complete { $"incomplete: ($m.problems | first 3 | str join '; ')" } else if not $m.valid { $"invalid: ($m.invalid | first 3 | str join '; ')" } else { $"its receipts unread: ($m.acceptance.reason)" })
+        error make { msg: $why }
+    }
+    gauge measure wake-delays $m.rows
 }
 
 # The q-th quantile of values by nearest rank
@@ -114,18 +123,15 @@ def nearest-rank [values: list<int>, q: float]: nothing -> int {
     $s | get ([$k 0] | math max)
 }
 
-# eps recomputed from the calibration battery's kernel's runs, read anew
-def calibration-of [m: record, runs: list<any>, complete: list<string>]: nothing -> record {
-    let src = $m.calibration
-    let targets = ($m.hosts | where host == $src.host | get 0.targets)
+# eps by the plan's rule over runs on the targets, each run's capture read anew
+def calibration-figures [targets: list<string>, runs: list<any>]: nothing -> record {
     let per = ($targets | each {|t|
-        let these = ($runs | where {|r| $r.host == $src.host and $r.target == $t and $r.battery == $src.battery and $r.kernel == $src.kernel })
-        let keys = ($these | each {|r| $r.key } | uniq)
+        let these = ($runs | where {|r| $r.target == $t })
         let read = ($these | each {|r| try { { delays: (wake-delays $r.dir), problem: null } } catch {|e| { delays: [], problem: $"run ($r.id)'s capture unread: ($e.msg)" } } })
         let delays = ($read | each {|x| $x.delays } | flatten)
         {
             target: $t
-            complete: ((not ($keys | is-empty)) and ($keys | all {|k| $k in $complete }))
+            runs: ($these | length)
             qualifying: ($delays | length)
             p999: (if ($delays | is-empty) { null } else { nearest-rank $delays 0.999 })
             past_cap: ($delays | where {|d| $d > $EPS_CAP } | length)
@@ -137,7 +143,56 @@ def calibration-of [m: record, runs: list<any>, complete: list<string>]: nothing
     let rounded = ([(($top / $EPS_QUANTUM | math ceil) * $EPS_QUANTUM) $EPS_QUANTUM] | math max)
     let state = (if $short { "short" } else if $top > $EPS_CAP { "capped" } else { "calibrated" })
     let eps = (if $state == "capped" { $EPS_CAP } else if $state == "calibrated" { $rounded } else { null })
-    { state: $state, eps: $eps, complete: ($per | all {|x| $x.complete }), targets: $per }
+    { state: $state, eps: $eps, targets: $per }
+}
+
+# eps recomputed from the calibration's source conditions' runs, complete on every target
+def calibration-of [m: record, conds: list<any>, runs: list<any>, complete: list<string>]: nothing -> record {
+    let src = $m.calibration
+    let targets = ($m.hosts | where host == $src.host | get 0.targets)
+    let sources = ($conds | where {|c| $c.host == $src.host and $c.battery == $src.battery and $c.kernel == $src.kernel })
+    let figures = (calibration-figures $targets ($runs | where {|r| $r.key in ($sources | get key) }))
+    let held = ($targets | each {|t|
+        let keys = ($sources | where target == $t | get key)
+        { target: $t, complete: ((not ($keys | is-empty)) and ($keys | all {|k| $k in $complete })) }
+    })
+    {
+        state: $figures.state
+        eps: $figures.eps
+        complete: ($held | all {|x| $x.complete })
+        targets: ($figures.targets | each {|x| $x | insert complete ($held | where target == $x.target | get 0.complete) })
+    }
+}
+
+# eps from a calibration capture's runs, each run's target its identity's spec, written as calibration.nuon
+export def calibrate [base: path, out: path] {
+    let selector = (identity reader [$STRESS $JAB])
+    let mx = (matrix-of $MATRIX)
+    if not ($mx.problems | is-empty) { error make { msg: $"($MATRIX): ($mx.problems | str join '; ')" } }
+    let targets = ($mx.matrix.hosts | where host == $mx.matrix.calibration.host | get 0.targets)
+    let base = ($base | path expand)
+    let runs = (open ($base | path join "batches.nuon") | each {|b|
+        glob ($base | path join $b.label "run_*") | where {|d| ($d | path type) == "dir" } | sort | each {|d|
+            let id = (gauge identity corrected ($d | path join "identity.nuon")).identity
+            { id: $"($b.label)/($d | path basename)", dir: $d, target: ($id | get -o machine.spec.name) }
+        }
+    } | flatten)
+    let foreign = ($runs | where {|r| $r.target not-in $targets })
+    if not ($foreign | is-empty) { error make { msg: $"runs on no target the matrix declares: ($foreign | each {|r| $'($r.id) on ($r.target | to nuon)' } | str join ', ')" } }
+    let c = (calibration-figures $targets $runs)
+    let record = {
+        state: $c.state
+        eps: $c.eps
+        qualifying: ($c.targets | reduce --fold {} {|x, acc| $acc | insert $x.target $x.qualifying })
+        targets: $c.targets
+        base: $base
+        runs: $runs
+        selector: $selector
+    }
+    mkdir $out
+    $record | to nuon --indent 1 | save --raw -f ($out | path join "calibration.nuon")
+    print $"timing calibrate: ($c.state), eps ($c.eps | to nuon) ticks"
+    for t in $c.targets { print $"  ($t.target): ($t.runs) runs, ($t.qualifying) qualifying frames, 99.9th ($t.p999 | to nuon) ticks, ($t.past_cap) past the cap(if ($t.problems | is-empty) { '' } else { $'; ($t.problems | str join "; ")' })" }
 }
 
 # The declared calibration held to the plan and to its recomputation
@@ -240,7 +295,7 @@ export def validate [readings: record, m: record]: nothing -> record {
     let limited = ($readings | get -o host_limits | default [] | each {|l| limit-binding $l $placed $conds $m $pairs })
 
     # the calibration, recomputed from its own runs' captures
-    let recomputed = (calibration-of $m $good $complete)
+    let recomputed = (calibration-of $m $conds $good $complete)
     let declared = ($readings | get -o calibration)
     let cal_refused = (if $recomputed.complete { calibration-problems $declared $recomputed } else if not (($declared | describe) | str starts-with "record") or ($declared | get -o state) not-in $STATES { ["the calibration's state is none of the plan's"] } else { [] })
     let cal_short = (if $recomputed.complete { $recomputed.targets | each {|x| $x.problems } | flatten } else { [$"the calibration's runs, ($m.calibration.host)'s ($m.calibration.battery) ($m.calibration.kernel), incomplete"] })
@@ -441,7 +496,7 @@ export def decide [readings: record, m: record]: nothing -> record {
 
 # The decision over one readings record, written as decision.nuon
 export def main [readings: path, out: path] {
-    let selector = (identity reader [$STRESS])
+    let selector = (identity reader [$STRESS $JAB])
     let mx = (matrix-of $MATRIX)
     if not ($mx.problems | is-empty) { error make { msg: $"($MATRIX): ($mx.problems | str join '; ')" } }
     let raw = (open --raw $readings | into binary)

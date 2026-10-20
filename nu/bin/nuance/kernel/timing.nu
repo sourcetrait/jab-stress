@@ -7,3 +7,8 @@ use $TIMING
 def main [readings: path, out: path] {
     timing $readings $out
 }
+
+# eps from a calibration capture's runs, written as calibration.nuon
+def "main calibrate" [base: path, out: path] {
+    timing calibrate $base $out
+}

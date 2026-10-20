@@ -10,14 +10,18 @@ readings record to it before any rule.
   name once his bench, step 5, joins the decision, deciding the guest side
   by his display battery's unprobed runs.
 - `legs`: the factory route's legs, every one an fps run's figures cover.
-- `calibration`: eps's source, the box's guest battery's P0 runs, both
-  batches, their captures read anew.
+- `calibration`: eps's source, the box's calibration battery's P0 runs, their
+  captures read anew.
 - `batteries`: each a host's, its workload, its backend (headless,
-  offscreen, window), its runs a batch, its runs a condition, its seeds a
-  batch in run order, its conditions, and its batches in run order, a
-  condition's name each. A condition's kernel, loop order, TIMING, probe,
-  and image role, the role the freeze names its export by; its kernel role
-  the kernel's.
+  offscreen, window), its runs a batch, its runs a condition, its seeds, one
+  list a batch in batch order, each in run order, its conditions, and its
+  batches in run order, a condition's name each. A condition's kernel, loop
+  order, TIMING, probe, and image role, the role the freeze names its export
+  by; its kernel role the kernel's.
+  - `calibration`, JointTiming's working decision: a capture of its own
+    before the comparison, the guest battery's protocol for P0 alone, fps
+    release, headless and unprobed, two batches a target, seeds 1 to 3 then 3
+    to 1. eps comes from it, so P2's kernel carries eps before any P2 run.
   - `guest`, step 2: fps release, headless and unprobed, P0 and P2 in the
     order P0, P2, P2, P0, seeds 1 to 3, six runs a condition.
   - `display`, step 3: fps in offscreen SDL, P0 and P2 probed and unprobed,

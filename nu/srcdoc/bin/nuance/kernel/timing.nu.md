@@ -7,3 +7,8 @@ so its closures run in a nu that loads no other module.
 
 `nu/bin/nuance/kernel/timing.nu`, its parameters `readings: path, out: path`:
 The decision over one readings record, written as decision.nuon.
+
+## def "main calibrate"
+
+`nu/bin/nuance/kernel/timing.nu calibrate`, its parameters `base: path, out:
+path`: eps from a calibration capture's runs, written as calibration.nuon.

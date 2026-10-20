@@ -70,6 +70,7 @@ the data checkout beside this repository, `../jab-stress-data`, under
 | `cadence_image_battery.nuon` | two builds at one cadence, one by its image, compared |
 | `gauge_batches.nuon` | gauge batches in a declared order, each with its own words and its own environment, nothing built: a control's arms on frozen exports |
 | `jab_probes.nuon` | sdl probes of one program in a declared order, each with its own words, every run's probe directory and record copied out before the next |
+| `walk_battery.nuon` | walk's CADENCE runs in a declared order through its wrapper, each batch a condition's image, kernel, spec, and run count, nothing built |
 | `route_battery.nuon` | the routes' battery on a debug image |
 | `grain_battery.nuon` | ThreeWorkerGrain's forced W 3 at 16 and 32 rows on four and eight harts |
 | `scaling_batteries.nuon` | GfxScaling's selections on three, four, and eight harts, settled and factory |

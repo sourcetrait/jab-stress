@@ -19,11 +19,19 @@ host-backed once every declared host's batteries stand.
 
 Its bin, `nu/bin/nuance/kernel/timing.nu <readings> <out>`, writes
 decision.nuon in `out`, printing the outcome, every refusal, and every
-shortfall.
+shortfall; `timing.nu calibrate <base> <out>` writes eps's calibration from a
+calibration capture as calibration.nuon, the readings' `calibration` its
+state, eps, and qualifying frames.
 
 ## const STRESS
 
 The workbench, the checkout a decision's selector names.
+
+## const JAB
+
+jab beside the workbench, the checkout a decision's selector names beside it:
+its gauge measures every capture the selector reads, the calibration's among
+them, and its nutype checker holds the matrix.
 
 ## const MATRIX
 
@@ -68,10 +76,6 @@ capped at it.
 
 The calibration's states: calibrated, capped, short.
 
-## const PRESENTED
-
-A flip's final status when it presented, 0.
-
 ## const MATCH
 
 The fields a run is matched to its declared condition by: host, target,
@@ -85,16 +89,18 @@ nushell 0.115.1 reads every finite number equal to `inf`.
 ## def matrix-of
 
 The matrix read and held to its model, then to itself: every batch a
-condition of its battery, each condition run its declared count, the seeds as
-many as the runs a batch, every battery on a declared host, every host
-deciding by batteries of its own, the calibration's source a battery. Its
-problems refuse the bin before any reading.
+condition of its battery, each condition run its declared count, a seed list
+for each batch and each list as many seeds as the runs a batch, every battery
+on a declared host, every host deciding by batteries of its own, the
+calibration's source a battery. Its problems refuse the bin before any
+reading.
 
 ## def conditions-of
 
 Every declared condition on each target of its host, its key
 `host/target/battery/name`, and its slots, a position and a seed each: the
-batches in order, runs a batch, position 1 the battery's first run.
+batches in order, runs a batch, position 1 the battery's first run, a slot's
+seed its batch's list's at its place in the batch.
 
 ## def condition-of
 
@@ -110,24 +116,42 @@ and with TIMING its D and its phases.
 
 ## def wake-delays
 
-A kept run's wake delays, s less T in ticks, over its qualifying frames:
-cadence 1, a wait above 0, the final flip presented. The run's capture is
-measured anew through jab's gauge under its corrected identity and its kept
-route's legs, never its kept report.
+A kept run's wake delays, s less T in ticks, over its qualifying frames as
+jab's gauge selects them (`gauge measure wake-delays`: cadence 1, a wait above
+0, the final flip presented), the population the gauge's late wakes count from
+too. The run's capture is measured anew through the gauge under its corrected
+identity and its kept route's legs, never its kept report, and read only when
+complete, valid, and its receipt stage passed, as the gauge reads K; else the
+run is refused by name, why among the first three problems.
 
 ## def nearest-rank
 
 The q-th quantile by nearest rank.
 
+## def calibration-figures
+
+eps by the plan's rule over runs on the targets given, each run's capture read
+anew (wake-delays): each target's runs, qualifying frames, 99.9th percentile,
+and those past the cap; short when a target holds under N_CAL, capped when the
+larger percentile passes the cap, eps then the cap, else calibrated, eps the
+larger percentile rounded up to the quantum and never under it. A capture that
+cannot be read is named. The one rule the validation and `calibrate` share.
+
 ## def calibration-of
 
-eps recomputed from the calibration's source, its battery's kernel's runs on
-each target of its host, each run's capture read anew (wake-delays): the
-qualifying frames a target, the 99.9th percentile, and those past the cap;
-short when a target holds under N_CAL, capped when the larger percentile
-passes the cap, eps then the cap, else calibrated, eps the larger percentile
-rounded up to the quantum and never under it. A capture that cannot be read
-is named.
+eps recomputed from the calibration's source, the conditions of its battery and
+kernel on each target of its host, their runs read by calibration-figures,
+complete when every such condition is complete on every target.
+
+## def calibrate
+
+eps from a calibration capture as its runner left it: every `run_<n>` of each
+batch its `batches.nuon` lists, each run's target its corrected identity's spec,
+a target the matrix does not declare refused, the figures by
+calibration-figures. Written as calibration.nuon in `out`: the state, eps, the
+qualifying frames by target (the readings' `calibration` takes these three),
+each target's figures, the base and its runs, and the selector's identity,
+taken first; the state, eps, and each target's line printed.
 
 ## def calibration-problems
 

@@ -11,6 +11,7 @@ Its command is its bin, run under the real nu:
 | Command | What it does |
 |---|---|
 | `nu nu/bin/nuance/kernel/timing.nu <readings> <out dir>` | Reads a readings record and writes `decision.nuon` in the directory, printing the outcome, every refusal, and every shortfall |
+| `nu nu/bin/nuance/kernel/timing.nu calibrate <base> <out dir>` | Reads a calibration capture's runs and writes eps's calibration, `calibration.nuon`, in the directory, printing its state, eps, and each target's figures |
 
 ## The declared comparison
 
@@ -18,9 +19,11 @@ Its command is its bin, run under the real nu:
 `nu/type/kernel/timing/Matrix.nutype`, declares the comparison before any
 run exists: the hosts and their targets, the battery each host decides by,
 the factory route's legs, where eps is calibrated from, and every battery's
-conditions in run order with their seeds. The box is declared; TheUser's
-host is added by name when his bench joins the decision. The selector
-refuses to run when the file breaks its model or contradicts itself.
+conditions in run order with each batch's seeds. eps is calibrated from a
+battery of its own, `calibration`, run before the comparison so that P2's
+kernel carries eps before any P2 run. The box is declared; TheUser's host is
+added by name when his bench joins the decision. The selector refuses to run
+when the file breaks its model or contradicts itself.
 
 ## The readings
 
@@ -87,5 +90,6 @@ decision names the code that made it.
 JointTiming's comparison writes the readings record from its readers'
 outputs: the gauge's reports for the guest side, ProbeRuns' reader for the
 display side, and walk's guest-only reading for the second workload. The
-comparison adds K's violations, the late wakes, and the catch-ups to the
-gauge's reports.
+gauge reports K's violations, the late wakes, and the catch-ups with every
+run. The calibration's state, eps, and qualifying frames are `calibrate`'s,
+whose population of frames is the one the gauge counts its late wakes from.

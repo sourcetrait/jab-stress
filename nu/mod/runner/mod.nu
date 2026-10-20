@@ -18,6 +18,7 @@ use (path self ./smoke)
 use (path self ./stress_bin)
 use (path self ./tilecensus_reading)
 use (path self ./two_build_battery)
+use (path self ./walk_battery)
 use (path self ./worker_battery)
 
 # An error's messages as plain text, each with its wrapped lines, then its help
@@ -77,6 +78,7 @@ def ready-of [harness: string, a: record]: nothing -> record {
         "stress_bin" => (stress_bin ready $a)
         "tilecensus_reading" => (tilecensus_reading ready $a)
         "two_build_battery" => (two_build_battery ready $a)
+        "walk_battery" => (walk_battery ready $a)
         "worker_battery" => (worker_battery ready $a)
         _ => (error make { msg: $"no harness ($harness)" })
     }
@@ -105,6 +107,7 @@ def work-of [harness: string, a: record]: nothing -> record {
         "stress_bin" => (stress_bin $a)
         "tilecensus_reading" => (tilecensus_reading $a)
         "two_build_battery" => (two_build_battery $a)
+        "walk_battery" => (walk_battery $a)
         "worker_battery" => (worker_battery $a)
         _ => (error make { msg: $"no harness ($harness)" })
     }
