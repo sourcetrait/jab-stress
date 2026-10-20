@@ -271,6 +271,11 @@ the archived ELF of the image's recorded SHA-256 in the tree's exports by its
 flags' nm (iz-min-of); an images' record written before ClampedReference holds
 none.
 
+## const AGAIN
+
+A reread's own record in its `out`, `again.nuon`, beside the `reread.nuon`
+that `runner reread` writes there.
+
 ## const REFERENCE_READS
 
 The files of a still copy the crate's reference reads: the map and the images,
@@ -333,8 +338,9 @@ inventory, the images' record, every captured pose; the crate built
 read again (reread-pose), then `read` over them, so the reading is today's
 reader's on today's reference. Beside it the first reading, the restored `reading.nuon`,
 each view's fields that changed from it named, old and new apart, neither
-replacing the other. `reread.nuon` holds the run, the tool, every pose's
-result, and both readings' whole verdicts. Its own outputs only: the restored
+replacing the other. `again.nuon` holds the run, the tool, every pose's
+result, and both readings' whole verdicts, apart from the `reread.nuon`
+that `runner reread` writes beside it. Its own outputs only: the restored
 tree is read and never written.
 
 ## def crops

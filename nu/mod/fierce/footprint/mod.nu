@@ -461,6 +461,9 @@ def floor-of [tree: path, image: record]: nothing -> int {
     iz-min-of ($elfs | first) ($image.flags | split row " " | last)
 }
 
+# A reread's own record in its `out`, beside the runner's `reread.nuon`
+const AGAIN = "again.nuon"
+
 # The files of a still copy the crate's reference reads: its map and its images
 const REFERENCE_READS = ['\.jabfps\.map$' '\.png$']
 
@@ -623,7 +626,7 @@ export def reread [tree: path, out: path] {
         if $f == null { return { pose: $v.pose, fields: ["absent from the first reading"] } }
         { pose: $v.pose, fields: ($fields | where {|k| ($v | get -o $k) != ($f | get -o $k) }) }
     } | where {|x| not ($x.fields | is-empty) })
-    { run: $run, tool: $tool, poses: $read, reading_changed: $changed, first: { whole: $first.whole, declared_holds: $first.declared_holds }, again: { whole: $again.whole, declared_holds: $again.declared_holds, revised_holds: ($again | get -o revised_holds) } } | to nuon --indent 2 | save --raw ($out | path join "reread.nuon")
+    { run: $run, tool: $tool, poses: $read, reading_changed: $changed, first: { whole: $first.whole, declared_holds: $first.declared_holds }, again: { whole: $again.whole, declared_holds: $again.declared_holds, revised_holds: ($again | get -o revised_holds) } } | to nuon --indent 2 | save --raw ($out | path join $AGAIN)
     print $"footprint reread: ($read | length) poses from ($run); ($read | where rows_same | length) block tables the first's byte for byte; ($read | where {|r| $r.still.held } | length) still copies the capture's; the reading's views changed from the first in ($changed | length)"
 }
 

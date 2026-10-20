@@ -276,6 +276,8 @@ export def reread [run: path, scratch: path, reader: string, bin: path, ...words
     mkdir $own
     let args = ($words | each {|w| $w | str replace --all '{tree}' ($dir | path join tree) | str replace --all '{out}' $own })
     let ran = (^$nu.current-exe $bin ...$args | complete)
+    let taken = ([reread.stdout reread.stderr reread.nuon] | where {|f| $own | path join $f | path exists })
+    if ($taken | is-not-empty) { error make { msg: $"the reader wrote ($taken | str join ', ') into its out, the names the reread keeps for its own record" } }
     $ran.stdout | save --raw -f ($own | path join reread.stdout)
     $ran.stderr | save --raw -f ($own | path join reread.stderr)
     let done = { run: ($run | path expand), reader: $reader, bin: $bin, words: $words, restoration: (measured ($dir | path join restoration.nuon)).sha256, exit: $ran.exit_code }
