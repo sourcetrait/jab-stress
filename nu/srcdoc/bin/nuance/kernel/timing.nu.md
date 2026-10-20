@@ -18,3 +18,9 @@ path`: eps from a calibration capture's runs, written as calibration.nuon.
 `nu/bin/nuance/kernel/timing.nu readings`, its parameters `spec: path, out:
 path`: the readings a comparison's captures give, from a spec, written as
 readings.nuon (the readings module).
+
+## def "main package"
+
+`nu/bin/nuance/kernel/timing.nu package`, its parameters `spec: path, out:
+path, --stage: string`: JointTiming's host package from a readings spec's
+freeze and jab's benches, one tar (the package module).

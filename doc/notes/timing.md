@@ -13,6 +13,7 @@ Its command is its bin, run under the real nu:
 | `nu nu/bin/nuance/kernel/timing.nu <readings> <out dir>` | Reads a readings record and writes `decision.nuon` in the directory, printing the outcome, every refusal, and every shortfall |
 | `nu nu/bin/nuance/kernel/timing.nu calibrate <base> <out dir>` | Reads a calibration capture's runs and writes eps's calibration, `calibration.nuon`, in the directory, printing its state, eps, and each target's figures |
 | `nu nu/bin/nuance/kernel/timing.nu readings <spec> <out dir>` | Reads every battery a spec names at the calibrated eps and writes the readings record, `readings.nuon`, in the directory, printing a line a run, then the controls and host limits |
+| `nu nu/bin/nuance/kernel/timing.nu package <spec> <out tar>` | Lays TheUser's host package from the spec's frozen exports, the asset tree and route the runs played, and jab's two JointTiming benches, one tar |
 
 ## The declared comparison
 
