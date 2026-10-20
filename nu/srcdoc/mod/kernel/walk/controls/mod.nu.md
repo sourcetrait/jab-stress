@@ -50,10 +50,14 @@ A list's nearest-rank quantile, null for no values.
 ## def host-side
 
 A run's host side from its shim's log: its uploads grouped into flips as
-sdl report groups them, each flip's start; the intervals between starts
-at the median and the 95th; the slow stretches, five or more consecutive
-intervals at STRETCH_MS or past; and the share of the flips the renders
-showed once (sdl report's frames shown).
+sdl report groups them, each flip's first and last upload; the intervals
+between starts at the median and the 95th; the slow stretches, five or
+more consecutive intervals at STRETCH_MS or past; and the share of the
+flips shown: a render shows the last flip landed since the render before,
+so the flips shown are the renders that found at least one, ProbeRuns'
+selection rule on a paired run. sdl report's `frames_shown`, whose
+`shown` counts the renders that found exactly one, rides beside it as
+`report_frames_shown`.
 
 ## def paired-side
 

@@ -62,16 +62,37 @@ def rank [values: list<number>, q: float]: nothing -> any {
 }
 
 # A run's flips on the host from its shim's log as sdl report groups its
-# uploads, each flip's start; the intervals between their starts in ms, the
-# slow stretches by STRETCH_MS and STRETCH_FLIPS, and the share shown
+# uploads, each flip's first and last upload; the intervals between their
+# starts in ms, the slow stretches by STRETCH_MS and STRETCH_FLIPS, and the
+# share shown: a render shows the last flip landed since the render before,
+# so the flips shown are the renders that found at least one, as ProbeRuns'
+# selection reads a paired run; sdl report's `shown` counts the renders that
+# found exactly one, and is kept beside it as the report's
 export def host-side [probe: path]: nothing -> record {
     let log = ($probe | path join "sdl.log")
     let report = (sdl report $log)
-    let uploads = (sdl classify $log | get events | where kind == "upload" | get ts)
+    let events = (sdl classify $log | get events)
+    let uploads = ($events | where kind == "upload" | get ts)
+    let renders = ($events | where kind == "render" | get ts)
     mut starts = []
+    mut ends = []
+    mut start = -1.0
     mut end = -1.0
     for t in $uploads {
-        if $end >= 0.0 and ($t - $end) < $JOIN_S { $end = $t } else { $starts = ($starts | append $t); $end = $t }
+        if $end >= 0.0 and ($t - $end) < $JOIN_S { $end = $t } else {
+            if $end >= 0.0 { $starts = ($starts | append $start); $ends = ($ends | append $end) }
+            $start = $t
+            $end = $t
+        }
+    }
+    if $end >= 0.0 { $starts = ($starts | append $start); $ends = ($ends | append $end) }
+    let count = ($ends | length)
+    mut shown = 0
+    mut next = 0
+    for r in $renders {
+        mut landed = false
+        while $next < $count and ($ends | get $next) <= $r { $landed = true; $next += 1 }
+        if $landed { $shown += 1 }
     }
     let intervals = ($starts | window 2 | each {|w| ($w.1 - $w.0) * 1000.0 })
     mut stretches = 0
@@ -83,13 +104,12 @@ export def host-side [probe: path]: nothing -> record {
         }
     }
     if $slow >= $STRETCH_FLIPS { $stretches += 1 }
-    let flips = ($starts | length)
     {
-        flips: $flips, renders: $report.renders,
+        flips: $count, renders: ($renders | length), shown: $shown, unshown_at_end: ($count - $next),
         host_median_ms: (rank $intervals 0.5), host_p95_ms: (rank $intervals 0.95),
         stretches: $stretches,
-        shown_share: (if $flips == 0 { null } else { $report.frames_shown.shown / $flips }),
-        frames_shown: $report.frames_shown,
+        shown_share: (if $count == 0 { null } else { $shown / $count }),
+        report_frames_shown: $report.frames_shown,
     }
 }
 
