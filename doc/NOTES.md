@@ -10,7 +10,7 @@ note is a file under `doc/notes/`; this file is their index.
 | [sdk workbench](notes/sdk.md) | `nu/mod/nuance/sdk/`: the sdl probe's controls and the reread of their records, and what they expect of the machine |
 | [Long-engine runners](notes/runners.md) | `nu/nuon/runner/` and `nu/mod/runner/`: the long-running test and measurement runs, their contract, and how to run one again |
 | [walk's cadence reader](notes/walk.md) | `nu/mod/kernel/walk/`: the reader of walk's measurement records, its commands, what a reading checks, the paired reading, and what it needs |
-| [JointTiming's selector](notes/timing.md) | `nu/mod/kernel/timing/`: the selector that decides JointTiming's comparison, its readings, and its decision |
+| [JointTiming's selector](notes/timing.md) | `nu/mod/kernel/timing/`: the selector that decides JointTiming's comparison, the comparison it declares, its readings, their validation, and its decision |
 | [Kernel candidates](notes/candidates.md) | `nu/mod/kernel/freeze/`: kernel and example changes waiting under a build symbol, how their cases run, and how a measured kernel is frozen with its provenance |
 | [Fresh builds](notes/freshbuild.md) | `nu/mod/nuance/freshbuild/`: a fresh build of every tuple Jab's source builds, each artifact's SHA-256 recorded for a later build to be held to |
 | [The import-map checker](notes/importmap.md) | `nu/mod/nuance/importmap/`: Jab's and the workbench's nushell trees held to the migration contract while their code moves into modules |

@@ -1,7 +1,13 @@
 use (path self ../../../../../jab/nu/mod/identity)
+use (path self ../../../../../jab/nu/mod/nutype)
+use (path self ../../../../../jab/kit/fierce/nu/mod/gauge)
 
 # The workbench, the checkout a decision's selector names
 const STRESS = (path self ../../../.. | path expand)
+
+# The comparison as declared, and the model it is held to
+const MATRIX = path self ../../../nuon/kernel/timing/matrix.nuon
+const MODEL = path self ../../../type/kernel/timing/Matrix.nutype
 
 # The late-frame legs the guest's presentation predicate reads
 const LATE_LEGS = [start up yard pressure]
@@ -12,15 +18,244 @@ const REGRESSION_FLOOR_MS = 0.25
 # The noise gate: a deciding statistic's N past this is insufficient
 const NOISE_GATE_MS = 1.0
 
-# The targets every predicate is judged on
-const TARGETS = ["1ka1" "1kb1"]
+# The calibration's least qualifying frames a target
+const N_CAL = 1000
 
-# What scopes a control: host, target, kernel, order, backend, build
-const SCOPE = [host target kernel order backend build]
+# eps's quantum and its cap, in ticks
+const EPS_QUANTUM = 100
+const EPS_CAP = 10000
 
-# The runs of one condition: every field `cond` names equal
-def arm-of [runs: list<any>, cond: record]: nothing -> list<any> {
-    $runs | where {|r| $cond | items {|k, v| ($r | get -o $k) == $v } | all {|x| $x } }
+# The calibration's states
+const STATES = [calibrated capped short]
+
+# A flip's final status when it presented
+const PRESENTED = 0
+
+# The fields a run is matched to its declared condition by
+const MATCH = [host target battery workload backend kernel order timing probed]
+
+# Whether a value is a finite number, a float judged by its text
+def finite [v: any]: nothing -> bool {
+    match ($v | describe) {
+        "int" => true,
+        "float" => (($v | into string) not-in ["inf" "-inf" "NaN"]),
+        _ => false,
+    }
+}
+
+# The declared matrix held to its model and to itself
+export def matrix-of [file: path]: nothing -> record<matrix: any, problems: list<string>> {
+    let m = (open $file)
+    let shape = (nutype problems $m (open --raw $MODEL | decode utf-8) $MODEL)
+    if not ($shape | is-empty) { return { matrix: $m, problems: $shape } }
+    let hosts = ($m.hosts | get host)
+    let own = ($m.batteries | each {|b|
+        let names = ($b.conditions | get name)
+        let stray = ($b.batches | where {|n| $n not-in $names } | each {|n| $"($b.host)'s ($b.battery) runs a batch of ($n), no condition of it" })
+        let counts = ($names | each {|n|
+            let c = (($b.batches | where {|x| $x == $n } | length) * $b.runs)
+            if $c != $b.per_condition { $"($b.host)'s ($b.battery) runs ($n) ($c) times, not ($b.per_condition)" }
+        } | compact)
+        let seeds = (if ($b.seeds | length) != $b.runs { [$"($b.host)'s ($b.battery) declares ($b.seeds | length) seeds for ($b.runs) runs a batch"] } else { [] })
+        let host = (if $b.host not-in $hosts { [$"($b.battery) runs on ($b.host), a host the matrix does not declare"] } else { [] })
+        $stray ++ $counts ++ $seeds ++ $host
+    } | flatten)
+    let deciding = ($m.hosts | each {|h| $h.deciding | values | where {|v| ($m.batteries | where {|b| $b.host == $h.host and $b.battery == $v } | is-empty) } | each {|v| $"($h.host) decides by ($v), no battery of its own" } } | flatten)
+    let source = ($m.batteries | where {|b| $b.host == $m.calibration.host and $b.battery == $m.calibration.battery })
+    let cal = (if ($source | is-empty) { [$"the calibration reads ($m.calibration.host)'s ($m.calibration.battery), no battery"] } else { [] })
+    { matrix: $m, problems: ($own ++ $deciding ++ $cal) }
+}
+
+# Every declared condition on each target of its host, with its slots
+def conditions-of [m: record]: nothing -> list<any> {
+    $m.batteries | each {|b|
+        let targets = ($m.hosts | where host == $b.host | get 0.targets)
+        $b.conditions | each {|c|
+            let slots = ($b.batches | enumerate | where item == $c.name | each {|e| 0..<$b.runs | each {|j| { position: ($e.index * $b.runs + $j + 1), seed: ($b.seeds | get $j) } } } | flatten)
+            $targets | each {|t| $c | merge { host: $b.host, battery: $b.battery, workload: $b.workload, backend: $b.backend, target: $t, slots: $slots, key: $"($b.host)/($t)/($b.battery)/($c.name)" } }
+        } | flatten
+    } | flatten
+}
+
+# The declared condition a run's fields name, or null
+def condition-of [conds: list<any>, r: record]: nothing -> any {
+    $conds | where {|c| $MATCH | all {|k| ($c | get $k) == ($r | get -o $k) } } | get -o 0
+}
+
+# The figures a run of its condition lacks, each by name, every one finite
+def figure-problems [r: record, c: record, legs: list<string>]: nothing -> list<string> {
+    let k = (if (finite ($r | get -o k_violations)) { [] } else { ["k_violations"] })
+    if $c.workload == "fps" {
+        let legged = ($legs | each {|l|
+            let row = ($r | get -o legs | default [] | where {|x| ($x | get -o leg) == $l } | get -o 0)
+            ["critical_median_ms" "presented_p95_ms"] | where {|f| $row == null or not (finite ($row | get -o $f)) } | each {|f| $"($l)'s ($f)" }
+        } | flatten)
+        let whole = (["submission_age_median_ms" "late_wakes" "catch_ups"] ++ (if $c.probed { ["shown_p95_ms"] } else { [] }) | where {|f| not (finite ($r | get -o $f)) })
+        $k ++ $legged ++ $whole
+    } else {
+        let whole = (["presented_median_ms" "presented_p95_ms"] ++ (if $c.timing { ["d_median_ms"] } else { [] }) | where {|f| not (finite ($r | get -o $f)) })
+        let phases = (if $c.timing and ($r | get -o phases) == null { ["phases"] } else { [] })
+        $k ++ $whole ++ $phases
+    }
+}
+
+# A kept run's wake delays over its qualifying frames, s less T in ticks
+def wake-delays [dir: string]: nothing -> list<int> {
+    let read = (gauge identity corrected ($dir | path join "identity.nuon"))
+    let legs = (gauge report legs-for $dir $read.identity "" | get legs)
+    let m = (gauge measure (open --raw ($dir | path join "api.out") | into binary) $legs --cap ($read.identity | get -o cap | default 60))
+    $m.rows | where {|x| ($x | get -o cadence) == 1 and ($x | get -o wait_us | default 0) > 0 and ($x | get -o flip_status) == $PRESENTED and ($x | get -o receipt_stamp) != null and ($x | get -o receipt_tick) != null } | each {|x| $x.receipt_stamp - $x.receipt_tick }
+}
+
+# The q-th quantile of values by nearest rank
+def nearest-rank [values: list<int>, q: float]: nothing -> int {
+    let s = ($values | sort)
+    let k = ((($q * ($s | length)) | math ceil) - 1)
+    $s | get ([$k 0] | math max)
+}
+
+# eps recomputed from the calibration battery's kernel's runs, read anew
+def calibration-of [m: record, runs: list<any>, complete: list<string>]: nothing -> record {
+    let src = $m.calibration
+    let targets = ($m.hosts | where host == $src.host | get 0.targets)
+    let per = ($targets | each {|t|
+        let these = ($runs | where {|r| $r.host == $src.host and $r.target == $t and $r.battery == $src.battery and $r.kernel == $src.kernel })
+        let keys = ($these | each {|r| $r.key } | uniq)
+        let read = ($these | each {|r| try { { delays: (wake-delays $r.dir), problem: null } } catch {|e| { delays: [], problem: $"run ($r.id)'s capture unread: ($e.msg)" } } })
+        let delays = ($read | each {|x| $x.delays } | flatten)
+        {
+            target: $t
+            complete: ((not ($keys | is-empty)) and ($keys | all {|k| $k in $complete }))
+            qualifying: ($delays | length)
+            p999: (if ($delays | is-empty) { null } else { nearest-rank $delays 0.999 })
+            past_cap: ($delays | where {|d| $d > $EPS_CAP } | length)
+            problems: ($read | each {|x| $x.problem } | compact)
+        }
+    })
+    let short = ($per | any {|x| $x.qualifying < $N_CAL })
+    let top = ($per | each {|x| $x.p999 } | compact | append 0 | math max)
+    let rounded = ([(($top / $EPS_QUANTUM | math ceil) * $EPS_QUANTUM) $EPS_QUANTUM] | math max)
+    let state = (if $short { "short" } else if $top > $EPS_CAP { "capped" } else { "calibrated" })
+    let eps = (if $state == "capped" { $EPS_CAP } else if $state == "calibrated" { $rounded } else { null })
+    { state: $state, eps: $eps, complete: ($per | all {|x| $x.complete }), targets: $per }
+}
+
+# The declared calibration held to the plan and to its recomputation
+def calibration-problems [declared: any, recomputed: record]: nothing -> list<string> {
+    if not (($declared | describe) | str starts-with "record") { return ["the readings declare no calibration"] }
+    let state = ($declared | get -o state)
+    if $state not-in $STATES { return [$"the calibration's state ($state | to nuon), none of ($STATES | str join ', ')"] }
+    let eps = ($declared | get -o eps)
+    let bounds = (if $state == "short" { [] } else if not (finite $eps) or ($eps mod $EPS_QUANTUM) != 0 or $eps < $EPS_QUANTUM or $eps > $EPS_CAP { [$"eps ($eps | to nuon), not a multiple of ($EPS_QUANTUM) ticks from ($EPS_QUANTUM) to ($EPS_CAP)"] } else { [] })
+    let counts = ($recomputed.targets | each {|x|
+        let said = ($declared | get -o qualifying | default {} | get -o $x.target)
+        if $said != $x.qualifying { $"the calibration says ($said | to nuon) qualifying frames on ($x.target), its frames hold ($x.qualifying)" }
+    } | compact)
+    let same = (if $state != $recomputed.state or ($state != "short" and $eps != $recomputed.eps) { [$"the calibration says ($state) at eps ($eps | to nuon), its frames ($recomputed.state) at eps ($recomputed.eps | to nuon)"] } else { [] })
+    $bounds ++ $counts ++ $same
+}
+
+# A control bound to the runs of the two conditions apart by its flag alone
+def control-binding [c: record, placed: list<any>, conds: list<any>, complete: list<string>]: nothing -> record {
+    let flag = (if ($c | get -o kind) == "shim" { "probed" } else if ($c | get -o kind) == "timing" { "timing" } else { null })
+    let named = $"the ($c | get -o kind) control of ($c | get -o host) on ($c | get -o target)"
+    if $flag == null { return { pair: null, problems: [$"($named): a kind neither shim nor timing"] } }
+    let ids = ($c | get -o runs | default [])
+    let mine = ($placed | where {|r| $r.id in $ids and $r.key != null })
+    let found = ($mine | each {|r| $r.id })
+    let unknown = ($ids | where {|i| $i not-in $found } | each {|i| $"($named) names ($i), no run of a declared condition" })
+    let keys = ($mine | each {|r| $r.key } | uniq)
+    let two = ($conds | where {|x| $x.key in $keys })
+    let others = ($MATCH | where {|k| $k != $flag })
+    let paired = ((($two | length) == 2) and ($others | all {|k| ($two | each {|x| $x | get $k } | uniq | length) == 1 }) and (($two | each {|x| $x | get $flag } | uniq | length) == 2))
+    if not ($unknown | is-empty) { return { pair: null, problems: $unknown } }
+    if not $paired { return { pair: null, problems: [$"($named) names no two conditions apart by ($flag) alone"] } }
+    let all = ($placed | where {|r| $r.key in $keys } | each {|r| $r.id } | sort)
+    if $all != ($ids | uniq | sort) { return { pair: null, problems: [$"($named) names not exactly its two conditions' runs"] } }
+    let on = ($two | where {|x| $x | get $flag } | first)
+    let off = ($two | where {|x| not ($x | get $flag) } | first)
+    { pair: { kind: $c.kind, host: $on.host, target: $on.target, on: $on.key, off: $off.key, passing: (($c | get -o passing) == true), complete: ($keys | all {|k| $k in $complete }) }, problems: [] }
+}
+
+# A host limit bound to the display battery's probed runs of both kernels
+def limit-binding [l: record, placed: list<any>, conds: list<any>, m: record, pairs: list<any>]: nothing -> record {
+    let named = $"the host limit of ($l | get -o host) on ($l | get -o target)"
+    let h = ($m.hosts | where host == ($l | get -o host) | get -o 0)
+    if $h == null { return { limit: null, problems: [$"($named): a host the matrix does not declare"] } }
+    let probed = ($conds | where {|c| $c.host == $h.host and $c.target == ($l | get -o target) and $c.battery == $h.deciding.display and $c.probed })
+    let keys = ($probed | each {|c| $c.key })
+    let all = ($placed | where {|r| $r.key in $keys } | each {|r| $r.id } | sort)
+    if ($keys | length) != 2 or $all != ($l | get -o runs | default [] | uniq | sort) { return { limit: null, problems: [$"($named) names not exactly the probed runs of both kernels"] } }
+    let admitted = ($keys | all {|k| $pairs | any {|p| $p.kind == "shim" and $p.on == $k and $p.passing and $p.complete } })
+    let claims = (($l | get -o admissible) == true)
+    if $claims and not $admitted { return { limit: null, problems: [$"($named) claims admissible runs whose shim controls are not both admitted"] } }
+    { limit: { host: $h.host, target: $l.target, admissible: $claims, limit: ($l | get -o limit) }, problems: [] }
+}
+
+# The readings held to the matrix before any rule: refusals and the short
+export def validate [readings: record, m: record]: nothing -> record {
+    let conds = (conditions-of $m)
+    let runs = ($readings | get -o runs | default [])
+    let placed = ($runs | each {|r|
+        let c = (condition-of $conds $r)
+        if $c == null { $r | upsert key null | upsert why "matches no declared condition" } else {
+            let slot = ($c.slots | where {|s| $s.position == ($r | get -o position) and $s.seed == ($r | get -o seed) })
+            $r | upsert key $c.key | upsert why (if ($slot | is-empty) { $"of ($c.key) at position ($r | get -o position | to nuon) and seed ($r | get -o seed | to nuon), no declared slot" } else { null })
+        }
+    })
+    let strays = ($placed | where {|r| $r.why != null } | each {|r| $"run ($r | get -o id): ($r.why)" })
+    let twice = (["id" "dir" "nonce"] | each {|f| $runs | each {|r| $r | get -o $f } | compact | uniq --count | where count > 1 | each {|x| $"($f) ($x.value) on ($x.count) runs" } } | flatten)
+    let seated = ($placed | where {|r| $r.why == null })
+    let doubled = ($seated | group-by {|r| $"($r.key) ($r.position)" } | items {|k, v| if ($v | length) > 1 { $"($k) filled ($v | length) times" } } | compact)
+
+    # the freeze: every run's image and kernel its condition's declared export
+    let freeze = ($readings | get -o freeze | default {})
+    let roles = {|kind: string, role: string| $freeze | get -o $kind | default [] | where {|x| ($x | get -o role) == $role } | get -o 0.sha256 }
+    let unnamed = ($conds | each {|c| [[images $c.image] [kernels $c.kernel]] | each {|p| if (do $roles $p.0 $p.1) == null { $"the freeze names no ($p.0 | str substring 0..-2) of role ($p.1)" } } | compact } | flatten | uniq)
+    let foreign_build = ($seated | where {|r|
+        let c = ($conds | where key == $r.key | first)
+        ($r | get -o image_sha256) != (do $roles images $c.image) or ($r | get -o kernel_sha256) != (do $roles kernels $c.kernel)
+    })
+    let mixed = ($foreign_build | each {|r| $"run ($r.id) of ($r.key) is not its condition's frozen export" })
+
+    # each condition's slots filled once by valid runs holding every figure
+    let short = ($conds | each {|c|
+        let these = ($seated | where key == $c.key)
+        let missing = ($c.slots | where {|s| ($these | where {|r| $r.position == $s.position } | is-empty) })
+        let invalid = ($these | where {|r| ($r | get -o valid) != true } | each {|r| $"($c.key): run ($r.id) invalid: ($r | get -o invalid | default [] | str join '; ')" })
+        let figures = ($these | where {|r| ($r | get -o valid) == true } | each {|r|
+            let lacking = (figure-problems $r $c $m.legs)
+            if not ($lacking | is-empty) { $"($c.key): run ($r.id) lacks ($lacking | str join ', ')" }
+        } | compact)
+        let absent = (if ($missing | is-empty) { [] } else { [$"($c.key): ($missing | length) of its ($c.slots | length) runs absent"] })
+        { key: $c.key, problems: ($absent ++ $invalid ++ $figures) }
+    })
+    let refused_keys = ($foreign_build | each {|r| $r.key } | uniq)
+    let complete = ($short | where {|x| ($x.problems | is-empty) and $x.key not-in $refused_keys } | each {|x| $x.key })
+    let good = ($seated | where {|r| $r.key in $complete })
+
+    # the controls and the host limits, each bound to its runs
+    let bound = ($readings | get -o controls | default [] | each {|c| control-binding $c $placed $conds $complete })
+    let pairs = ($bound | each {|b| $b.pair } | compact)
+    let limited = ($readings | get -o host_limits | default [] | each {|l| limit-binding $l $placed $conds $m $pairs })
+
+    # the calibration, recomputed from its own runs' captures
+    let recomputed = (calibration-of $m $good $complete)
+    let declared = ($readings | get -o calibration)
+    let cal_refused = (if $recomputed.complete { calibration-problems $declared $recomputed } else if not (($declared | describe) | str starts-with "record") or ($declared | get -o state) not-in $STATES { ["the calibration's state is none of the plan's"] } else { [] })
+    let cal_short = (if $recomputed.complete { $recomputed.targets | each {|x| $x.problems } | flatten } else { [$"the calibration's runs, ($m.calibration.host)'s ($m.calibration.battery) ($m.calibration.kernel), incomplete"] })
+
+    let refused = ($strays ++ $twice ++ $doubled ++ $unnamed ++ $mixed ++ ($bound | each {|b| $b.problems } | flatten) ++ ($limited | each {|l| $l.problems } | flatten) ++ $cal_refused)
+    {
+        conditions: $conds
+        runs: $good
+        complete: $complete
+        refused: $refused
+        insufficient: (($short | each {|x| $x.problems } | flatten) ++ $cal_short)
+        controls: $pairs
+        limits: ($limited | each {|l| $l.limit } | compact)
+        calibration: $recomputed
+    }
 }
 
 # An arm's figure for a statistic, its range, and its count
@@ -38,35 +273,11 @@ def compare [base: list<any>, compared: list<any>, stat: closure]: nothing -> re
     { base: $b.figure, compared: $c.figure, d: ($c.figure - $b.figure), n: (([$b.range $c.range] | math max) / 2.0), runs: [$b.count $c.count] }
 }
 
-# An arm's scope, from its first run
-def scope-of [runs: list<any>]: nothing -> record {
-    let r = ($runs | first)
-    $SCOPE | reduce --fold {} {|k, acc| $acc | insert $k ($r | get -o $k) }
-}
-
-# Whether a passing control of `kind` applies to an arm
-def admitted [controls: list<any>, kind: string, runs: list<any>]: nothing -> bool {
-    if ($runs | is-empty) { return false }
-    let scope = (scope-of $runs)
-    $controls | any {|c| $c.kind == $kind and $c.passing and ($SCOPE | all {|k| ($c | get -o $k) == ($scope | get $k) }) }
-}
-
-# The hosts the readings hold runs of
-def hosts-of [readings: record]: nothing -> list<string> {
-    $readings.runs | get host | uniq
-}
-
-# P2's eligibility: its checks exact and no K violation
-def eligibility [readings: record]: nothing -> record {
-    let checks = ([function_cases model cadence_fixtures] | where {|k| ($readings.checks | get -o $k) != true } | each {|k| $"P2's ($k) not exact" })
-    let violated = ($readings.runs | where {|r| $r.kernel == "P2" and $r.k_violations > 0 } | each {|r| $"K violated ($r.k_violations) times in ($r.id)" })
-    let why = ($checks ++ $violated)
-    { eligible: ($why | is-empty), why: $why }
-}
-
-# The game's unprobed arm of one kernel on a host and target
-def fps-arm [runs: list<any>, host: string, target: string, kernel: string]: nothing -> list<any> {
-    arm-of $runs { host: $host, target: $target, workload: "fps", kernel: $kernel, probed: false }
+# A complete condition's runs by its fields, or null where none is complete
+def arm [v: record, cond: record]: nothing -> any {
+    let c = ($v.conditions | where {|x| $cond | items {|k, val| ($x | get -o $k) == $val } | all {|y| $y } } | get -o 0)
+    if $c == null or $c.key not-in $v.complete { return null }
+    $v.runs | where key == $c.key
 }
 
 # A leg's statistic of a run, null where the run has no such leg
@@ -74,140 +285,171 @@ def leg-stat [r: record, leg: string, field: string]: nothing -> any {
     $r | get -o legs | default [] | where {|l| $l.leg == $leg } | get -o 0 | default {} | get -o $field
 }
 
-# The regression rule on each host and target's unprobed game runs
-def regression [readings: record]: nothing -> list<any> {
-    hosts-of $readings | each {|h| $TARGETS | each {|t|
-        let base = (fps-arm $readings.runs $h $t "P0")
-        let comp = (fps-arm $readings.runs $h $t "P2")
-        let legs = ($base ++ $comp | each {|r| $r | get -o legs | default [] | get leg } | flatten | uniq)
-        $legs | each {|leg|
+# P2's eligibility: its checks exact and no K violation in any valid P2 run
+def eligibility [readings: record]: nothing -> record {
+    let checks = ([function_cases model cadence_fixtures] | where {|k| ($readings | get -o checks | default {} | get -o $k) != true } | each {|k| $"P2's ($k) not exact" })
+    let violated = ($readings | get -o runs | default [] | where {|r| ($r | get -o kernel) == "P2" and ($r | get -o valid) == true and ($r | get -o k_violations | default 0) > 0 } | each {|r| $"K violated ($r.k_violations) times in ($r.id)" })
+    let why = ($checks ++ $violated)
+    { eligible: ($why | is-empty), why: $why }
+}
+
+# The regression rule on each declared host's deciding game runs
+def regression [v: record, m: record]: nothing -> list<any> {
+    $m.hosts | each {|h| $h.targets | each {|t|
+        let base = (arm $v { host: $h.host, target: $t, battery: $h.deciding.guest, workload: "fps", kernel: "P0", probed: false })
+        let comp = (arm $v { host: $h.host, target: $t, battery: $h.deciding.guest, workload: "fps", kernel: "P2", probed: false })
+        if $base == null or $comp == null { return [{ host: $h.host, target: $t, leg: null, state: "insufficient", base: null, compared: null, d: null, n: null, runs: null, regressing: false }] }
+        $m.legs | each {|leg|
             let c = (compare $base $comp {|r| leg-stat $r $leg "critical_median_ms" })
-            $c | merge { host: $h, target: $t, leg: $leg, regressing: ($c.d != null and $c.d > $c.n and $c.d > $REGRESSION_FLOOR_MS) }
+            $c | merge { host: $h.host, target: $t, leg: $leg, state: "admissible", regressing: ($c.d > $c.n and $c.d > $REGRESSION_FLOOR_MS) }
         }
     } | flatten } | flatten
 }
 
-# The guest's presentation on each host and target's unprobed game runs
-def presentation-guest [readings: record]: nothing -> list<any> {
-    hosts-of $readings | each {|h| $TARGETS | each {|t|
-        let base = (fps-arm $readings.runs $h $t "P0")
-        let comp = (fps-arm $readings.runs $h $t "P2")
+# The guest's presentation on each declared host's deciding game runs
+def presentation-guest [v: record, m: record]: nothing -> list<any> {
+    $m.hosts | each {|h| $h.targets | each {|t|
+        let base = (arm $v { host: $h.host, target: $t, battery: $h.deciding.guest, workload: "fps", kernel: "P0", probed: false })
+        let comp = (arm $v { host: $h.host, target: $t, battery: $h.deciding.guest, workload: "fps", kernel: "P2", probed: false })
+        if $base == null or $comp == null { return [{ host: $h.host, target: $t, leg: null, state: "insufficient", base: null, compared: null, d: null, n: null, runs: null, worse: false }] }
         $LATE_LEGS | each {|leg|
             let c = (compare $base $comp {|r| leg-stat $r $leg "presented_p95_ms" })
-            $c | merge { host: $h, target: $t, leg: $leg, worse: ($c.d != null and $c.compared > ($c.base + $c.n)) }
+            $c | merge { host: $h.host, target: $t, leg: $leg, state: "admissible", worse: ($c.compared > ($c.base + $c.n)) }
         }
     } | flatten } | flatten
 }
 
-# Each host's display side on each target, from its probed game runs
-def presentation-display [readings: record]: nothing -> list<any> {
-    hosts-of $readings | each {|h| $TARGETS | each {|t|
-        let base = (arm-of $readings.runs { host: $h, target: $t, workload: "fps", kernel: "P0", probed: true })
-        let comp = (arm-of $readings.runs { host: $h, target: $t, workload: "fps", kernel: "P2", probed: true })
-        let limits = ($readings.host_limits | where {|l| $l.host == $h and $l.target == $t and $l.limit })
-        let row = { host: $h, target: $t, base: null, compared: null, d: null, n: null, worse: false }
-        if ($base | is-empty) and ($comp | is-empty) {
-            $row | merge { state: "blocked", why: "no probed condition among the runs" }
-        } else if ($limits | any {|l| $l.admissible }) {
+# Each declared host's display side on each target, from its probed runs
+def presentation-display [v: record, m: record]: nothing -> list<any> {
+    $m.hosts | each {|h| $h.targets | each {|t|
+        let d = $h.deciding.display
+        let row = { host: $h.host, target: $t, base: null, compared: null, d: null, n: null, worse: false }
+        let probed = ($v.conditions | where {|c| $c.host == $h.host and $c.target == $t and $c.battery == $d and $c.probed })
+        if ($probed | is-empty) { return ($row | merge { state: "blocked", why: "no probed condition declared" }) }
+        let base = (arm $v { host: $h.host, target: $t, battery: $d, workload: "fps", kernel: "P0", probed: true })
+        let comp = (arm $v { host: $h.host, target: $t, battery: $d, workload: "fps", kernel: "P2", probed: true })
+        if $base == null or $comp == null { return ($row | merge { state: "insufficient", why: "a probed condition incomplete" }) }
+        let limits = ($v.limits | where {|l| $l.host == $h.host and $l.target == $t })
+        let shim = ([($base | first | get key) ($comp | first | get key)] | all {|k| $v.controls | any {|p| $p.kind == "shim" and $p.on == $k and $p.passing and $p.complete } })
+        if ($limits | any {|l| $l.admissible }) {
             $row | merge { state: "out", why: "a host limit on admissible runs: the decision guest-side" }
-        } else if (admitted $readings.controls "shim" $base) and (admitted $readings.controls "shim" $comp) {
+        } else if $shim {
             let c = (compare $base $comp {|r| $r.shown_p95_ms })
-            $row | merge $c | merge { state: "admissible", why: "", worse: ($c.d != null and $c.compared > ($c.base + $c.n)) }
+            $row | merge $c | merge { state: "admissible", why: "", worse: ($c.compared > ($c.base + $c.n)) }
         } else if not ($limits | is-empty) {
             $row | merge { state: "insufficient", why: "a host limit claimed on inadmissible runs" }
         } else {
-            $row | merge { state: "insufficient", why: "no applicable passing shim control for each rule's readings" }
+            $row | merge { state: "insufficient", why: "no admitted passing shim control for each rule's readings" }
         }
     } } | flatten
 }
 
-# walk's arm of a kernel and order, TIMING off and unprobed
-def walk-off-arm [runs: list<any>, host: string, target: string, kernel: string, order: string]: nothing -> list<any> {
-    arm-of $runs { host: $host, target: $target, workload: "walk", kernel: $kernel, order: $order, timing: false, probed: false }
-}
-
-# The second workload's gate on each host and target, by the strategy
-def walk-gate [readings: record]: nothing -> list<any> {
-    let order = (if $readings.strategy == "reordered" { "prepare" } else { "await" })
-    hosts-of $readings | each {|h|
-        if ($readings.runs | where {|r| $r.host == $h and $r.workload == "walk" } | is-empty) { return [] }
-        $TARGETS | each {|t|
-            let base = (walk-off-arm $readings.runs $h $t "P0" "await")
-            let comp = (walk-off-arm $readings.runs $h $t "P2" $order)
-            let offered = ($readings.runs | where {|r| $r.host == $h and $r.target == $t and $r.workload == "walk" and $r.kernel == "P2" and $r.order == $order and ($r.timing or $r.probed) })
-            let row = { host: $h, target: $t, order: $order, median: null, p95: null, refused: ($offered | get id), fails: false }
-            if ($base | is-empty) or ($comp | is-empty) {
-                $row | merge { state: "insufficient", why: "an arm the strategy reads has no TIMING-off unprobed run" }
-            } else if ($base ++ $comp | any {|r| not $r.valid }) {
-                $row | merge { state: "insufficient", why: "an invalid run in an arm the strategy reads" }
-            } else {
-                let median = (compare $base $comp {|r| $r.presented_median_ms })
-                let p95 = (compare $base $comp {|r| $r.presented_p95_ms })
-                let fails = ($readings.strategy == "reordered" and (($median.compared > ($median.base + $median.n)) or ($p95.compared > ($p95.base + $p95.n))))
-                $row | merge { state: "admissible", why: "", median: $median, p95: $p95, fails: $fails }
-            }
+# The second workload's gate on each declared host and target, by the strategy
+def walk-gate [v: record, m: record, strategy: string]: nothing -> list<any> {
+    $m.hosts | each {|h| $h.targets | each {|t|
+        let w = $h.deciding.walk
+        let row = { host: $h.host, target: $t, order: (if $strategy == "reordered" { "prepare" } else { "await" }), median: null, p95: null, fails: false }
+        let base = (arm $v { host: $h.host, target: $t, battery: $w, workload: "walk", kernel: "P0", order: "await", timing: false })
+        if $strategy == "reordered" {
+            let comp = (arm $v { host: $h.host, target: $t, battery: $w, workload: "walk", kernel: "P2", order: "prepare", timing: false })
+            if $base == null or $comp == null { return ($row | merge { state: "insufficient", why: "a TIMING-off arm the strategy reads incomplete" }) }
+            let median = (compare $base $comp {|r| $r.presented_median_ms })
+            let p95 = (compare $base $comp {|r| $r.presented_p95_ms })
+            $row | merge { state: "admissible", why: "", median: $median, p95: $p95, fails: (($median.compared > ($median.base + $median.n)) or ($p95.compared > ($p95.base + $p95.n))) }
+        } else {
+            let on = (arm $v { host: $h.host, target: $t, battery: $w, workload: "walk", kernel: "P2", order: "await", timing: true })
+            if $base == null or $on == null { return ($row | merge { state: "insufficient", why: "an arm the tradeoff reports incomplete" }) }
+            let median = (compare $base $on {|r| $r.presented_median_ms })
+            let p95 = (compare $base $on {|r| $r.presented_p95_ms })
+            $row | merge { state: "reported", why: "P2 await's TIMING-on figures, held to nothing", median: $median, p95: $p95 }
         }
-    } | flatten
+    } } | flatten
 }
 
 # Each TIMING-on walk arm's D and phases, admissible or instrumented
-def walk-phases [readings: record]: nothing -> list<any> {
-    let arms = ($readings.runs | where {|r| $r.workload == "walk" and $r.timing and (not $r.probed) } | each {|r| { host: $r.host, target: $r.target, kernel: $r.kernel, order: $r.order } } | uniq)
-    $arms | each {|a|
-        let runs = (arm-of $readings.runs ($a | merge { workload: "walk", timing: true, probed: false }))
-        let d = (figure-of $runs {|r| $r.d_median_ms })
-        $a | merge { d_ms: $d.figure, evidence: (if (admitted $readings.controls "timing" $runs) { "admissible" } else { "instrumented-only" }) }
-    }
+def walk-phases [v: record, m: record]: nothing -> list<any> {
+    $m.hosts | each {|h| $h.targets | each {|t|
+        $v.conditions | where {|c| $c.host == $h.host and $c.target == $t and $c.battery == $h.deciding.walk and $c.timing } | each {|c|
+            let runs = (if $c.key in $v.complete { $v.runs | where key == $c.key } else { [] })
+            let d = (if ($runs | is-empty) { null } else { figure-of $runs {|r| $r.d_median_ms } | get figure })
+            let control = ($v.controls | any {|p| $p.kind == "timing" and $p.on == $c.key and $p.passing and $p.complete })
+            { host: $h.host, target: $t, kernel: $c.kernel, order: $c.order, d_ms: $d, evidence: (if ($runs | is-empty) { "insufficient" } else if $control { "admissible" } else { "instrumented-only" }) }
+        }
+    } | flatten } | flatten
 }
 
-# The noise gate over every deciding comparison
-def noise-gate [regressions: list<any>, guest: list<any>, display: list<any>, walk: list<any>]: nothing -> record {
-    let critical = ($regressions | where {|r| $r.n != null } | each {|r| { what: $"critical path, ($r.leg)", host: $r.host, target: $r.target, n: $r.n } })
-    let presented = ($guest | where {|r| $r.n != null } | each {|r| { what: $"presented 95th, ($r.leg)", host: $r.host, target: $r.target, n: $r.n } })
-    let shown = ($display | where {|r| $r.state == "admissible" and $r.n != null } | each {|r| { what: "shown 95th", host: $r.host, target: $r.target, n: $r.n } })
-    let walked = ($walk | where {|r| $r.state == "admissible" } | each {|r| [{ what: "walk median", host: $r.host, target: $r.target, n: $r.median.n } { what: "walk 95th", host: $r.host, target: $r.target, n: $r.p95.n }] } | flatten)
-    let rows = ($critical ++ $presented ++ $shown ++ $walked)
-    let over = ($rows | where {|r| $r.n > $NOISE_GATE_MS })
+# The noise gate over every deciding comparison of these hosts
+def noise-gate [hosts: list<string>, regressions: list<any>, guest: list<any>, display: list<any>, walk: list<any>]: nothing -> record {
+    let critical = ($regressions | where {|r| $r.host in $hosts and $r.n != null } | each {|r| { what: $"critical path, ($r.leg)", host: $r.host, target: $r.target, n: $r.n } })
+    let presented = ($guest | where {|r| $r.host in $hosts and $r.n != null } | each {|r| { what: $"presented 95th, ($r.leg)", host: $r.host, target: $r.target, n: $r.n } })
+    let shown = ($display | where {|r| $r.host in $hosts and $r.state == "admissible" and $r.n != null } | each {|r| { what: "shown 95th", host: $r.host, target: $r.target, n: $r.n } })
+    let walked = ($walk | where {|r| $r.host in $hosts and $r.state == "admissible" } | each {|r| [{ what: "walk median", host: $r.host, target: $r.target, n: $r.median.n } { what: "walk 95th", host: $r.host, target: $r.target, n: $r.p95.n }] } | flatten)
+    let over = ($critical ++ $presented ++ $shown ++ $walked | where {|r| $r.n > $NOISE_GATE_MS })
     { passed: ($over | is-empty), over: $over }
 }
 
-# The decision over a readings record, the outcome in the plan's order
-export def decide [readings: record]: nothing -> record {
-    let eligible = (eligibility $readings)
-    let regressions = (regression $readings)
-    let guest = (presentation-guest $readings)
-    let display = (presentation-display $readings)
-    let walk = (walk-gate $readings)
-    let phases = (walk-phases $readings)
-    let noise = (noise-gate $regressions $guest $display $walk)
-    let calibrated = ($readings.calibration.state != "short")
-    let missing = ($TARGETS | where {|t| ($regressions | where {|r| $r.host == "box" and $r.target == $t and $r.d != null } | is-empty) } | each {|t| $"the box's fps comparison on ($t)" })
-    let short_walk = ($walk | where state == "insufficient")
-    let short_display = ($display | where {|r| $r.state in ["insufficient" "blocked"] })
-    let insufficient = ((not $calibrated) or (not $noise.passed) or (not ($missing | is-empty)) or (not ($short_walk | is-empty)) or (not ($short_display | is-empty)))
-    let regressing = (($regressions | any {|r| $r.regressing }) or ($guest | any {|r| $r.worse }) or ($display | any {|r| $r.worse }))
+# The outcome over these hosts' rows, in the plan's order
+def outcome-of [hosts: list<string>, eligible: record, refused: bool, calibrated: bool, rows: record]: nothing -> record {
+    let regress = ($rows.regression | where {|r| $r.host in $hosts })
+    let guest = ($rows.guest | where {|r| $r.host in $hosts })
+    let display = ($rows.display | where {|r| $r.host in $hosts })
+    let walk = ($rows.walk | where {|r| $r.host in $hosts })
+    let noise = (noise-gate $hosts $regress $guest $display $walk)
+    let short = (($regress ++ $guest | any {|r| $r.state == "insufficient" }) or ($display | any {|r| $r.state in ["insufficient" "blocked"] }) or ($walk | any {|r| $r.state == "insufficient" }))
+    let insufficient = ((not $calibrated) or (not $noise.passed) or $short)
+    let regressing = (($regress | any {|r| $r.regressing }) or ($guest | any {|r| $r.worse }) or ($display | any {|r| $r.worse }))
     let walk_failed = ($walk | any {|r| $r.fails })
-    let outcome = (if not $eligible.eligible { "ineligible" } else if $insufficient { "insufficient" } else if $regressing { "regressing" } else if $walk_failed { "walk_failed" } else { "chosen" })
+    let outcome = (if not $eligible.eligible { "ineligible" } else if $refused { "refused" } else if $insufficient { "insufficient" } else if $regressing { "regressing" } else if $walk_failed { "walk_failed" } else { "chosen" })
+    { outcome: $outcome, noise: $noise }
+}
+
+# The decision over a readings record and the matrix, validated before any rule
+export def decide [readings: record, m: record]: nothing -> record {
+    let v = (validate $readings $m)
+    let eligible = (eligibility $readings)
+    let strategy = ($readings | get -o strategy)
+    let rows = {
+        regression: (regression $v $m)
+        guest: (presentation-guest $v $m)
+        display: (presentation-display $v $m)
+        walk: (walk-gate $v $m $strategy)
+    }
+    let phases = (walk-phases $v $m)
+    let refused = (not ($v.refused | is-empty))
+    let calibrated = ($v.calibration.complete and $v.calibration.state != "short")
+    let hosts = ($m.hosts | get host)
+    let all = (outcome-of $hosts $eligible $refused $calibrated $rows)
+    let box = (outcome-of ["box"] $eligible $refused $calibrated $rows)
+    let scope = (if $all.outcome != "chosen" { null } else if $hosts == ["box"] { "provisional" } else { "host-backed" })
     {
-        strategy: $readings.strategy,
-        calibration: ($readings.calibration | merge { calibrated: $calibrated }),
-        eligibility: $eligible,
-        regression: $regressions,
-        presentation: { guest: $guest, display: $display },
-        walk: { gate: $walk, phases: $phases },
-        noise: $noise,
-        blockers: (($display | where state == "blocked" | each {|r| $"($r.host) on ($r.target): ($r.why)" }) ++ $missing),
-        outcome: $outcome,
-        contract: (if $outcome == "chosen" { "met" } else { "unmet" }),
+        strategy: $strategy
+        hosts: $hosts
+        validation: { refused: $v.refused, insufficient: $v.insufficient, complete: $v.complete, controls: $v.controls, limits: $v.limits }
+        calibration: { declared: ($readings | get -o calibration), recomputed: $v.calibration, calibrated: $calibrated }
+        eligibility: $eligible
+        regression: $rows.regression
+        presentation: { guest: $rows.guest, display: $rows.display }
+        walk: { gate: $rows.walk, phases: $phases }
+        noise: $all.noise
+        blockers: ($rows.display | where state == "blocked" | each {|r| $"($r.host) on ($r.target): ($r.why)" })
+        outcome: $all.outcome
+        scope: $scope
+        box: { outcome: $box.outcome, standing: (if $box.outcome == "chosen" { "provisional" } else { null }) }
+        contract: (if $all.outcome == "chosen" { "met" } else { "unmet" })
     }
 }
 
 # The decision over one readings record, written as decision.nuon
 export def main [readings: path, out: path] {
+    let selector = (identity reader [$STRESS])
+    let mx = (matrix-of $MATRIX)
+    if not ($mx.problems | is-empty) { error make { msg: $"($MATRIX): ($mx.problems | str join '; ')" } }
     let raw = (open --raw $readings | into binary)
-    let decision = (decide ($raw | decode | from nuon) | merge { readings_sha256: ($raw | hash sha256), selector: (identity reader [$STRESS]) })
+    let decision = (decide ($raw | decode | from nuon) $mx.matrix | merge { readings_sha256: ($raw | hash sha256), matrix_sha256: (open --raw $MATRIX | hash sha256), selector: $selector })
     mkdir $out
     $decision | to nuon --indent 1 | save --raw -f ($out | path join "decision.nuon")
-    print $"timing select: ($decision.outcome), the contract ($decision.contract)"
+    print $"timing select: ($decision.outcome)(if $decision.scope == null { '' } else { ', ' + $decision.scope }), the contract ($decision.contract)"
+    for p in $decision.validation.refused { print $"  refused: ($p)" }
+    for p in $decision.validation.insufficient { print $"  short: ($p)" }
     for b in $decision.blockers { print $"  blocker: ($b)" }
 }
