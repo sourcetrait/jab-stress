@@ -463,26 +463,73 @@ def floor-of [tree: path, image: record]: nothing -> int {
 # The files of a still copy the crate's reference reads: its map and its images
 const REFERENCE_READS = ['\.jabfps\.map$' '\.png$']
 
-# A still copy made again, held file by file to the capture's inventory: a
-# file the reference reads that differs is a problem, any other a limit
-def still-held [disk: record, out: path, inventory: list<any>]: nothing -> record<problems: list<string>, limits: list<string>> {
-    let base = ($disk.disk | path dirname)
-    let rel = ($base | path relative-to $out | path split)
-    let record = ($rel | append "disk.nuon" | path join)
-    let rows = ($inventory | where {|r| ($r.path | path split | first ($rel | length)) == $rel and $r.path != $record })
-    let built = (glob ($base | path join "**" "*") --no-dir | each {|f| $rel | append ($f | path relative-to $base | path split) | path join } | where {|p| $p != $record })
-    let differ = ($rows | each {|r|
-        let at = ($out | path join $r.path)
-        if not ($at | path exists) { { path: $r.path, how: "is absent from the copy made again" } } else {
-            let sha = (open --raw $at | hash sha256)
+# A still copy's files, its tree and its disk, each by its path in the run,
+# held to the capture's inventory rows: every one absent, of another
+# SHA-256, or not the capture's
+def still-differ [base: path, rel: list<string>, rows: list<any>, disk: string]: nothing -> list<record<path: string, how: string>> {
+    let files = (glob ($base | path join "tree" "**" "*") --no-dir | append ($base | path join $disk) | where {|f| $f | path exists })
+    let built = ($files | each {|f| $rel | append ($f | path relative-to $base | path split) | path join })
+    let at = {|p: string| $base | path join ($p | path split | skip ($rel | length) | path join) }
+    ($rows | each {|r|
+        let file = (do $at $r.path)
+        if not ($file | path exists) { { path: $r.path, how: "is absent from the copy made again" } } else {
+            let sha = (open --raw $file | hash sha256)
             if $sha != $r.sha256 { { path: $r.path, how: $"is made again at SHA-256 ($sha), the capture's ($r.sha256)" } }
         }
     } | compact) ++ ($built | where {|p| $p not-in ($rows | get path) } | each {|p| { path: $p, how: "is in the copy made again and not the capture's" } })
+}
+
+# A still copy remade in `into` with its tile.nuon naming the content where
+# the capture's checkout held it, as a tree compiled before jab c804ccb did:
+# the map source's place in the checkout at the capture's commit
+def remade-still [disk: record, c: record, into: path]: nothing -> record<content: any, problems: list<string>> {
+    let jab = ($GAME | path join .. .. | path expand)
+    let commit = ($c | get -o tool.commit)
+    if $commit == null { return { content: null, problems: ["the capture names no commit of its checkout"] } }
+    let listed = (^git -C $jab ls-tree -r --name-only $commit | complete)
+    if $listed.exit_code != 0 { return { content: null, problems: [$"the checkout's tree at ($commit): ($listed.stderr | str trim)"] } }
+    let wanted = ["content" "map" $"($c.pose.map).nuon"]
+    let found = ($listed.stdout | lines | where {|p| ($p | path split | last 3) == $wanted })
+    if ($found | length) != 1 { return { content: null, problems: [$"the checkout at ($commit) holds ($found | length) sources of ($c.pose.map), where one names the content"] } }
+    let content = ($jab | path join ($found | first | path split | drop 2 | path join))
+    if ($into | path exists) { error make { msg: $"($into) exists; a still copy is remade once" } }
+    mkdir $into
+    cp -r ($disk.disk | path dirname | path join "tree") ($into | path join "tree")
+    let tree = ($into | path join ($disk.tree | path relative-to ($disk.disk | path dirname)))
+    let tiles = ($tree | path join "tile.nuon")
+    open $tiles | each {|t| $t | update source (if $t.source == "" { "" } else { $content | path join $t.source }) } | to nuon | save -f $tiles
+    let made = (^genromfs -d $tree -f ($into | path join ($disk.disk | path basename)) -V "fps" | complete)
+    if $made.exit_code != 0 { error make { msg: $"genromfs over ($tree): ($made.stderr)" } }
+    { content: $content, problems: [] }
+}
+
+# A still copy made again, held file by file to the capture's inventory, once
+# a copy, `held.nuon` beside it: a file the reference reads that differs is a
+# problem, any other a limit. A copy that differs is remade as the capture's
+# checkout compiled it, and the copy holds when either is the capture's whole
+def still-held [disk: record, out: path, inventory: list<any>, c: record]: nothing -> record<problems: list<string>, limits: list<string>, disk: record> {
+    let base = ($disk.disk | path dirname)
+    let kept = ($base | path join "held.nuon")
+    if ($kept | path exists) { return (open $kept) }
+    let rel = ($base | path relative-to $out | path split)
+    let name = ($disk.disk | path basename)
+    let rows = ($inventory | where {|r| ($r.path | path split | first ($rel | length)) == $rel and ($r.path | path basename) != "disk.nuon" })
+    let differ = (still-differ $base $rel $rows $name)
     let reads = {|p: string| $REFERENCE_READS | any {|re| $p =~ $re } }
-    {
-        problems: ($differ | where {|d| do $reads $d.path } | each {|d| $"($d.path), which the reference reads, ($d.how)" }),
-        limits: ($differ | where {|d| not (do $reads $d.path) } | each {|d| $"($d.path) ($d.how); the reference reads no such file" }),
-    }
+    let problems = ($differ | where {|d| do $reads $d.path } | each {|d| $"($d.path), which the reference reads, ($d.how)" })
+    let into = ($base | path join "remade")
+    let remade = (if ($differ | is-empty) { null } else if ($problems | is-empty) { remade-still $disk $c $into } else { { content: null, problems: ["not remade, since a file the reference reads differs"] } })
+    let after = (if $remade == null or not ($remade.problems | is-empty) { null } else { still-differ $into $rel $rows $name })
+    let remade_sha = (if ($into | path join $name | path exists) { open --raw ($into | path join $name) | hash sha256 } else { null })
+    let held = (if $remade == null { $disk.sha256 == $c.disk.sha256 } else { $after != null and ($after | is-empty) and $remade_sha == $c.disk.sha256 })
+    let limits = (if $remade == null { [] } else if $held {
+        [$"the copy names its sources relative to the content; remade naming them under ($remade.content), as the capture's checkout did, its every file and its disk are the capture's, where ($differ | get path | str join ', ') differ made again"]
+    } else {
+        ($differ | where {|d| not (do $reads $d.path) } | each {|d| $"($d.path) ($d.how); the reference reads no such file" }) ++ $remade.problems ++ ($after | default [] | each {|d| $"remade, ($d.path) ($d.how)" })
+    })
+    let result = { problems: $problems, limits: $limits, disk: { first: $c.disk.sha256, again: $disk.sha256, remade: $remade_sha, content: ($remade | get -o content), held: $held } }
+    $result | to nuon --indent 2 | save --raw $kept
+    $result
 }
 
 # One captured pose read again from a restoration: disk, bindings, reference
@@ -493,7 +540,7 @@ def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>,
     let dir = ($out | path join $name)
     mkdir $dir
     let disk = (disk-for $c.pose.map ($c.pose | get -o keep | default []) $out)
-    let held = (still-held $disk $out $inventory)
+    let held = (still-held $disk $out $inventory $c)
     let disk_problems = $held.problems
     let launches = ($labels | each {|label|
         let r = ($c.rows | where label == $label | first)
@@ -540,12 +587,12 @@ def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>,
         pose: $c.pose, disk: $disk, export: $c.export, commit: $c.commit, tool: $tool, launch: ($c | get -o launch), rows: ($launches | get row),
         reference: ($reference | get -o value), pictures: $pictures, problems: $problems,
         reread: {
-            from: ($tree | path join $name "pose.nuon"), first_tool: $c.tool, differences: ($launches | get differences | flatten), limits: $limits,
+            from: ($tree | path join $name "pose.nuon"), first_tool: $c.tool, differences: ($launches | get differences | flatten), limits: $limits, still: $held.disk,
             rows_sha256: $rows_sha, first_rows_sha256: $recorded_rows, rows_same: ($rows_sha != null and $rows_sha == $recorded_rows),
             pictures_same: (if $pictures == null { null } else { not $picture_differs }),
         },
     } | to nuon --indent 2 | save --raw ($dir | path join "pose.nuon")
-    { pose: $name, problems: $problems, differences: ($launches | get differences | flatten), limits: $limits, rows_same: ($rows_sha != null and $rows_sha == $recorded_rows), pictures_same: (if $pictures == null { null } else { not $picture_differs }) }
+    { pose: $name, problems: $problems, differences: ($launches | get differences | flatten), limits: $limits, still: $held.disk, rows_same: ($rows_sha != null and $rows_sha == $recorded_rows), pictures_same: (if $pictures == null { null } else { not $picture_differs }) }
 }
 
 # A restored footprint run read again: every pose, its reading, the first's beside it
@@ -564,7 +611,8 @@ export def reread [tree: path, out: path] {
     let read = ($captured | each {|c| reread-pose $tree $out $inventory $images $c $tool })
     for r in $read {
         let rows = (if $r.rows_same { "its block table the first's byte for byte" } else { "its block table another than the first's" })
-        print $"($r.pose): (if ($r.problems | is-empty) { 'read again' } else { $r.problems | str join '; ' }); ($rows); ($r.differences | length) differences from the first reading, ($r.limits | length) limits"
+        let still = (if $r.still.held { "its still copy the capture's" } else { "its still copy not the capture's" })
+        print $"($r.pose): (if ($r.problems | is-empty) { 'read again' } else { $r.problems | str join '; ' }); ($rows); ($still); ($r.differences | length) differences from the first reading, ($r.limits | length) limits"
     }
     read $out $poses
     let first = (open ($tree | path join "reading.nuon"))
@@ -576,7 +624,7 @@ export def reread [tree: path, out: path] {
         { pose: $v.pose, fields: ($fields | where {|k| ($v | get -o $k) != ($f | get -o $k) }) }
     } | where {|x| not ($x.fields | is-empty) })
     { run: $run, tool: $tool, poses: $read, reading_changed: $changed, first: { whole: $first.whole, declared_holds: $first.declared_holds }, again: { whole: $again.whole, declared_holds: $again.declared_holds, revised_holds: ($again | get -o revised_holds) } } | to nuon --indent 2 | save --raw ($out | path join "reread.nuon")
-    print $"footprint reread: ($read | length) poses from ($run); ($read | where rows_same | length) block tables the first's byte for byte; the reading's views changed from the first in ($changed | length)"
+    print $"footprint reread: ($read | length) poses from ($run); ($read | where rows_same | length) block tables the first's byte for byte; ($read | where {|r| $r.still.held } | length) still copies the capture's; the reading's views changed from the first in ($changed | length)"
 }
 
 # Each region where a pose's pictures differ cut out of both as PNGs
