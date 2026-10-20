@@ -68,6 +68,7 @@ the data checkout beside this repository, `../jab-stress-data`, under
 | `worker_battery.nuon` | the same with each batch's workers and grain |
 | `cadence_battery.nuon` | gauge batches at their cadences, compared with a baseline |
 | `cadence_image_battery.nuon` | two builds at one cadence, one by its image, compared |
+| `gauge_batches.nuon` | gauge batches in a declared order, each with its own words and its own environment, nothing built: a control's arms on frozen exports |
 | `route_battery.nuon` | the routes' battery on a debug image |
 | `grain_battery.nuon` | ThreeWorkerGrain's forced W 3 at 16 and 32 rows on four and eight harts |
 | `scaling_batteries.nuon` | GfxScaling's selections on three, four, and eight harts, settled and factory |
