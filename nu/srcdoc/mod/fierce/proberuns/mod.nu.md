@@ -117,9 +117,10 @@ holding its gauge.nuon, each run's directory found beside its report
 
 ## def observed
 
-A run's capture measured for the observer control: its whole-run summary
+A run's capture measured for an observer control: its whole-run summary
 (gauge/measure's), the problems that leave it unfit (`capture-problems`),
-and whether its identity names the sdl shim.
+whether its identity names the sdl shim, and its identity's window, the
+launch's `-display`, and its mode's sound.
 
 ## def labels-of
 
@@ -142,6 +143,23 @@ noise.
 `nu/bin/nuance/fierce/proberuns.nu observer <base> <out.nuon> --probed
 "[labels]" --plain "[labels]"`: the observer reading saved as NUON, a line
 a measure, the problems, and the verdict, admissible or instrumented-only.
+
+## def window-reading
+
+The window's cost (ProbeRuns.md's Observer controls, labelled apart): each
+run of the windowed batches and of the headless batches read through
+`observed`, a run kept out and named whose capture does not stand, whose
+identity names the shim, or whose window disagrees with its arm, the
+windowed arm's a display other than none and the headless arm's none; the
+arms' sound held to one value, so the window is the one difference; the
+cost over the fit runs by `observer window-effect`; `within` only where
+every run fits, the sound agrees, and every measure is within its noise.
+
+## def window-sets
+
+`nu/bin/nuance/fierce/proberuns.nu window <base> <out.nuon> --windowed
+"[labels]" --headless "[labels]"`: the window's cost saved as NUON, a line a
+measure, the problems, and whether the cost is within the noise.
 
 ## def line-of
 

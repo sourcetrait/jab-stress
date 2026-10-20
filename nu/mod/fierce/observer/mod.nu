@@ -22,23 +22,33 @@ def statistic [whole: any, path: list<string>]: nothing -> any {
     $whole | get -o ($path | into cell-path)
 }
 
-# The shim's effect over a probed and a plain arm, each measure judged
-export def shim-effect [probed: list<record>, plain: list<record>]: nothing -> record<measures: list<any>, admissible: bool, problems: list<string>> {
-    let empty = ([[probed $probed] [plain $plain]] | where {|a| ($a.1 | is-empty) } | each {|a| $"the ($a.0) arm holds no run" })
+# Two named arms' effect, the first's statistic less the second's, each measure judged
+def arms-effect [first: string, firsts: list<record>, second: string, seconds: list<record>]: nothing -> record<measures: list<any>, admissible: bool, problems: list<string>> {
+    let empty = ([[$first $firsts] [$second $seconds]] | where {|a| ($a.1 | is-empty) } | each {|a| $"the ($a.0) arm holds no run" })
     let measures = ($MEASURES | each {|m|
         let read = {|arm: string, runs: list<record>| $runs | each {|r| { arm: $arm, name: $r.name, value: (statistic $r.whole $m.path) } } }
-        let values = ((do $read probed $probed) ++ (do $read plain $plain))
+        let values = ((do $read $first $firsts) ++ (do $read $second $seconds))
         let missing = ($values | where value == null | each {|v| $"($v.arm) run ($v.name) holds no ($m.measure)" })
         let of = {|arm: string| $values | where {|v| $v.arm == $arm and $v.value != null } | get value }
         let range = {|arm: string| let v = (do $of $arm); if ($v | is-empty) { null } else { ($v | math max) - ($v | math min) } }
-        let a = (median-of (do $of probed))
-        let b = (median-of (do $of plain))
-        let ranges = ([(do $range probed) (do $range plain)] | compact)
+        let a = (median-of (do $of $first))
+        let b = (median-of (do $of $second))
+        let ranges = ([(do $range $first) (do $range $second)] | compact)
         let effect = (if $a == null or $b == null { null } else { $a - $b })
         let noise = (if ($ranges | length) < 2 { null } else { ($ranges | math max) / 2 })
         let within = (if (not ($missing | is-empty)) or $effect == null or $noise == null { false } else { ($effect | math abs) <= $noise })
-        { measure: $m.measure, probed: $a, plain: $b, effect: $effect, noise: $noise, within: $within, runs: $values, problems: $missing }
+        { measure: $m.measure, ($first): $a, ($second): $b, effect: $effect, noise: $noise, within: $within, runs: $values, problems: $missing }
     })
     let problems = ($empty ++ ($measures | get problems | flatten))
     { measures: ($measures | reject problems), admissible: (($problems | is-empty) and ($measures | all {|m| $m.within })), problems: $problems }
+}
+
+# The shim's effect over a probed and a plain arm, each measure judged
+export def shim-effect [probed: list<record>, plain: list<record>]: nothing -> record<measures: list<any>, admissible: bool, problems: list<string>> {
+    arms-effect probed $probed plain $plain
+}
+
+# The window's cost over a windowed and a headless arm, each measure judged
+export def window-effect [windowed: list<record>, headless: list<record>]: nothing -> record<measures: list<any>, admissible: bool, problems: list<string>> {
+    arms-effect windowed $windowed headless $headless
 }

@@ -14,3 +14,9 @@ batches under `base`, saved.
 `nu/bin/nuance/fierce/proberuns.nu observer`, its parameters `base: string,
 out: string, --probed: string, --plain: string`: the observer sets' reading
 under `base`, probed against plain, saved.
+
+## def main window
+
+`nu/bin/nuance/fierce/proberuns.nu window`, its parameters `base: string,
+out: string, --windowed: string, --headless: string`: the window's cost under
+`base`, windowed against headless, saved.

@@ -190,13 +190,13 @@ export def analyse [base: string, labels: list<string>, --eps: int = 10000]: not
     analyse-runs $runs --eps $eps
 }
 
-# A run's capture measured for the observer control, its standing named
-def observed [dir: path]: nothing -> record<whole: record, problems: list<string>, probed: bool> {
+# A run's capture measured for an observer control, its standing named
+def observed [dir: path]: nothing -> record<whole: record, problems: list<string>, probed: bool, window: string, sound: string> {
     let read_id = (gauge identity read $dir)
     let id = $read_id.identity
     let chosen = (gauge report legs-for $dir $id "")
     let m = (gauge measure (open --raw ($dir | path join "api.out") | into binary) $chosen.legs --cap ($id | get -o cap | default 60))
-    { whole: $m.whole, problems: (capture-problems $m ($id | get -o mode.cadence)), probed: (($id | get -o shim | default "") != "") }
+    { whole: $m.whole, problems: (capture-problems $m ($id | get -o mode.cadence)), probed: (($id | get -o shim | default "") != ""), window: ($id | get -o window | default ""), sound: ($id | get -o mode.sound | default "" | into string) }
 }
 
 # A label list given on a command line as NUON, refused by name if malformed
@@ -247,6 +247,52 @@ export def observer-sets [base: string, out: string, --probed: string, --plain: 
     }
     for p in $reading.problems { print $"proberuns: ($p)" }
     print $"proberuns: (if $reading.admissible { 'admissible: the probed readings stand for the unprobed program' } else { 'instrumented-only: the probed readings stand for the probed runs alone' })"
+    print $"proberuns: ($out)"
+}
+
+# The window's cost over unprobed windowed batches against headless ones
+export def window-reading [base: string, windowed: list<string>, headless: list<string>]: nothing -> record {
+    let base = ($base | path expand)
+    let arm = {|labels: list<string>, shown: bool|
+        $labels | each {|l|
+            let file = ($base | path join $l "gauge.nuon")
+            (open $file).runs | each {|r|
+                let dir = (gauge identity dirs $file $r | where {|d| ($d | path type) == "dir" } | get -o 0)
+                let name = $"($l) run ($r.run)"
+                if $dir == null { { name: $name, whole: null, sound: null, problems: ["its run's directory is not beside its report"] } } else {
+                    let o = (observed $dir)
+                    let shim = (if $o.probed { ["its identity names the shim"] } else { [] })
+                    let window = (if ($o.window not-in ["" "none"]) == $shown { [] } else if $shown { ["its identity names no window"] } else { [$"its identity names the window ($o.window)"] })
+                    { name: $name, whole: $o.whole, sound: $o.sound, problems: ($o.problems ++ $shim ++ $window) }
+                }
+            }
+        } | flatten
+    }
+    let arms = { windowed: (do $arm $windowed true), headless: (do $arm $headless false) }
+    let sounds = (($arms.windowed ++ $arms.headless) | get sound | compact | uniq)
+    let sound = (if ($sounds | length) > 1 { [$"the arms' sound differs: ($sounds | str join ', ')"] } else { [] })
+    let fit = {|runs: list<any>| $runs | where {|r| $r.problems | is-empty } | each {|r| { name: $r.name, whole: $r.whole } } }
+    let effect = (observer window-effect (do $fit $arms.windowed) (do $fit $arms.headless))
+    let unfit = (($arms.windowed ++ $arms.headless) | where {|r| not ($r.problems | is-empty) } | each {|r| $"($r.name): ($r.problems | str join '; ')" })
+    {
+        windowed: ($arms.windowed | each {|r| { name: $r.name, problems: $r.problems } }),
+        headless: ($arms.headless | each {|r| { name: $r.name, problems: $r.problems } }),
+        measures: $effect.measures,
+        within: ($effect.admissible and ($unfit | is-empty) and ($sound | is-empty)),
+        problems: ($unfit ++ $sound ++ $effect.problems),
+    }
+}
+
+# The window's cost reading saved, each measure's effect against its noise
+export def window-sets [base: string, out: string, --windowed: string, --headless: string] {
+    let reading = (window-reading $base (labels-of windowed $windowed) (labels-of headless $headless))
+    $reading | to nuon --indent 1 | save --raw -f $out
+    for m in $reading.measures {
+        let ms = {|v: any| if $v == null { "-" } else { $"($v / 1000.0 | math round -p 3) ms" } }
+        print $"proberuns: the window's cost, ($m.measure): windowed (do $ms $m.windowed), headless (do $ms $m.headless), effect (do $ms $m.effect), noise (do $ms $m.noise), (if $m.within { 'within' } else { 'past' }) its noise"
+    }
+    for p in $reading.problems { print $"proberuns: ($p)" }
+    print $"proberuns: the window's cost (if $reading.within { 'within the noise on every measure' } else { 'past the noise or unread on some measure' })"
     print $"proberuns: ($out)"
 }
 

@@ -12,3 +12,8 @@ def main [base: string, out: string, ...labels: string, --eps: int = 10000] {
 def "main observer" [base: string, out: string, --probed: string, --plain: string] {
     proberuns observer-sets $base $out --probed $probed --plain $plain
 }
+
+# The window's cost under `base`, windowed against headless, saved
+def "main window" [base: string, out: string, --windowed: string, --headless: string] {
+    proberuns window-sets $base $out --windowed $windowed --headless $headless
+}

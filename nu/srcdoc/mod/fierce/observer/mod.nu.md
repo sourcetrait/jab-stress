@@ -33,11 +33,25 @@ no values.
 A run's statistic of a measure, from its whole-run summary; null where
 the summary holds none.
 
+## def arms-effect
+
+Two named arms' effect, each arm a list of runs, a run its `name` and its
+whole-run summary `whole`: every measure's statistic for each arm under the
+arm's name, the effect, the first arm's less the second's, the noise, and
+whether the effect is within it; `problems` naming an arm with no run and
+each run lacking a statistic, a measure with a problem never within its
+noise; `admissible` when there is no problem and every measure is within
+its noise.
+
 ## def shim-effect
 
-The shim's effect over two arms, each a list of runs, a run its `name`
-and its whole-run summary `whole`: every measure's arm statistics, the
-effect, the noise, and whether the effect is within it; `problems`
-naming an arm with no run and each run lacking a statistic, a measure
-with a problem never within its noise; `admissible` when there is no
-problem and every measure is within its noise.
+The shim's effect, `arms-effect` over the probed arm and the plain one, its
+measures' statistics named `probed` and `plain`: the rule the qualification's
+shim control and the observer sets take.
+
+## def window-effect
+
+The window's cost, `arms-effect` over the windowed arm and the headless one,
+both unprobed, its measures' statistics named `windowed` and `headless`:
+ProbeRuns' second observer control, labelled apart and never mixed with the
+shim's.
