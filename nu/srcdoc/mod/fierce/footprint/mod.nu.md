@@ -76,9 +76,13 @@ SECONDS so the final records land, a run the bound ends reading BOUND_STATUS
 
 A capture's launch condition beyond the picture contract's, recorded in its
 `pose.nuon`: the API on, the sound not recorded (EvidenceRetention's drop at
-the source, since nothing reads a capture's sound). A capture taken before it
-recorded its sound and carries no `launch`; it keeps its own condition, and
-no reader takes it under this one.
+the source, since nothing reads a capture's sound), and a sound device on
+QEMU's `none` backend in the recording's place, `launch --live-sound` under
+`JAB_AUDIO` named by `audio`, so no discovery runs and nothing plays on any
+host. The game needs the device: a machine with none exits 2 at the load
+(`fps: no sound`). A capture taken before it recorded its sound and carries
+no `launch`; it keeps its own condition, and no reader takes it under this
+one.
 
 ## def placement
 
