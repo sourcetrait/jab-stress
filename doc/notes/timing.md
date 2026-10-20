@@ -12,6 +12,7 @@ Its command is its bin, run under the real nu:
 |---|---|
 | `nu nu/bin/nuance/kernel/timing.nu <readings> <out dir>` | Reads a readings record and writes `decision.nuon` in the directory, printing the outcome, every refusal, and every shortfall |
 | `nu nu/bin/nuance/kernel/timing.nu calibrate <base> <out dir>` | Reads a calibration capture's runs and writes eps's calibration, `calibration.nuon`, in the directory, printing its state, eps, and each target's figures |
+| `nu nu/bin/nuance/kernel/timing.nu readings <spec> <out dir>` | Reads every battery a spec names at the calibrated eps and writes the readings record, `readings.nuon`, in the directory, printing a line a run, then the controls and host limits |
 
 ## The declared comparison
 
@@ -87,9 +88,19 @@ decision names the code that made it.
 
 ## Where the readings come from
 
-JointTiming's comparison writes the readings record from its readers'
-outputs: the gauge's reports for the guest side, ProbeRuns' reader for the
-display side, and walk's guest-only reading for the second workload. The
-gauge reports K's violations, the late wakes, and the catch-ups with every
-run. The calibration's state, eps, and qualifying frames are `calibrate`'s,
-whose population of frames is the one the gauge counts its late wakes from.
+`readings` writes the readings record from the comparison's own captures, a
+spec naming them: the strategy and the checks as given, the calibration
+`calibrate` wrote, the frozen exports by role and file, and each battery's
+base by host and battery. Every run is read anew at the calibrated eps, its
+fields from its own records: an fps run through jab's gauge, which reports K's
+violations, the late wakes, and the catch-ups, a probed one through ProbeRuns'
+reader as well for the frames shown; a walk run through walk's guest-only
+reading. Its rule comes from its kernel export's provenance and its display
+backend from its batch's environment. The shim's controls are ProbeRuns'
+observer effect between each kernel's probed and unprobed runs; the TIMING
+controls compare each walk arm's runs with TIMING on and off on the guest's
+presented interval's median and 95th. A host limit is written where every
+probed run of both kernels shows SDL rendering more than half a period slower
+than the guest presents. The calibration's state, eps, and qualifying frames
+are `calibrate`'s, whose population of frames is the one the gauge counts its
+late wakes from.

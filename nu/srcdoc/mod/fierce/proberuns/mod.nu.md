@@ -50,7 +50,7 @@ Why a run's capture is not read, each named, none where it stands:
 incomplete, invalid, unseeded or seeded after its first frame, its identity
 asking no cadence, its cadence never answered or answered late, its frames
 at another cadence than asked, and its capture nonce never answered or
-answered late.
+answered late. Exported: JointTiming's readings hold every fps run to it.
 
 ## def stalls-of
 

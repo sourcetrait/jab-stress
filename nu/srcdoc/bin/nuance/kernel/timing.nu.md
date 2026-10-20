@@ -12,3 +12,9 @@ The decision over one readings record, written as decision.nuon.
 
 `nu/bin/nuance/kernel/timing.nu calibrate`, its parameters `base: path, out:
 path`: eps from a calibration capture's runs, written as calibration.nuon.
+
+## def "main readings"
+
+`nu/bin/nuance/kernel/timing.nu readings`, its parameters `spec: path, out:
+path`: the readings a comparison's captures give, from a spec, written as
+readings.nuon (the readings module).

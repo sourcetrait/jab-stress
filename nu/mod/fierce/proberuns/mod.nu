@@ -34,7 +34,7 @@ def guest-nonce [api: path]: nothing -> any {
 }
 
 # Why a run's capture is not read, each named, none where it stands
-def capture-problems [m: record, asked: any]: nothing -> list<string> {
+export def capture-problems [m: record, asked: any]: nothing -> list<string> {
     [
         (if not $m.complete { $"incomplete: ($m.problems | first 3 | str join '; ')" })
         (if $m.complete and (not $m.valid) { $"invalid: ($m.invalid | first 3 | str join '; ')" })
