@@ -2,6 +2,7 @@ use (path self ../../../../../../jab/nu/mod/spec)
 use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge)
 use (path self ../matrix)
 use (path self ../record)
+use (path self ../../../../../../jab/nu/mod/sdl/bundle)
 use (path self ../matrix) [CASES JAB RECORD TARGETS]
 
 # The check's own file beside the record it derives again
@@ -43,8 +44,24 @@ def reopened [bench: path, inventory: string]: nothing -> record<checked: int, p
     { checked: ($read | length), problems: ($problems ++ $absent) }
 }
 
-# The bench laid out again in `work`, every step's report made again
-def rebuilt [bench: path, work: path]: nothing -> nothing {
+# A step's probed runs whose bundle the bench kept none of, each laid out in
+# `work` beside the step's report, where the record finds a run first, and
+# bundled again by the sdl probe's bundler at the reader's revision
+def rebundled [bench: path, work: path, label: string]: nothing -> list<string> {
+    glob ($bench | path join $label "run_*" "sdl.log") | sort | each {|log|
+        let run = ($log | path dirname)
+        if ($run | path join "bundle" | path exists) { return null }
+        let to = ($work | path join $label ($run | path basename))
+        mkdir $to
+        for f in (ls $run | where type == file | get name) { cp $f $to }
+        bundle $to ($to | path join "bundle") --profile paired | ignore
+        $to
+    } | compact
+}
+
+# The bench laid out again in `work`, every step's report made again and
+# every probed run without its bundle bundled again; the runs bundled
+def rebuilt [bench: path, work: path]: nothing -> list<string> {
     mkdir $work
     for f in ["bench.nuon" "watch.nuon"] {
         let at = ($bench | path join $f)
@@ -56,12 +73,13 @@ def rebuilt [bench: path, work: path]: nothing -> nothing {
         cp $manifest ($work | path join "preflight" "package.nuon")
     }
     let listed = (open ($bench | path join "bench.nuon"))
-    for s in $listed.steps {
+    $listed.steps | each {|s|
         let step = ($bench | path join $s.label)
         if ($step | path type) == "dir" and not (glob ($step | path join "run_*") | is-empty) {
             gauge read batch $step --label $s.label --out ($work | path join $s.label)
-        }
-    }
+            rebundled $bench $work $s.label
+        } else { [] }
+    } | flatten
 }
 
 # The candidate's record the check reads: the file given, held to its SHA-256
@@ -110,14 +128,14 @@ export def check-of [r: any, bench: path, work: path, --inventory: string = "", 
     let bench = ($bench | path expand)
     if not ($bench | path join "bench.nuon" | path exists) { error make { msg: $"($bench) holds no bench.nuon, so it is no bench run's directory" } }
     let held = (reopened $bench $inventory)
-    rebuilt $bench $work
+    let rebundled = (rebuilt $bench $work)
     let cand = (candidate-file $r $candidate $work)
     let fresh = (record record-of $work $cand.file $r.target --readers $readers)
     let tag = (matrix tag-state $fresh.candidate.tag $fresh.candidate.jab)
     let ledger = (matrix ledger-of $fresh $tag ($fresh.bench.problems ++ $fresh.conditions.problems ++ $held.problems ++ $cand.problems))
     let verdicts = (matrix verdicts-of $ledger)
     let problems = ($ledger | where state == "failed" | each {|x| $x.problems | each {|p| $"($x.row): ($p)" } } | flatten)
-    { problems: $problems, ledger: $ledger, verdicts: $verdicts, history: (history-of $r $fresh), reopened: { inventory: (if $inventory == "" { null } else { $inventory | path expand }), checked: $held.checked, problems: $held.problems }, record: $fresh }
+    { problems: $problems, ledger: $ledger, verdicts: $verdicts, history: (history-of $r $fresh), reopened: { inventory: (if $inventory == "" { null } else { $inventory | path expand }), checked: $held.checked, problems: $held.problems }, rebundled: ($rebundled | each {|d| $d | path relative-to $work }), record: $fresh }
 }
 
 # A record derived again from its bench's kept inputs into `out`, verdicts printed
@@ -129,7 +147,8 @@ export def main [record: path, --bench: string = "", --inventory: string = "", -
     let bench_dir = (if $bench == "" { $r.bench.dir } else { $bench })
     let c = (check-of $r $bench_dir ($out | path join "bench") --inventory $inventory --candidate $candidate --readers $readers)
     if $c.record != null { $c.record | to nuon --indent 1 | save --raw ($out | path join $RECORD) }
-    { checked: ($record | path expand), checked_sha256: (open --raw $record | hash sha256), bench: ($bench_dir | path expand), record: (if $c.record == null { null } else { $out | path join $RECORD }), problems: $c.problems, ledger: $c.ledger, verdicts: $c.verdicts, history: $c.history, reopened: $c.reopened } | to nuon --indent 1 | save --raw ($out | path join $CHECK)
+    { checked: ($record | path expand), checked_sha256: (open --raw $record | hash sha256), bench: ($bench_dir | path expand), record: (if $c.record == null { null } else { $out | path join $RECORD }), problems: $c.problems, ledger: $c.ledger, verdicts: $c.verdicts, history: $c.history, reopened: $c.reopened, rebundled: ($c | get -o rebundled | default []) } | to nuon --indent 1 | save --raw ($out | path join $CHECK)
+    for b in ($c | get -o rebundled | default []) { print $"qualification: ($b) bundled again, its bench keeping no bundle" }
     for h in $c.history { print $"qualification: the record's ($h.item) reads ($h.stored | to nuon), derived again ($h.derived | to nuon)" }
     for p in $c.problems { print $"qualification: ($p)" }
     if $c.verdicts != null {

@@ -34,6 +34,17 @@ reopened input whose digest differs is the captured data itself, a
 problem. With no inventory, a bench not yet landed, the files are read as
 found.
 
+## def rebundled
+
+A step's probed runs, each a run directory holding `sdl.log`, whose bundle
+the bench kept none of: each laid out in `work` beside the step's report,
+its files copied, where the record finds a run before the bench's own
+directory (gauge's `identity dirs`, the adjacent directory first), and
+bundled again there by the sdl probe's bundler (jab's `sdl/bundle`) under
+the paired profile, at the reader's revision. A run whose capture refused
+its bundle under an older rule, 1KB1's probed_2 run 3, is read so from
+the landed bench alone. The runs bundled, by their paths in `work`.
+
 ## def rebuilt
 
 The bench laid out again in `work`: its bench.nuon and watch.nuon copied,
@@ -41,7 +52,8 @@ a packaged bench's manifest with them at `preflight/package.nuon`, where
 the record reads the freeze's ELF, each step's report made again from its
 kept runs (gauge read batch), so
 the record is derived from the streams and never from a stored report, and
-the bench's own directory is never written.
+every probed run with no bundle bundled again (rebundled); the bench's own
+directory is never written. Returns the runs bundled.
 
 ## def candidate-file
 
