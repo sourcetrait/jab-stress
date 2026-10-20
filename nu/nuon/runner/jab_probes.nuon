@@ -1,0 +1,26 @@
+{
+ nonce: "jiOMKYvbPUY",
+ title: "One program's sdl probes in a declared order, each run's probe directory kept",
+ args_type: "record<stress: string, jab: string, program: string, probe_dir: string, base: string, runs: table<label: string, words: list<string>>, label: string, mcp_nom: string, max_quiet_min: int>",
+ result_type: "record<label: string, nonce: string>",
+ body: "use rig/sourcetrait/emptwo/prototype/long
+let a = $args
+let bin = ($a.stress | path join nu bin nuance.nu)
+let given = ($a | to nuon)
+let ready = (^$bin runner ready jab_probes $given | complete)
+if $ready.exit_code != 0 { error make { msg: $\"jab_probes is not ready: ($ready.stderr | str trim)\" } }
+let handle = (long launch {
+    label: $a.label,
+    mcp_nom: $a.mcp_nom,
+    interval: 120sec,
+    max_quiet: ($a.max_quiet_min * 1min),
+    check: {|state| { runs: (glob ($a.base | path join \"*\" \"record.nuon\") | length) } },
+    teardown: null,
+    work: {
+        let w = (^$bin runner work jab_probes $given | complete)
+        if $w.exit_code != 0 { error make { msg: $\"jab_probes: ($w.stderr | str trim)\" } }
+        $w.stdout | from nuon
+    },
+})
+{ label: $handle.label, nonce: $handle.nonce }"
+}
