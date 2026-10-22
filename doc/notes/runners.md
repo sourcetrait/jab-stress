@@ -51,6 +51,7 @@ the data checkout beside this repository, `../jab-stress-data`, under
 | `fps_suite.nuon` | fierce's tests through jab's driver, `--set <set>` when `set` names any symbols, its log saved and its gauge lines returned |
 | `jab_suite.nuon` | jab's whole suite through its driver, its table and failures returned, the `log` path's directory made first. Its nonce is the campaign's one cutover pass of the suite, run with a stub `just` first on its PATH, which fails and records any call |
 | `jab_programs.nuon` | several programs' tests through jab's driver in turn |
+| `recorded.nuon` | steps through jab's bins or the workbench's, each its own directory: its output, the revisions it ran, its symbols, its kernel's and programs' builds with their digests, and the files it wrote, in `step.nuon`, the run's directory then landed whole |
 | `smoke.nuon` | fierce's development smoke |
 
 ## Benches

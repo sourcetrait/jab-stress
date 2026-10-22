@@ -6,5 +6,6 @@ so its closures run in a nu that loads no other module.
 ## def main
 
 `nu/bin/nuance/fierce/stress/cadence.nu`, its parameters `kernel: path, image:
-path, out: path`: The cadence fixtures alone on a debug image, `cadence: ok`
-once they hold.
+path, out: path, --set: string`: The cadence fixtures alone on a debug image,
+`cadence: ok` once they hold, `--set` the build's symbols as the fixtures read
+them, `DEBUG` unless given.

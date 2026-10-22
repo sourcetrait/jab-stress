@@ -4,9 +4,9 @@ use (path self ../../../../../../jab/kit/fierce/nu/mod/suite/clock) [cadence-hol
 const GAME = (path self ../../../../../../jab/kit/fierce | path expand)
 
 # The cadence fixtures alone on a debug image, `cadence: ok` once they hold
-export def main [kernel: path, image: path, out: path] {
+export def main [kernel: path, image: path, out: path, --set: string = "DEBUG"]: nothing -> nothing {
     let game = $GAME
     mkdir $out
-    cadence-holds $kernel $image $out "DEBUG" $game
+    cadence-holds $kernel $image $out $set $game
     print "cadence: ok"
 }
