@@ -30,7 +30,7 @@ export def symbols-of [set: string]: nothing -> list<string> {
 }
 
 # An image's provenance, saved beside it as provenance.nuon and returned
-export def provenance-of [repo: string, full: string, image: string, symbols: list<string>]: nothing -> record {
+export def provenance-of [repo: string, full: string, image: string, symbols: list<string>, build_tool: record]: nothing -> record {
     let beside = ($image | path dirname)
     let stem = ($image | path parse | get stem)
     let flags = (open --raw ($beside | path join "flags") | decode | lines | first)
@@ -41,7 +41,7 @@ export def provenance-of [repo: string, full: string, image: string, symbols: li
         symbols: $symbols,
         source: $"the program's src/ and manifest at ($full)",
         sdk: $"sdk/src at ($full), the export's own",
-        build_tool: (identity reader [$repo] --launches),
+        build_tool: $build_tool,
         toolchain: {
             prefix: $prefix,
             version: (^$"($prefix)as" --version | complete | get stdout | lines | get -o 0),
@@ -106,6 +106,7 @@ export def main [repo: string, commit: string, cands: string, expected: string, 
         exported_from: $"git archive of ($carried) at ($full), ($redirected) and its workspace the checkout's for the kernel and the target, its declaration and run shape kept, (if ($kept | is-empty) { 'none' } else { $kept | columns | str join ', ' }), and its fields naming the program's own tree dropped",
     } | to nuon --indent 2 | save --raw ($program_dir | path join "source.nuon")
     let tree = (if $debug { "debug" } else { "release" })
+    let build_tool = (identity reader [$repo] --launches)
     let built = (^($repo | path join "do") build $program_dir --set ([$tree] ++ ($names | str lowercase) | str join ",") | complete)
     if $built.exit_code != 0 { error make { msg: $"the ($tree) build of ($program_dir): ($built.stdout + $built.stderr | lines | last 6 | str join ' | ')" } }
     let image = (glob ($program_dir | path join "**" $"($original.name).jab") | get -o 0)
@@ -119,7 +120,7 @@ export def main [repo: string, commit: string, cands: string, expected: string, 
     if $debug != ($flags =~ '--defsym DEBUG=') { error make { msg: $"the ($tree) export built (if $debug { 'without' } else { 'with' }) DEBUG: ($flags)" } }
     let missing = ($names | where {|n| not ($flags | str contains $"--defsym ($n)=1") })
     if not ($missing | is-empty) { error make { msg: $"the export's flags lack ($missing | str join ', '): ($flags)" } }
-    let provenance = (provenance-of $repo $full $image (if $debug { ["DEBUG"] ++ $names } else { $names }))
+    let provenance = (provenance-of $repo $full $image (if $debug { ["DEBUG"] ++ $names } else { $names }) $build_tool)
     if $expected != "" and $provenance.image_sha256 != $expected {
         error make { msg: $"the export's image has SHA-256 ($provenance.image_sha256) where ($expected) was expected" }
     }

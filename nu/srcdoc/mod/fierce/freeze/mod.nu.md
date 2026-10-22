@@ -63,8 +63,10 @@ case, each once, sorted.
 
 An image's provenance, written beside it as `provenance.nuon` and
 returned: the commit for the source and the SDK, the symbols the build
-names beside its tree's, the build tool's identity apart (`identity
-reader` over the checkout, its commit and state and its interpreters), the
+names beside its tree's, the build tool's identity apart, `build_tool`,
+which the caller takes before its build, since the checkout can move while
+it builds (`identity reader` over the checkout, its commit and state and
+its interpreters), the
 toolchain's prefix, its advertised version, and the SHA-256 of the
 resolved assembler, linker, and objcopy, the flags, and the image's and
 the ELF's SHA-256, the ELF the image's stem's; and the romfs's, the

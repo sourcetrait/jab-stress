@@ -11,7 +11,8 @@ by the checkout's build verb, the export lying in the checkout's target, so the
 build lands beside it in `kernel/release/`; then beside the ELF, `jab.bin`,
 objcopy's flat image, the bytes the kernel loads, and `provenance.nuon`: the
 commit, the symbols, the flags, the build tool's identity (`identity reader`
-over the checkout: its commit and state, its interpreters), the toolchain's
+over the checkout: its commit and state, its interpreters), taken before the
+build, since the checkout can move while it builds, the toolchain's
 prefix, its version, and the SHA-256 of its assembler, linker, and objcopy, the
 ELF's SHA-256 and the loaded bytes'. A gate before anything measures it: the
 ELF's SHA-256 the one `expected` names, unless `expected` is "". DEBUG is

@@ -143,7 +143,9 @@ restored tree and `{out}` the reread's own directory, `<scratch>/out`,
 which holds `reread.nuon` naming the run, the reader, the command, the
 receipt's SHA-256, the exit, and the reread's own `identity`, jab's
 `identity reader` over the workbench's checkout and jab's beside it, the
-code the reread ran, recorded beside the identity the read run carries,
+code the reread ran, taken before the command starts, since a checkout can
+move while a long reader runs, and recorded beside the identity the read
+run carries,
 beside the command's stdout and stderr as
 `reread.stdout` and `reread.stderr`. Those three names are the reread's: a
 reader that wrote one into its out is refused by name rather than

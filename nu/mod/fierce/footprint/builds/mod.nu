@@ -1,4 +1,5 @@
 use (path self ../../../../../../jab/nu/mod/build)
+use (path self ../../../../../../jab/nu/mod/identity)
 use (path self ../../freeze) [symbols-of provenance-of]
 
 # The images an export is built as, each a label, its set, and the poses' kind it serves
@@ -50,6 +51,7 @@ export def images [export: path] {
         let target = ($copy | path join $place)
         mkdir $target
         for item in [src program.jab.toml source.nuon] { cp -r ($program | path join $item) $target }
+        let build_tool = (identity reader [$repo] --launches)
         let kernel_built = (^nu $tool build ($repo | path join "kernel") --kernel --set $b.set | complete)
         if $kernel_built.exit_code != 0 { error make { msg: $"the ($b.label) kernel's build: ($kernel_built.stdout + $kernel_built.stderr | lines | last 6 | str join ' | ')" } }
         let built = (^nu $tool build $target --set $b.set | complete)
@@ -68,7 +70,7 @@ export def images [export: path] {
         let bin = ($out | path join "kernel.bin")
         let copied = (^$"($prefix)objcopy" -O binary $kernel $bin | complete)
         if $copied.exit_code != 0 { error make { msg: $"objcopy of ($kernel): ($copied.stderr)" } }
-        let provenance = (provenance-of $repo $source.commit $image $names)
+        let provenance = (provenance-of $repo $source.commit $image $names $build_tool)
         let entry = {
             label: $b.label, set: $b.set, kind: $b.kind, symbols: $names, image: $image, image_sha256: $provenance.image_sha256,
             elf_sha256: $provenance.elf_sha256, iz_min: (iz-min-of ($out | path join $"($name).elf") $prefix),

@@ -36,5 +36,6 @@ the checkout's kernel and then the copy built debug with its set by the
 checkout's tool; its flags holding DEBUG and every symbol of its set;
 that kernel copied beside it as `kernel.elf` with its loaded bytes,
 objcopy's flat image, as `kernel.bin`, every image's the same; and
-provenance.nuon beside it. The record, every image's label, set, kind,
+provenance.nuon beside it, its build tool's identity taken before that
+image's builds (provenance-of). The record, every image's label, set, kind,
 image, kernel, digests, and IZ_MIN, goes to the export's IMAGES.

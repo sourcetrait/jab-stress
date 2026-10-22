@@ -25,6 +25,7 @@ export def main [repo: string, commit: string, cands: string, symbols: string, e
         exported_from: $"git archive of kernel/src, kernel/kernel.jab.toml, and sdk/src at ($full), the manifest's workspace the checkout's for the toolchain and the target, its do dropped",
     } | to nuon --indent 2 | save --raw ($kernel | path join "source.nuon")
     let tool = ($repo | path join "nu" "bin" "do.nu")
+    let build_tool = (identity reader [$repo] --launches)
     let built = (if ($names | is-empty) { ^nu $tool build $kernel --kernel | complete } else { ^nu $tool build $kernel --kernel --set ($names | str join ",") | complete })
     if $built.exit_code != 0 { error make { msg: $"the release build of ($kernel): ($built.stdout + $built.stderr | lines | last 6 | str join ' | ')" } }
     let out = ($kernel | path join "release")
@@ -46,7 +47,7 @@ export def main [repo: string, commit: string, cands: string, symbols: string, e
         symbols: $names,
         source: $"kernel/src and kernel/kernel.jab.toml at ($full)",
         sdk: $"sdk/src at ($full), the export's own",
-        build_tool: (identity reader [$repo] --launches),
+        build_tool: $build_tool,
         toolchain: {
             prefix: $prefix,
             version: (^$"($prefix)as" --version | complete | get stdout | lines | get -o 0),
