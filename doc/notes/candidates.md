@@ -10,16 +10,18 @@ from one commit.
 | Symbol | Task | What it changes |
 |---|---|---|
 | `flip_batch` | SubmitWait | The kernel's whole-screen flip sends its transfer and its flush as one batch with one wait, as a list of rectangles is sent |
-| `prepare` | LoopReorder | bounce, walk, wasd, and pad draw first and wait for the display's tick after, then flip what they kept; it lands only if JointTiming chooses its new presentation rule |
+
+`prepare`, LoopReorder's, landed with JointTiming's frame rule: bounce, walk,
+wasd, and pad draw first and wait for the display's tick after in every
+build, and the symbol now chooses the loop order only in walk's CADENCE
+measurement build.
 
 ## Testing a candidate
 
 A candidate's cases run in the Jab checkout's own tests, built with its
 symbol: `./do test test/framecap --set flip_batch` there holds the whole
 flip's receipts on the candidate, and the same test without the symbol
-holds them on the kernel as it is. `./do test example/bounce --set
-prepare`, and the same for walk, wasd, and pad, runs each example's own
-test on its candidate loop.
+holds them on the kernel as it is.
 
 ## Exporting a candidate
 

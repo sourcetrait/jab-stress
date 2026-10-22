@@ -6,10 +6,10 @@ launch measured from its records, the fixtures building their own Render One and
 still Render Zero disks under `out`. Prints `cadence: ok` once every fixture
 holds.
 
-`--set` names the build's symbols as the fixtures read them, `DEBUG` unless
-given: with `P2` among them, the fixtures hold each presented flip to P2's rule
-and K at the kernel's FRAME_EPS (`p2-holds`), the image and kernel built under
-the same symbols, as `./do build kit/fierce --set debug,p2` builds them.
+`--set` names the build's symbols as the fixtures' launches take them, `DEBUG`
+unless given, the image and kernel built under the same symbols, as `./do
+build kit/fierce --set debug` builds them. The fixtures hold each presented
+flip to the kernel's frame rule and K at its FRAME_EPS (`rule-holds`).
 
 Its bin: `nu/bin/nuance/fierce/stress/cadence.nu <kernel> <image> <out>
-[--set DEBUG,P2]`.
+[--set DEBUG]`.
