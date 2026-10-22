@@ -139,7 +139,7 @@ def target-section [c: record]: nothing -> list<string> {
             ""
             "### The feature unavailable"
             ""
-            $"On ($name) the game asks for the synthetic service, and the kernel refuses it, because the target's harts are all in use. ($held)"
+            $"On ($name) the game asks for the synthetic service, and its own check refuses it before asking the kernel. Giving the service a hart would leave the graphics fewer harts than the game reserves for them. ($held)"
             ""
         ] ++ (md-table ["Run" "Refusal code" "Frames with the service running" "Median frame"] $rows)
     })
@@ -162,7 +162,7 @@ def target-section [c: record]: nothing -> list<string> {
             ""
             "### Audio"
             ""
-            "These runs use a debug build, because only a debug build counts the sound driver's work. Each plays ten seconds with a table of pad reports and live sound. They are a diagnostic, never an acceptance run."
+            "These runs use a debug build, because only a debug build counts the sound driver's work. Each plays ten seconds with a table of pad reports. On a host with a sound output the sound plays live. On a host with none it is recorded, and only a recording shows whether the sound ran without gaps. They are a diagnostic, never an acceptance run."
             ""
         ] ++ (md-table ["Run" "Pad events taken" "Pad events dropped" "Times the sound queue ran empty" "Pad reports QEMU dropped" "Continuity"] $rows)
     })
