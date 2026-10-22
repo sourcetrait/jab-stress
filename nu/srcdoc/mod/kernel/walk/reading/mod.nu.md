@@ -16,6 +16,14 @@ Each header flag's build symbol, the names the arm's faults give.
 The fields an identity names its build by. An identity naming none of them is
 historical; one naming some and not all is refused.
 
+## const CONTRACT_RULES
+
+The stream's rules a receipt sequence needs before its K is read: every frame
+record decoded and numbered in order (the record, the numbering), no final
+status of 2 to 4, the header's nonce nonzero, and at least one frame
+(TimingSelector's E9). Every other rule of the stream is the reading's
+validity alone.
+
 ## const HISTORICAL_UNCHECKED
 
 What a historical reading leaves unchecked and says so: the arm and the build
@@ -65,14 +73,26 @@ A distribution's median and 95th in milliseconds, from ticks.
 
 A distribution's median and 95th in milliseconds, from microseconds.
 
+## def contract-of
+
+K over a stream's receipt sequence where the sequence can be trusted, apart
+from the reading's validity (TimingSelector's E9): available when the stream
+is complete, its header's structure, the 10 MHz rate, its length, end record,
+counts, and CRC; no fault of CONTRACT_RULES; and none of `held`, the receipt
+stage's faults and the binding's. Then K over the presented flips' acceptances
+(jab k-violations, `eps` in ticks), its count and its first eight. Otherwise
+unavailable, the failing rules named as its reason and its K null, never 0. A
+run failing only the reading's other rules keeps its contract's K and stays
+invalid.
+
 ## def guest-side
 
 The guest's side of a reading (the fifth step), on a stream that held:
 each frame's interval, start to start, in either arm; with TIMING the
 work, the wait, and the call, each frame's own, without it unavailable,
 null and never zero; the presented intervals from the receipts'
-acceptances; K over them (jab k-violations, `eps` in ticks), reported
-and never the run's validity; and the workload.
+acceptances; K, the contract's, computed once (contract-of), reported and
+never the run's validity; and the workload.
 
 ## def guest-of
 
@@ -80,7 +100,9 @@ The one path both readings take: the stream's rules but the capture's, the
 receipt stage, the binding, the header's capture nonce equal to the identity's
 `capture_nonce` and nonzero, and the identity stage; then the guest's side. The
 record carries `historical`, `deciding` (valid and not historical), the `build`,
-and the rules left `unchecked`, with the stream itself for the paired reading.
+the rules left `unchecked`, and the `contract` (contract-of), which every
+reading carries whatever its validity, with the stream itself for the paired
+reading.
 
 ## def guest-reading
 

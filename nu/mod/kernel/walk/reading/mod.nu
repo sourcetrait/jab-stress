@@ -11,6 +11,9 @@ const SYMBOLS = { timing: "TIMING", replay: "REPLAY", prepare: "PREPARE", test: 
 # The fields an identity names its build by
 const BUILD_FIELDS = [cadence flags image kernel workload]
 
+# The stream's rules a receipt sequence needs before its K is read
+const CONTRACT_RULES = ["the record" "the numbering" "the final status" "the nonce" "no frame"]
+
 # What a historical reading, its identity naming no build, leaves unchecked
 const HISTORICAL_UNCHECKED = [
     "the arm: the header's flags against the build's symbols"
@@ -95,8 +98,22 @@ export def spread-us [us: list<number>]: nothing -> record<median_ms: any, p95_m
     { median_ms: (rank $ms 0.5), p95_ms: (rank $ms 0.95), count: ($ms | length) }
 }
 
-# The guest's side of a reading, on a stream that held
-export def guest-side [stream: record, eps: int]: nothing -> record {
+# K over a stream's receipt sequence where it can be trusted, else its reason
+export def contract-of [stream: record, held: list<any>, eps: int]: nothing -> record<available: bool, reason: string, k: any> {
+    if not $stream.complete {
+        return { available: false, reason: $"the stream: ($stream.faults | each {|f| $f.rule } | str join ', ')", k: null }
+    }
+    let faults = (($stream.faults | where {|f| $f.rule in $CONTRACT_RULES }) ++ $held)
+    if not ($faults | is-empty) {
+        return { available: false, reason: ($faults | each {|f| $f.rule } | uniq | str join ", "), k: null }
+    }
+    let accepted = ($stream.frames | where {|f| $f.issued == 1 and $f.status == 0 } | each {|f| $f.s })
+    let k = (present k-violations $accepted $PERIOD $eps)
+    { available: true, reason: "", k: { eps: $eps, period: $PERIOD, violations: ($k | length), first: ($k | first 8) } }
+}
+
+# The guest's side of a reading, on a stream that held, its contract's K
+export def guest-side [stream: record, k: record]: nothing -> record {
     let fl = (flags-of $stream.header.flags)
     let frames = $stream.frames
     let starts = ($frames | get start)
@@ -110,7 +127,6 @@ export def guest-side [stream: record, eps: int]: nothing -> record {
     } else { { work: null, wait: null, call: null } })
     let accepted = ($frames | where {|f| $f.issued == 1 and $f.status == 0 } | get s)
     let presented = ($accepted | window 2 | each {|p| $p.1 - $p.0 })
-    let k = (present k-violations $accepted $PERIOD $eps)
     let window_s = (($frames | last | get call_end) / $HZ)
     {
         frames: ($frames | length),
@@ -121,7 +137,7 @@ export def guest-side [stream: record, eps: int]: nothing -> record {
         presented_interval: (spread $presented),
         phases: $phases,
         presents: ($accepted | length),
-        k: { eps: $eps, period: $PERIOD, violations: ($k | length), first: ($k | first 8) },
+        k: $k,
         workload: {
             drawn: { median: (rank ($frames | get drawn) 0.5), p95: (rank ($frames | get drawn) 0.95) },
             rect_area: { median: (rank ($frames | get rect_area) 0.5), p95: (rank ($frames | get rect_area) 0.95) },
@@ -135,20 +151,21 @@ export def guest-of [bytes: binary, identity: record, eps: int, test: bool, repl
     let stream = (stream-of $bytes --test=$test)
     let base = { reader: "walk cadence", mode: "guest", guest_only: true }
     if not $stream.complete {
-        return { result: ($base | merge { complete: false, valid: false, faults: $stream.faults, nonce: null, historical: null, deciding: false, build: null, unchecked: [], reading: null }), stream: $stream }
+        return { result: ($base | merge { complete: false, valid: false, faults: $stream.faults, nonce: null, historical: null, deciding: false, build: null, unchecked: [], contract: (contract-of $stream [] $eps), reading: null }), stream: $stream }
     }
     let receipts = (if ($stream.frames | is-empty) { [] } else { receipt-faults $stream.frames $stream.header.origin (flags-of $stream.header.flags).timing })
     let wanted = ($identity | get -o capture_nonce)
     let binding = (if $wanted == null or $wanted == 0 or $wanted != $stream.header.nonce {
         [(fault "the binding" 1 [$"the header's nonce ($stream.header.nonce), the identity's ($wanted | to nuon)"])]
     } else { [] })
+    let contract = (contract-of $stream ($receipts ++ $binding) $eps)
     let built = (identity-stage $stream $identity $replay)
     let faults = ($stream.faults ++ $receipts ++ $binding ++ $built.faults)
     let valid = ($faults | is-empty)
     let result = ($base | merge {
         complete: true, valid: $valid, faults: $faults, nonce: $stream.header.nonce,
         historical: $built.historical, deciding: ($valid and not $built.historical), build: $built.build, unchecked: $built.unchecked,
-        reading: (if $valid { guest-side $stream $eps } else { null }),
+        contract: $contract, reading: (if $valid { guest-side $stream $contract.k } else { null }),
     })
     { result: $result, stream: $stream }
 }

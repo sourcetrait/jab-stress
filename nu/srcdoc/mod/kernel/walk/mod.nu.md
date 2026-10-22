@@ -58,7 +58,8 @@ A reading's record saved as NUON.
 ## def show
 
 A reading's record printed: its standing, historical or deciding, its faults
-and unchecked rules, the guest's figures, the pairing's verdict and stalls, the
+and unchecked rules, a reading that did not stand its contract, its K or why
+it is unavailable, the guest's figures, the pairing's verdict and stalls, the
 renders' choice, and each stretch and where it is located.
 
 ## def main

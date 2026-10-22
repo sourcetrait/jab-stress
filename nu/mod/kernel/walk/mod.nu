@@ -16,6 +16,10 @@ def show [record: record]: nothing -> nothing {
     print $"walk cadence, ($record.mode): ($state)($standing)($at)"
     for f in $record.faults { print $"  ($f.rule): ($f.held), ($f.examples | str join '; ')" }
     for u in $record.unchecked { print $"  unchecked: ($u)" }
+    let contract = ($record | get -o contract)
+    if $record.reading == null and $contract != null {
+        print (if $contract.available { $"  contract: K violations ($contract.k.violations) at eps ($contract.k.eps), the reading apart" } else { $"  contract unavailable: ($contract.reason)" })
+    }
     if $record.reading != null {
         let r = $record.reading
         print $"  ($r.frames) frames over ($r.window_s | math round -p 2) s, ended by ($r.ended_by); presents ($r.presents), K violations ($r.k.violations) at eps ($r.k.eps)"

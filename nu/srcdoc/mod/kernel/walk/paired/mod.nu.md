@@ -70,7 +70,8 @@ flip's call's start and end (`recorded`); TIMING off, the frame's start and its
 call's end (`frame`), never a call's, its long brackets named apart from the
 stalls. The stages run in that order, the stream, the capture, the pairing,
 and the first that fails stops the reading there, its `stage` named and what
-read before it kept, the guest's side among it, the run invalid; an admitted
+read before it kept, the guest's side and the contract among it, the run
+invalid; an admitted
 or ambiguous pairing is read through the selection (`nu/mod/selection`,
 ProbeRuns' rules), each presented flip's figures (flip-rows), the summary,
 and the slow stretches.
