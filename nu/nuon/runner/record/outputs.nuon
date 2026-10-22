@@ -1,0 +1,13 @@
+[
+    [pattern, sets, repository, model];
+    ["decision.nuon", ["kernel/jointtiming"], "jab-stress", "nu/type/kernel/timing/Decision.nutype"]
+    ["readings.nuon", ["kernel/jointtiming"], "jab-stress", "nu/type/kernel/timing/readings/Readings.nutype"]
+    ["reading.nuon", ["fierce/footprint_levels"], "jab-stress", "nu/type/fierce/footprint/verdicts/Reading.nutype"]
+    ["qualification.nuon", ["fierce/qualification"], "jab-stress", "nu/type/fierce/qualification/record/Qualification.nutype"]
+    ["manifest.nuon", ["jab/justtonu"], "jab-stress", "nu/type/nuance/freshbuild/Manifest.nutype"]
+    ["compare.nuon", ["jab/justtonu"], "jab-stress", "nu/type/nuance/freshbuild/Compare.nutype"]
+    ["report.nuon", ["jab/importmap"], "jab-stress", "nu/type/nuance/importmap/Report.nutype"]
+    ["gauge.nuon", [], "jab", "kit/fierce/nu/type/gauge/report/Gauge.nutype"]
+    ["*/gauge.nuon", [], "jab", "kit/fierce/nu/type/gauge/report/Gauge.nutype"]
+    ["bench/*/gauge.nuon", [], "jab", "kit/fierce/nu/type/gauge/report/Gauge.nutype"]
+]

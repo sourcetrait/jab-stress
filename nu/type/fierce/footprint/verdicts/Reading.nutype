@@ -1,0 +1,53 @@
+record<
+    views: table<
+        pose: string,
+        map: string,
+        judged: int,
+        sensitive: int,
+        clamped: int,
+        iz_min: oneof<int, nothing>,
+        floor_depth: oneof<float, nothing>,
+        population: record<
+            blocks: int,
+            classes: record<
+                judged: int,
+                sky: int,
+                unknown: int,
+                unread: int,
+                actor: int,
+                degenerate: int,
+                no_end: int,
+                unpaired: int
+            >,
+            unresolved: int,
+            sensitive: int,
+            clamped: int,
+            actors: int
+        >,
+        resolved: bool,
+        unresolved: list<string>,
+        declared: record<today: int, candidate: int, candidate_sharper: int, holds: bool>,
+        secant: record<today: int, candidate: int, candidate_sharper: int, holds: bool>,
+        departure: record<new_off: int, own_sharper: int, holds: bool>,
+        blocks: record<
+            levels_differ: int,
+            shared_sharper: int,
+            own_sharper: int,
+            new_off: int,
+            today_own_sharper: int,
+            along_today: record<blocks: int, along_decides: int, ratio: oneof<list<float>, nothing>>,
+            along_candidate: record<blocks: int, along_decides: int, ratio: oneof<list<float>, nothing>>
+        >,
+        today_levels: list<int>,
+        candidate_levels: list<int>,
+        pictures: oneof<record<pixels: int, regions: int, largest: int>, nothing>
+    >,
+    refused: table<pose: string, problems: list<string>>,
+    missing: list<string>,
+    whole: bool,
+    declared_holds: bool,
+    secant_holds: bool,
+    departures_hold: bool,
+    revised_holds: bool,
+    own_sharper: int
+>

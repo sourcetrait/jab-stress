@@ -1,0 +1,2733 @@
+record<
+    target: string, written: string,
+    readers: record<
+        repos: table<repo: string, commit: oneof<string, nothing>, dirty: oneof<bool, nothing>>,
+        runtime: table<role: string, version: string, sha256: oneof<string, nothing>>,
+        executables: table<name: string, sha256: string>
+    >,
+    candidate: record<
+        tag: oneof<string, nothing>, written: string, jab: string, stress: string,
+        stress_checkout: record<dirty: bool, tagged: oneof<string, nothing>>, image_sha256: string,
+        elf_sha256: string, kernel_sha256: string, flags: string,
+        toolchain: record<
+            prefix: string, version: oneof<string, nothing>,
+            tools: record<
+                as: record<path: oneof<string, nothing>, sha256: oneof<string, nothing>>,
+                ld: record<path: oneof<string, nothing>, sha256: oneof<string, nothing>>,
+                objcopy: record<path: oneof<string, nothing>, sha256: oneof<string, nothing>>
+            >
+        >,
+        assets: record<map: string, digest: oneof<string, nothing>>,
+        builds: record<
+            service: record<
+                set: string, tree: string, flags: string, image_sha256: oneof<string, nothing>,
+                elf_sha256: oneof<string, nothing>, kernel_sha256: oneof<string, nothing>
+            >,
+            debug: record<
+                set: string, tree: string, flags: string, image_sha256: oneof<string, nothing>,
+                elf_sha256: oneof<string, nothing>, kernel_sha256: oneof<string, nothing>
+            >
+        >,
+        file: string, sha256: string
+    >,
+    spec: record<name: string, cores: int, ram_bytes: int, display: record<width: int, height: int>, fps: int>,
+    bench: record<
+        dir: string, bench: oneof<string, nothing>, stamp: oneof<string, nothing>,
+        state: oneof<string, nothing>, file: oneof<string, nothing>,
+        package: oneof<
+            record<file: string, sha256: oneof<string, nothing>, elf_sha256: oneof<string, nothing>>,
+            nothing
+        >,
+        steps: table<
+            label: string, state: string, exit: oneof<int, nothing>, seconds: oneof<float, nothing>,
+            run: list<string>, gauge: oneof<string, nothing>, gauge_sha256: oneof<string, nothing>
+        >,
+        problems: list<string>
+    >,
+    conditions: record<
+        hosts: list<oneof<string, nothing>>,
+        qemus: table<version: oneof<string, nothing>, sha256: oneof<string, nothing>>,
+        backends: table<case: string, backends: table<window: oneof<string, nothing>, audio: string>>,
+        problems: list<string>
+    >,
+    hosts: record<
+        hosts: list<oneof<
+            record<
+                os: string, name: oneof<string, nothing>, os_version: oneof<string, nothing>,
+                kernel_version: oneof<string, nothing>, hostname: oneof<string, nothing>,
+                cpu: oneof<string, nothing>, cores: int, memory: oneof<filesize, nothing>
+            >,
+            nothing
+        >>,
+        qemus: list<oneof<
+            record<binary: string, version: oneof<string, nothing>, sha256: oneof<string, nothing>>, nothing
+        >>,
+        toolchains: list<oneof<
+            record<
+                prefix: oneof<string, nothing>, assembler: oneof<string, nothing>, link: oneof<string, nothing>,
+                tools: oneof<
+                    record<
+                        as: record<path: oneof<string, nothing>, sha256: oneof<string, nothing>>,
+                        ld: record<path: oneof<string, nothing>, sha256: oneof<string, nothing>>,
+                        objcopy: record<path: oneof<string, nothing>, sha256: oneof<string, nothing>>
+                    >,
+                    nothing
+                >
+            >,
+            nothing
+        >>,
+        machines: list<oneof<
+            oneof<
+                record<
+                    harts: int, ram_gib: int,
+                    spec: record<name: string, cores: int, ram_gib: int, display: record<width: int, height: int>>,
+                    diagnostic: nothing, machine: string, cpu: string, accel: string, overrides: list<string>
+                >,
+                record<
+                    harts: int, ram_gib: int, spec: nothing, diagnostic: record<harts: int, ram_gib: int>,
+                    machine: string, cpu: string, accel: string, overrides: list<string>
+                >,
+                record<
+                    harts: int, ram_gib: int,
+                    spec: record<name: string, cores: int, ram_gib: int, display: record<width: int, height: int>>,
+                    diagnostic: nothing, machine: string, cpu: string, accel: string, overrides: list<string>,
+                    below_minimum: bool
+                >,
+                record<
+                    harts: int, ram_gib: int, spec: nothing, diagnostic: record<harts: int, ram_gib: int>,
+                    machine: string, cpu: string, accel: string, overrides: list<string>, below_minimum: bool
+                >
+            >,
+            nothing
+        >>
+    >,
+    watch: oneof<
+        record<
+            bench: string, run: string, dir: string, state: string,
+            steps: oneof<
+                table<
+                    label: string, attend: oneof<string, nothing>, gate: bool, run: list<string>, state: string,
+                    exit: oneof<int, nothing>, seconds: oneof<float, nothing>
+                >,
+                nothing
+            >,
+            report: oneof<
+                record<
+                    bench: oneof<string, nothing>, stamp: oneof<string, nothing>, dir: string,
+                    steps: table<label: string, state: oneof<string, nothing>, file: oneof<string, nothing>>,
+                    runs: table<
+                        label: string, run: int, seed: oneof<int, nothing>, kind: string, selection: string,
+                        cadence: oneof<int, nothing>, workers: oneof<int, nothing>, grain: oneof<int, nothing>,
+                        period_us: float,
+                        machine: oneof<
+                            oneof<
+                                record<
+                                    harts: int, ram_gib: int,
+                                    spec: record<name: string, cores: int, ram_gib: int, display: record<width: int, height: int>>,
+                                    diagnostic: nothing, machine: string, cpu: string, accel: string, overrides: list<string>
+                                >,
+                                record<
+                                    harts: int, ram_gib: int, spec: nothing, diagnostic: record<harts: int, ram_gib: int>,
+                                    machine: string, cpu: string, accel: string, overrides: list<string>
+                                >,
+                                record<
+                                    harts: int, ram_gib: int,
+                                    spec: record<name: string, cores: int, ram_gib: int, display: record<width: int, height: int>>,
+                                    diagnostic: nothing, machine: string, cpu: string, accel: string, overrides: list<string>,
+                                    below_minimum: bool
+                                >,
+                                record<
+                                    harts: int, ram_gib: int, spec: nothing, diagnostic: record<harts: int, ram_gib: int>,
+                                    machine: string, cpu: string, accel: string, overrides: list<string>, below_minimum: bool
+                                >
+                            >,
+                            nothing
+                        >,
+                        qemu: oneof<string, nothing>, standing: string, reasons: list<string>
+                    >,
+                    groups: table<
+                        kind: string,
+                        cadences: table<
+                            cadence: oneof<int, nothing>, period_us: float, steps: list<string>, runs: int, valid: int,
+                            standings: table<label: string, run: int, standing: string, reasons: list<string>>,
+                            cpu_over_wall: list<oneof<float, nothing>>,
+                            cpu_left: table<label: string, run: int, why: string>,
+                            outcomes: table<
+                                label: string, run: int,
+                                outcomes: oneof<
+                                    record<
+                                        rounds: table<met: string, count: int>, androids: table<event: string, count: int>, struck: int,
+                                        pickups: int, sectors: table<leg: string, sectors: list<int>>
+                                    >,
+                                    nothing
+                                >
+                            >,
+                            frames: oneof<
+                                record<frames: int>,
+                                record<
+                                    frames: int, presented: int,
+                                    acceptance: record<
+                                        count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                                        p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                                    >,
+                                    completion: record<
+                                        count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                        p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                    >,
+                                    call_interval: record<
+                                        count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                        p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                    >,
+                                    grid: table<periods: int, intervals: int>, off_grid: int, unknown_calls: int,
+                                    submission_age: record<
+                                        count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                        p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                    >,
+                                    critical: record<
+                                        count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                        p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                    >,
+                                    draw: record<
+                                        count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                        p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                    >,
+                                    wait: record<
+                                        count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                        p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                    >,
+                                    pacing: record<
+                                        count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                        p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                    >,
+                                    await: record<
+                                        count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                        p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                    >,
+                                    wakes: int, attempts: int, refusals: int, flips_early: int, flips_failed: int, over: int,
+                                    fast: int, fast_waited: int, catch_up: int
+                                >
+                            >,
+                            apart: table<
+                                label: string, run: int, standing: string, reasons: list<string>,
+                                cpu_over_wall: oneof<float, nothing>,
+                                frames: oneof<
+                                    record<frames: int>,
+                                    record<
+                                        frames: int, presented: int,
+                                        acceptance: record<
+                                            count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                                            p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                                        >,
+                                        completion: record<
+                                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                        >,
+                                        call_interval: record<
+                                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                        >,
+                                        grid: table<periods: int, intervals: int>, off_grid: int, unknown_calls: int,
+                                        submission_age: record<
+                                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                        >,
+                                        critical: record<
+                                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                        >,
+                                        draw: record<
+                                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                        >,
+                                        wait: record<
+                                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                        >,
+                                        pacing: record<
+                                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                        >,
+                                        await: record<
+                                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                        >,
+                                        wakes: int, attempts: int, refusals: int, flips_early: int, flips_failed: int, over: int,
+                                        fast: int, fast_waited: int, catch_up: int
+                                    >
+                                >
+                            >
+                        >
+                    >,
+                    compared: list<oneof<
+                        record<field: string, error: string>,
+                        record<
+                            field: string, diagnostic: bool,
+                            table: table<
+                                build: string, leg: string, route: oneof<string, nothing>, selection: string,
+                                machine: oneof<
+                                    oneof<
+                                        record<
+                                            harts: int, ram_gib: int,
+                                            spec: record<name: string, cores: int, ram_gib: int, display: record<width: int, height: int>>,
+                                            diagnostic: nothing, machine: string, cpu: string, accel: string, overrides: list<string>
+                                        >,
+                                        record<
+                                            harts: int, ram_gib: int, spec: nothing, diagnostic: record<harts: int, ram_gib: int>,
+                                            machine: string, cpu: string, accel: string, overrides: list<string>
+                                        >,
+                                        record<
+                                            harts: int, ram_gib: int,
+                                            spec: record<name: string, cores: int, ram_gib: int, display: record<width: int, height: int>>,
+                                            diagnostic: nothing, machine: string, cpu: string, accel: string, overrides: list<string>,
+                                            below_minimum: bool
+                                        >,
+                                        record<
+                                            harts: int, ram_gib: int, spec: nothing, diagnostic: record<harts: int, ram_gib: int>,
+                                            machine: string, cpu: string, accel: string, overrides: list<string>, below_minimum: bool
+                                        >
+                                    >,
+                                    nothing
+                                >,
+                                probed: bool, value_us: oneof<float, nothing>, half_spread_us: oneof<float, nothing>,
+                                batches: int, missing: int, standings: list<string>
+                            >
+                        >,
+                        record<
+                            field: string, diagnostic: bool, refused: string,
+                            table: table<
+                                build: string, leg: string, route: oneof<string, nothing>, selection: string,
+                                machine: oneof<
+                                    oneof<
+                                        record<
+                                            harts: int, ram_gib: int,
+                                            spec: record<name: string, cores: int, ram_gib: int, display: record<width: int, height: int>>,
+                                            diagnostic: nothing, machine: string, cpu: string, accel: string, overrides: list<string>
+                                        >,
+                                        record<
+                                            harts: int, ram_gib: int, spec: nothing, diagnostic: record<harts: int, ram_gib: int>,
+                                            machine: string, cpu: string, accel: string, overrides: list<string>
+                                        >,
+                                        record<
+                                            harts: int, ram_gib: int,
+                                            spec: record<name: string, cores: int, ram_gib: int, display: record<width: int, height: int>>,
+                                            diagnostic: nothing, machine: string, cpu: string, accel: string, overrides: list<string>,
+                                            below_minimum: bool
+                                        >,
+                                        record<
+                                            harts: int, ram_gib: int, spec: nothing, diagnostic: record<harts: int, ram_gib: int>,
+                                            machine: string, cpu: string, accel: string, overrides: list<string>, below_minimum: bool
+                                        >
+                                    >,
+                                    nothing
+                                >,
+                                probed: bool, value_us: oneof<float, nothing>, half_spread_us: oneof<float, nothing>,
+                                batches: int, missing: int, standings: list<string>
+                            >
+                        >
+                    >>,
+                    services: table<
+                        label: string, run: int,
+                        service: record<
+                            frames: int, running: int,
+                            answers: table<states: int, status: int, harts: int, generation: int, start: bool>,
+                            started: bool, refusals: list<int>,
+                            windows: table<
+                                generation: int, started: oneof<int, nothing>, stopped: int, valid: bool, forced: bool,
+                                offered: int, applied: int, dropped: int, rejected: int, discarded: int, skipped: int,
+                                corrupted: int, last: int, published: int, expected: int, applied_chain: oneof<int, nothing>,
+                                gaps: oneof<int, nothing>, frames: int, seconds: oneof<float, nothing>,
+                                per_frame: oneof<float, nothing>, per_second: oneof<float, nothing>,
+                                apply: record<
+                                    count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                    p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                >,
+                                age: record<
+                                    count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                    p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                >,
+                                depth_max: oneof<int, nothing>, problems: list<string>
+                            >,
+                            skipped: int, reduced: bool,
+                            apply: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            problems: list<string>
+                        >
+                    >,
+                    audio: table<
+                        label: string, run: int, standing: string,
+                        reading: oneof<
+                            record<
+                                sent: int, trace_listed: bool, queue_full: int, complaints: list<string>,
+                                status: oneof<int, nothing>, faults: list<string>, pads: int,
+                                pad: oneof<record<accepted: int, taken: int, dropped: int>, nothing>, sounds: int,
+                                sound: oneof<record<submitted: int, returned: int, failed: int, exhausted: int>, nothing>,
+                                recorded: bool,
+                                windows: oneof<
+                                    record<
+                                        windows: int, first: oneof<int, nothing>, heard_from: oneof<float, nothing>, reached: bool,
+                                        read: int, quiet: list<int>, first_peaks: list<int>
+                                    >,
+                                    nothing
+                                >,
+                                problems: list<string>
+                            >,
+                            nothing
+                        >
+                    >
+                >,
+                nothing
+            >,
+            watch: table<
+                step: string, n: int, pid: int, file: string,
+                watch: oneof<
+                    record<
+                        run: record<
+                            os: string, arch: string, qemu: string, harts: oneof<int, nothing>, machine: string, cpu: string,
+                            accel: string, window: string, kernel: string, symbols: list<string>, pid: int, started: string
+                        >,
+                        skipped: float, seconds: float, samples: int, tcg: oneof<string, nothing>, process: float,
+                        threads: table<name: string, id: string, steady: float, peak: oneof<float, nothing>, stable: bool>,
+                        memory: oneof<record<median: int, peak: int, samples: int>, nothing>
+                    >,
+                    record<error: string>
+                >
+            >
+        >,
+        nothing
+    >,
+    ram: record<installed_bytes: int, window_bytes: oneof<int, nothing>>,
+    runs: list<oneof<
+        record<
+            step: string, run: int, seed: oneof<int, nothing>, build: oneof<string, nothing>,
+            kind: oneof<string, nothing>, selection: string, cadence: oneof<int, nothing>,
+            workers: oneof<int, nothing>, grain: oneof<int, nothing>, standing: string,
+            reasons: list<string>, probed: bool, dir: oneof<string, nothing>, bundle: oneof<string, nothing>,
+            identity: record<
+                from: string, binding: oneof<string, nothing>, file: oneof<string, nothing>,
+                sha256: oneof<string, nothing>, tree: oneof<string, nothing>, flags: oneof<string, nothing>,
+                image_sha256: oneof<string, nothing>, elf_sha256: oneof<string, nothing>,
+                kernel_sha256: oneof<string, nothing>,
+                assets: record<map: oneof<string, nothing>, digest: oneof<string, nothing>>,
+                workspace: oneof<record<dir: string, commit: string, dirty: bool>, nothing>,
+                program: oneof<
+                    record<
+                        dir: string, commit: oneof<string, nothing>, dirty: oneof<bool, nothing>,
+                        from: oneof<string, nothing>
+                    >,
+                    nothing
+                >,
+                machine: oneof<
+                    oneof<
+                        record<
+                            harts: int, ram_gib: int,
+                            spec: record<name: string, cores: int, ram_gib: int, display: record<width: int, height: int>>,
+                            diagnostic: nothing, machine: string, cpu: string, accel: string, overrides: list<string>
+                        >,
+                        record<
+                            harts: int, ram_gib: int, spec: nothing, diagnostic: record<harts: int, ram_gib: int>,
+                            machine: string, cpu: string, accel: string, overrides: list<string>
+                        >,
+                        record<
+                            harts: int, ram_gib: int,
+                            spec: record<name: string, cores: int, ram_gib: int, display: record<width: int, height: int>>,
+                            diagnostic: nothing, machine: string, cpu: string, accel: string, overrides: list<string>,
+                            below_minimum: bool
+                        >,
+                        record<
+                            harts: int, ram_gib: int, spec: nothing, diagnostic: record<harts: int, ram_gib: int>,
+                            machine: string, cpu: string, accel: string, overrides: list<string>, below_minimum: bool
+                        >
+                    >,
+                    nothing
+                >,
+                overrides: list<string>, cap: oneof<int, nothing>,
+                qemu: oneof<
+                    record<binary: string, version: oneof<string, nothing>, sha256: oneof<string, nothing>>, nothing
+                >,
+                toolchain: oneof<
+                    record<
+                        prefix: oneof<string, nothing>, assembler: oneof<string, nothing>, link: oneof<string, nothing>,
+                        tools: oneof<
+                            record<
+                                as: record<path: oneof<string, nothing>, sha256: oneof<string, nothing>>,
+                                ld: record<path: oneof<string, nothing>, sha256: oneof<string, nothing>>,
+                                objcopy: record<path: oneof<string, nothing>, sha256: oneof<string, nothing>>
+                            >,
+                            nothing
+                        >
+                    >,
+                    nothing
+                >,
+                host: oneof<
+                    record<
+                        os: string, name: oneof<string, nothing>, os_version: oneof<string, nothing>,
+                        kernel_version: oneof<string, nothing>, hostname: oneof<string, nothing>,
+                        cpu: oneof<string, nothing>, cores: int, memory: oneof<filesize, nothing>
+                    >,
+                    nothing
+                >,
+                mode: oneof<
+                    oneof<
+                        record<
+                            window: bool, sound: string, pad: string, seed: int, cadence: int, workers: oneof<int, nothing>,
+                            grain: oneof<int, nothing>, end: duration, capture: duration, service: oneof<int, nothing>
+                        >,
+                        record<
+                            window: bool, sound: string, pad: string, seed: int, cadence: int, workers: oneof<int, nothing>,
+                            grain: oneof<int, nothing>, end: duration, capture: duration
+                        >,
+                        record<
+                            window: bool, sound: string, pad: string, seed: nothing, cadence: nothing, workers: nothing,
+                            grain: nothing, end: duration, capture: duration, service: nothing
+                        >
+                    >,
+                    nothing
+                >,
+                shim: string, capture_nonce: oneof<int, nothing>
+            >,
+            agreement: list<string>, conditions: list<string>,
+            backend: record<window: oneof<string, nothing>, audio: string>,
+            measured: oneof<
+                record<
+                    clocked: bool, schema: oneof<int, nothing>, complete: bool, final: oneof<int, nothing>,
+                    problems: list<string>, valid: bool, invalid: list<string>, seeded: bool, late_seed: bool,
+                    cadence_set: bool, late_cadence: bool, cadences: list<int>, workers_set: bool,
+                    late_workers: bool, nonce_set: bool, late_nonce: bool,
+                    load: oneof<
+                        record<
+                            title_stamp: int, title_end_us: int, clear_stamp: int, clear_end_us: int, title_ordinal: int,
+                            clear_ordinal: int, nonce: int, schema: int, arrival_states: int
+                        >,
+                        nothing
+                    >,
+                    bounds: oneof<
+                        record<
+                            title_start: int, title_end: int, clear_start: int, clear_end: int, origin: int, schema: int,
+                            arrival_states: int, arrival_loads: int
+                        >,
+                        nothing
+                    >,
+                    acceptance: record<available: bool, reason: oneof<string, nothing>>,
+                    contract: oneof<
+                        record<
+                            eps: int, period: int, available: bool, reason: string, k_violations: nothing,
+                            k_first: table<index: int, witness: int, gap: int, bound: int, frame: int, witness_frame: int>,
+                            late_wakes: nothing, catch_ups: nothing
+                        >,
+                        record<
+                            eps: int, period: int, available: bool, reason: nothing, k_violations: int,
+                            k_first: table<index: int, witness: int, gap: int, bound: int, frame: int, witness_frame: int>,
+                            late_wakes: int, catch_ups: int
+                        >
+                    >,
+                    workers: list<int>, grains: list<int>, grants: list<int>, actives: list<int>, period_us: float,
+                    frames: int, past_window: int, under: oneof<bool, nothing>, over: oneof<int, nothing>,
+                    whole: oneof<
+                        record<
+                            leg: string, frames: int, entries: int,
+                            draw: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            game: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >
+                        >,
+                        record<
+                            leg: string, frames: int, entries: int,
+                            draw: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            game: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            over: int, fast: int, fast_waited: int,
+                            wait: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            pacing: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            submission_age: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            wakes: int, wait_presses: int, attempts: int, refusals: int,
+                            critical: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hud: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            mix: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flip: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            report: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            await: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flips_early: int, flips_failed: int,
+                            completion_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            acceptance_interval: record<
+                                count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                                p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                            >,
+                            latency: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            parts_unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            clear: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            portals: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            planes: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            walls: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            sprites: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles_built: int, building_frames: int, tiled_pixels: int, fallback_pixels: int,
+                            tile_bytes_max: int, tile_peak: int, tile_resets: int, spans_max: int, spans_over: int,
+                            misaligned: int,
+                            preparation: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            raster: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            commands: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flushes: int, invalidated: int, packet_bytes_max: oneof<int, nothing>, workers: list<int>,
+                            grains: list<int>, grants: list<int>, actives: list<int>,
+                            slowest: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            busy: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            dispatch: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            barrier: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            admitted: int, dropped: int, filtered: int, merged: int, unprocessed: int, evicted: int,
+                            build: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            overrun: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hit_blocks: int, straddling_blocks: int, missed_blocks: int, slots_used_max: oneof<int, nothing>,
+                            ring_fill_max: oneof<int, nothing>, memory_peak: oneof<int, nothing>
+                        >,
+                        record<
+                            leg: string, frames: int, entries: int,
+                            draw: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            game: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            over: int, fast: int, fast_waited: int,
+                            wait: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            pacing: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            submission_age: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            wakes: int, wait_presses: int, attempts: int, refusals: int,
+                            critical: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hud: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            mix: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flip: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            report: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            await: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flips_early: int, flips_failed: int,
+                            completion_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            acceptance_interval: record<
+                                count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                                p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                            >,
+                            latency: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            parts_unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            clear: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            portals: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            planes: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            walls: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            sprites: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles_built: int, building_frames: int, tiled_pixels: int, fallback_pixels: int,
+                            tile_bytes_max: int, tile_peak: int, tile_resets: int, spans_max: int, spans_over: int,
+                            misaligned: int,
+                            preparation: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            raster: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            commands: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flushes: int, invalidated: int, packet_bytes_max: oneof<int, nothing>, workers: list<int>,
+                            grains: list<int>, grants: list<int>, actives: list<int>,
+                            slowest: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            busy: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            dispatch: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            barrier: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            admitted: int, dropped: int, filtered: int, merged: int, unprocessed: int, evicted: int,
+                            build: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            overrun: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hit_blocks: int, straddling_blocks: int, missed_blocks: int, slots_used_max: oneof<int, nothing>,
+                            ring_fill_max: oneof<int, nothing>, memory_peak: oneof<int, nothing>,
+                            service: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            service_applied: int, service_depth_max: oneof<int, nothing>,
+                            service_skipped: oneof<int, nothing>
+                        >
+                    >,
+                    legs: list<oneof<
+                        record<
+                            leg: string, frames: int, entries: int,
+                            draw: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            game: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >
+                        >,
+                        record<
+                            leg: string, frames: int, entries: int,
+                            draw: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            game: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            over: int, fast: int, fast_waited: int,
+                            wait: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            pacing: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            submission_age: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            wakes: int, wait_presses: int, attempts: int, refusals: int,
+                            critical: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hud: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            mix: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flip: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            report: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            await: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flips_early: int, flips_failed: int,
+                            completion_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            acceptance_interval: record<
+                                count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                                p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                            >,
+                            latency: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            parts_unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            clear: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            portals: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            planes: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            walls: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            sprites: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles_built: int, building_frames: int, tiled_pixels: int, fallback_pixels: int,
+                            tile_bytes_max: int, tile_peak: int, tile_resets: int, spans_max: int, spans_over: int,
+                            misaligned: int,
+                            preparation: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            raster: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            commands: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flushes: int, invalidated: int, packet_bytes_max: oneof<int, nothing>, workers: list<int>,
+                            grains: list<int>, grants: list<int>, actives: list<int>,
+                            slowest: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            busy: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            dispatch: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            barrier: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            admitted: int, dropped: int, filtered: int, merged: int, unprocessed: int, evicted: int,
+                            build: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            overrun: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hit_blocks: int, straddling_blocks: int, missed_blocks: int, slots_used_max: oneof<int, nothing>,
+                            ring_fill_max: oneof<int, nothing>, memory_peak: oneof<int, nothing>
+                        >,
+                        record<
+                            leg: string, frames: int, entries: int,
+                            draw: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            game: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            over: int, fast: int, fast_waited: int,
+                            wait: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            pacing: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            submission_age: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            wakes: int, wait_presses: int, attempts: int, refusals: int,
+                            critical: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hud: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            mix: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flip: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            report: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            await: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flips_early: int, flips_failed: int,
+                            completion_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            acceptance_interval: record<
+                                count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                                p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                            >,
+                            latency: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            parts_unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            clear: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            portals: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            planes: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            walls: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            sprites: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles_built: int, building_frames: int, tiled_pixels: int, fallback_pixels: int,
+                            tile_bytes_max: int, tile_peak: int, tile_resets: int, spans_max: int, spans_over: int,
+                            misaligned: int,
+                            preparation: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            raster: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            commands: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flushes: int, invalidated: int, packet_bytes_max: oneof<int, nothing>, workers: list<int>,
+                            grains: list<int>, grants: list<int>, actives: list<int>,
+                            slowest: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            busy: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            dispatch: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            barrier: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            admitted: int, dropped: int, filtered: int, merged: int, unprocessed: int, evicted: int,
+                            build: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            overrun: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hit_blocks: int, straddling_blocks: int, missed_blocks: int, slots_used_max: oneof<int, nothing>,
+                            ring_fill_max: oneof<int, nothing>, memory_peak: oneof<int, nothing>,
+                            service: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            service_applied: int, service_depth_max: oneof<int, nothing>,
+                            service_skipped: oneof<int, nothing>
+                        >
+                    >>,
+                    outliers: table<frame: int, leg: string, phases: table<phase: string, us: int, median: int>, critical_us: int>,
+                    outcomes: record<
+                        rounds: table<met: string, count: int>, androids: table<event: string, count: int>, struck: int,
+                        pickups: int, sectors: table<leg: string, sectors: list<int>>
+                    >,
+                    rounds: table<frame: int, rounds: int, cancelled: int>,
+                    service: oneof<
+                        record<
+                            frames: int, running: int,
+                            answers: table<states: int, status: int, harts: int, generation: int, start: bool>,
+                            started: bool, refusals: list<int>,
+                            windows: table<
+                                generation: int, started: oneof<int, nothing>, stopped: int, valid: bool, forced: bool,
+                                offered: int, applied: int, dropped: int, rejected: int, discarded: int, skipped: int,
+                                corrupted: int, last: int, published: int, expected: int, applied_chain: oneof<int, nothing>,
+                                gaps: oneof<int, nothing>, frames: int, seconds: oneof<float, nothing>,
+                                per_frame: oneof<float, nothing>, per_second: oneof<float, nothing>,
+                                apply: record<
+                                    count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                    p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                >,
+                                age: record<
+                                    count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                    p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                >,
+                                depth_max: oneof<int, nothing>, problems: list<string>
+                            >,
+                            skipped: int, reduced: bool,
+                            apply: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            problems: list<string>
+                        >,
+                        nothing
+                    >
+                >,
+                nothing
+            >,
+            cpu: oneof<
+                record<
+                    whole: oneof<
+                        record<
+                            window: string, requested_from: float, requested_to: float, missing: bool,
+                            from: oneof<float, nothing>, to: oneof<float, nothing>, interval: nothing,
+                            threads: table<
+                                id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                            >
+                        >,
+                        record<
+                            window: string, requested_from: float, requested_to: float, missing: bool, from: float,
+                            to: float, interval: float,
+                            threads: table<
+                                id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                            >
+                        >
+                    >,
+                    legs: list<oneof<
+                        record<
+                            window: string, requested_from: float, requested_to: float, missing: bool,
+                            from: oneof<float, nothing>, to: oneof<float, nothing>, interval: nothing,
+                            threads: table<
+                                id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                            >,
+                            subwindows: list<oneof<
+                                record<
+                                    window: string, requested_from: float, requested_to: float, missing: bool,
+                                    from: oneof<float, nothing>, to: oneof<float, nothing>, interval: nothing,
+                                    threads: table<
+                                        id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                                    >
+                                >,
+                                record<
+                                    window: string, requested_from: float, requested_to: float, missing: bool, from: float,
+                                    to: float, interval: float,
+                                    threads: table<
+                                        id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                                    >
+                                >
+                            >>
+                        >,
+                        record<
+                            window: string, requested_from: float, requested_to: float, missing: bool, from: float,
+                            to: float, interval: float,
+                            threads: table<
+                                id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                            >,
+                            subwindows: list<oneof<
+                                record<
+                                    window: string, requested_from: float, requested_to: float, missing: bool,
+                                    from: oneof<float, nothing>, to: oneof<float, nothing>, interval: nothing,
+                                    threads: table<
+                                        id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                                    >
+                                >,
+                                record<
+                                    window: string, requested_from: float, requested_to: float, missing: bool, from: float,
+                                    to: float, interval: float,
+                                    threads: table<
+                                        id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                                    >
+                                >
+                            >>
+                        >
+                    >>
+                >,
+                nothing
+            >,
+            audio: oneof<
+                record<
+                    sent: int, trace_listed: bool, queue_full: int, complaints: list<string>,
+                    status: oneof<int, nothing>, faults: list<string>, pads: int,
+                    pad: oneof<record<accepted: int, taken: int, dropped: int>, nothing>, sounds: int,
+                    sound: oneof<record<submitted: int, returned: int, failed: int, exhausted: int>, nothing>,
+                    recorded: bool,
+                    windows: oneof<
+                        record<
+                            windows: int, first: oneof<int, nothing>, heard_from: oneof<float, nothing>, reached: bool,
+                            read: int, quiet: list<int>, first_peaks: list<int>
+                        >,
+                        nothing
+                    >,
+                    problems: list<string>
+                >,
+                nothing
+            >
+        >,
+        record<
+            step: string, run: int, seed: oneof<int, nothing>, build: oneof<string, nothing>,
+            kind: oneof<string, nothing>, selection: string, cadence: oneof<int, nothing>,
+            workers: oneof<int, nothing>, grain: oneof<int, nothing>, standing: string,
+            reasons: list<string>, probed: bool, dir: oneof<string, nothing>, bundle: oneof<string, nothing>,
+            identity: record<
+                from: string, binding: oneof<string, nothing>, file: oneof<string, nothing>,
+                sha256: oneof<string, nothing>, tree: oneof<string, nothing>, flags: oneof<string, nothing>,
+                image_sha256: oneof<string, nothing>, elf_sha256: oneof<string, nothing>,
+                kernel_sha256: oneof<string, nothing>,
+                assets: record<map: oneof<string, nothing>, digest: oneof<string, nothing>>,
+                workspace: oneof<record<dir: string, commit: string, dirty: bool>, nothing>,
+                program: oneof<
+                    record<
+                        dir: string, commit: oneof<string, nothing>, dirty: oneof<bool, nothing>,
+                        from: oneof<string, nothing>
+                    >,
+                    nothing
+                >,
+                machine: oneof<
+                    oneof<
+                        record<
+                            harts: int, ram_gib: int,
+                            spec: record<name: string, cores: int, ram_gib: int, display: record<width: int, height: int>>,
+                            diagnostic: nothing, machine: string, cpu: string, accel: string, overrides: list<string>
+                        >,
+                        record<
+                            harts: int, ram_gib: int, spec: nothing, diagnostic: record<harts: int, ram_gib: int>,
+                            machine: string, cpu: string, accel: string, overrides: list<string>
+                        >,
+                        record<
+                            harts: int, ram_gib: int,
+                            spec: record<name: string, cores: int, ram_gib: int, display: record<width: int, height: int>>,
+                            diagnostic: nothing, machine: string, cpu: string, accel: string, overrides: list<string>,
+                            below_minimum: bool
+                        >,
+                        record<
+                            harts: int, ram_gib: int, spec: nothing, diagnostic: record<harts: int, ram_gib: int>,
+                            machine: string, cpu: string, accel: string, overrides: list<string>, below_minimum: bool
+                        >
+                    >,
+                    nothing
+                >,
+                overrides: list<string>, cap: oneof<int, nothing>,
+                qemu: oneof<
+                    record<binary: string, version: oneof<string, nothing>, sha256: oneof<string, nothing>>, nothing
+                >,
+                toolchain: oneof<
+                    record<
+                        prefix: oneof<string, nothing>, assembler: oneof<string, nothing>, link: oneof<string, nothing>,
+                        tools: oneof<
+                            record<
+                                as: record<path: oneof<string, nothing>, sha256: oneof<string, nothing>>,
+                                ld: record<path: oneof<string, nothing>, sha256: oneof<string, nothing>>,
+                                objcopy: record<path: oneof<string, nothing>, sha256: oneof<string, nothing>>
+                            >,
+                            nothing
+                        >
+                    >,
+                    nothing
+                >,
+                host: oneof<
+                    record<
+                        os: string, name: oneof<string, nothing>, os_version: oneof<string, nothing>,
+                        kernel_version: oneof<string, nothing>, hostname: oneof<string, nothing>,
+                        cpu: oneof<string, nothing>, cores: int, memory: oneof<filesize, nothing>
+                    >,
+                    nothing
+                >,
+                mode: oneof<
+                    oneof<
+                        record<
+                            window: bool, sound: string, pad: string, seed: int, cadence: int, workers: oneof<int, nothing>,
+                            grain: oneof<int, nothing>, end: duration, capture: duration, service: oneof<int, nothing>
+                        >,
+                        record<
+                            window: bool, sound: string, pad: string, seed: int, cadence: int, workers: oneof<int, nothing>,
+                            grain: oneof<int, nothing>, end: duration, capture: duration
+                        >,
+                        record<
+                            window: bool, sound: string, pad: string, seed: nothing, cadence: nothing, workers: nothing,
+                            grain: nothing, end: duration, capture: duration, service: nothing
+                        >
+                    >,
+                    nothing
+                >,
+                shim: string, capture_nonce: oneof<int, nothing>
+            >,
+            agreement: list<string>, conditions: list<string>,
+            backend: record<window: oneof<string, nothing>, audio: string>,
+            measured: oneof<
+                record<
+                    clocked: bool, schema: oneof<int, nothing>, complete: bool, final: oneof<int, nothing>,
+                    problems: list<string>, valid: bool, invalid: list<string>, seeded: bool, late_seed: bool,
+                    cadence_set: bool, late_cadence: bool, cadences: list<int>, workers_set: bool,
+                    late_workers: bool, nonce_set: bool, late_nonce: bool,
+                    load: oneof<
+                        record<
+                            title_stamp: int, title_end_us: int, clear_stamp: int, clear_end_us: int, title_ordinal: int,
+                            clear_ordinal: int, nonce: int, schema: int, arrival_states: int
+                        >,
+                        nothing
+                    >,
+                    bounds: oneof<
+                        record<
+                            title_start: int, title_end: int, clear_start: int, clear_end: int, origin: int, schema: int,
+                            arrival_states: int, arrival_loads: int
+                        >,
+                        nothing
+                    >,
+                    acceptance: record<available: bool, reason: oneof<string, nothing>>,
+                    contract: oneof<
+                        record<
+                            eps: int, period: int, available: bool, reason: string, k_violations: nothing,
+                            k_first: table<index: int, witness: int, gap: int, bound: int, frame: int, witness_frame: int>,
+                            late_wakes: nothing, catch_ups: nothing
+                        >,
+                        record<
+                            eps: int, period: int, available: bool, reason: nothing, k_violations: int,
+                            k_first: table<index: int, witness: int, gap: int, bound: int, frame: int, witness_frame: int>,
+                            late_wakes: int, catch_ups: int
+                        >
+                    >,
+                    workers: list<int>, grains: list<int>, grants: list<int>, actives: list<int>, period_us: float,
+                    frames: int, past_window: int, under: oneof<bool, nothing>, over: oneof<int, nothing>,
+                    whole: oneof<
+                        record<
+                            leg: string, frames: int, entries: int,
+                            draw: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            game: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >
+                        >,
+                        record<
+                            leg: string, frames: int, entries: int,
+                            draw: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            game: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            over: int, fast: int, fast_waited: int,
+                            wait: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            pacing: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            submission_age: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            wakes: int, wait_presses: int, attempts: int, refusals: int,
+                            critical: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hud: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            mix: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flip: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            report: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            await: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flips_early: int, flips_failed: int,
+                            completion_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            acceptance_interval: record<
+                                count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                                p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                            >,
+                            latency: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            parts_unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            clear: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            portals: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            planes: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            walls: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            sprites: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles_built: int, building_frames: int, tiled_pixels: int, fallback_pixels: int,
+                            tile_bytes_max: int, tile_peak: int, tile_resets: int, spans_max: int, spans_over: int,
+                            misaligned: int,
+                            preparation: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            raster: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            commands: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flushes: int, invalidated: int, packet_bytes_max: oneof<int, nothing>, workers: list<int>,
+                            grains: list<int>, grants: list<int>, actives: list<int>,
+                            slowest: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            busy: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            dispatch: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            barrier: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            admitted: int, dropped: int, filtered: int, merged: int, unprocessed: int, evicted: int,
+                            build: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            overrun: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hit_blocks: int, straddling_blocks: int, missed_blocks: int, slots_used_max: oneof<int, nothing>,
+                            ring_fill_max: oneof<int, nothing>, memory_peak: oneof<int, nothing>
+                        >,
+                        record<
+                            leg: string, frames: int, entries: int,
+                            draw: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            game: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            over: int, fast: int, fast_waited: int,
+                            wait: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            pacing: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            submission_age: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            wakes: int, wait_presses: int, attempts: int, refusals: int,
+                            critical: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hud: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            mix: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flip: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            report: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            await: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flips_early: int, flips_failed: int,
+                            completion_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            acceptance_interval: record<
+                                count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                                p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                            >,
+                            latency: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            parts_unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            clear: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            portals: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            planes: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            walls: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            sprites: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles_built: int, building_frames: int, tiled_pixels: int, fallback_pixels: int,
+                            tile_bytes_max: int, tile_peak: int, tile_resets: int, spans_max: int, spans_over: int,
+                            misaligned: int,
+                            preparation: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            raster: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            commands: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flushes: int, invalidated: int, packet_bytes_max: oneof<int, nothing>, workers: list<int>,
+                            grains: list<int>, grants: list<int>, actives: list<int>,
+                            slowest: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            busy: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            dispatch: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            barrier: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            admitted: int, dropped: int, filtered: int, merged: int, unprocessed: int, evicted: int,
+                            build: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            overrun: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hit_blocks: int, straddling_blocks: int, missed_blocks: int, slots_used_max: oneof<int, nothing>,
+                            ring_fill_max: oneof<int, nothing>, memory_peak: oneof<int, nothing>,
+                            service: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            service_applied: int, service_depth_max: oneof<int, nothing>,
+                            service_skipped: oneof<int, nothing>
+                        >
+                    >,
+                    legs: list<oneof<
+                        record<
+                            leg: string, frames: int, entries: int,
+                            draw: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            game: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >
+                        >,
+                        record<
+                            leg: string, frames: int, entries: int,
+                            draw: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            game: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            over: int, fast: int, fast_waited: int,
+                            wait: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            pacing: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            submission_age: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            wakes: int, wait_presses: int, attempts: int, refusals: int,
+                            critical: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hud: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            mix: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flip: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            report: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            await: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flips_early: int, flips_failed: int,
+                            completion_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            acceptance_interval: record<
+                                count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                                p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                            >,
+                            latency: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            parts_unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            clear: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            portals: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            planes: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            walls: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            sprites: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles_built: int, building_frames: int, tiled_pixels: int, fallback_pixels: int,
+                            tile_bytes_max: int, tile_peak: int, tile_resets: int, spans_max: int, spans_over: int,
+                            misaligned: int,
+                            preparation: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            raster: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            commands: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flushes: int, invalidated: int, packet_bytes_max: oneof<int, nothing>, workers: list<int>,
+                            grains: list<int>, grants: list<int>, actives: list<int>,
+                            slowest: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            busy: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            dispatch: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            barrier: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            admitted: int, dropped: int, filtered: int, merged: int, unprocessed: int, evicted: int,
+                            build: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            overrun: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hit_blocks: int, straddling_blocks: int, missed_blocks: int, slots_used_max: oneof<int, nothing>,
+                            ring_fill_max: oneof<int, nothing>, memory_peak: oneof<int, nothing>
+                        >,
+                        record<
+                            leg: string, frames: int, entries: int,
+                            draw: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            game: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            over: int, fast: int, fast_waited: int,
+                            wait: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            pacing: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            submission_age: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            wakes: int, wait_presses: int, attempts: int, refusals: int,
+                            critical: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hud: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            mix: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flip: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            report: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            await: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flips_early: int, flips_failed: int,
+                            completion_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            acceptance_interval: record<
+                                count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                                p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                            >,
+                            latency: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            parts_unattributed: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            clear: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            portals: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            planes: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            walls: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            sprites: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            tiles_built: int, building_frames: int, tiled_pixels: int, fallback_pixels: int,
+                            tile_bytes_max: int, tile_peak: int, tile_resets: int, spans_max: int, spans_over: int,
+                            misaligned: int,
+                            preparation: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            raster: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            commands: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            flushes: int, invalidated: int, packet_bytes_max: oneof<int, nothing>, workers: list<int>,
+                            grains: list<int>, grants: list<int>, actives: list<int>,
+                            slowest: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            busy: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            dispatch: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            barrier: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            admitted: int, dropped: int, filtered: int, merged: int, unprocessed: int, evicted: int,
+                            build: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            overrun: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            hit_blocks: int, straddling_blocks: int, missed_blocks: int, slots_used_max: oneof<int, nothing>,
+                            ring_fill_max: oneof<int, nothing>, memory_peak: oneof<int, nothing>,
+                            service: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            service_applied: int, service_depth_max: oneof<int, nothing>,
+                            service_skipped: oneof<int, nothing>
+                        >
+                    >>,
+                    outliers: table<frame: int, leg: string, phases: table<phase: string, us: int, median: int>, critical_us: int>,
+                    outcomes: record<
+                        rounds: table<met: string, count: int>, androids: table<event: string, count: int>, struck: int,
+                        pickups: int, sectors: table<leg: string, sectors: list<int>>
+                    >,
+                    rounds: table<frame: int, rounds: int, cancelled: int>,
+                    service: oneof<
+                        record<
+                            frames: int, running: int,
+                            answers: table<states: int, status: int, harts: int, generation: int, start: bool>,
+                            started: bool, refusals: list<int>,
+                            windows: table<
+                                generation: int, started: oneof<int, nothing>, stopped: int, valid: bool, forced: bool,
+                                offered: int, applied: int, dropped: int, rejected: int, discarded: int, skipped: int,
+                                corrupted: int, last: int, published: int, expected: int, applied_chain: oneof<int, nothing>,
+                                gaps: oneof<int, nothing>, frames: int, seconds: oneof<float, nothing>,
+                                per_frame: oneof<float, nothing>, per_second: oneof<float, nothing>,
+                                apply: record<
+                                    count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                    p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                >,
+                                age: record<
+                                    count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                    p99: oneof<int, nothing>, max: oneof<int, nothing>
+                                >,
+                                depth_max: oneof<int, nothing>, problems: list<string>
+                            >,
+                            skipped: int, reduced: bool,
+                            apply: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            problems: list<string>
+                        >,
+                        nothing
+                    >
+                >,
+                nothing
+            >,
+            cpu: oneof<
+                record<
+                    whole: oneof<
+                        record<
+                            window: string, requested_from: float, requested_to: float, missing: bool,
+                            from: oneof<float, nothing>, to: oneof<float, nothing>, interval: nothing,
+                            threads: table<
+                                id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                            >
+                        >,
+                        record<
+                            window: string, requested_from: float, requested_to: float, missing: bool, from: float,
+                            to: float, interval: float,
+                            threads: table<
+                                id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                            >
+                        >
+                    >,
+                    legs: list<oneof<
+                        record<
+                            window: string, requested_from: float, requested_to: float, missing: bool,
+                            from: oneof<float, nothing>, to: oneof<float, nothing>, interval: nothing,
+                            threads: table<
+                                id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                            >,
+                            subwindows: list<oneof<
+                                record<
+                                    window: string, requested_from: float, requested_to: float, missing: bool,
+                                    from: oneof<float, nothing>, to: oneof<float, nothing>, interval: nothing,
+                                    threads: table<
+                                        id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                                    >
+                                >,
+                                record<
+                                    window: string, requested_from: float, requested_to: float, missing: bool, from: float,
+                                    to: float, interval: float,
+                                    threads: table<
+                                        id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                                    >
+                                >
+                            >>
+                        >,
+                        record<
+                            window: string, requested_from: float, requested_to: float, missing: bool, from: float,
+                            to: float, interval: float,
+                            threads: table<
+                                id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                            >,
+                            subwindows: list<oneof<
+                                record<
+                                    window: string, requested_from: float, requested_to: float, missing: bool,
+                                    from: oneof<float, nothing>, to: oneof<float, nothing>, interval: nothing,
+                                    threads: table<
+                                        id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                                    >
+                                >,
+                                record<
+                                    window: string, requested_from: float, requested_to: float, missing: bool, from: float,
+                                    to: float, interval: float,
+                                    threads: table<
+                                        id: string, name: string, cpu_seconds: oneof<float, nothing>, utilization: oneof<float, nothing>
+                                    >
+                                >
+                            >>
+                        >
+                    >>
+                >,
+                nothing
+            >,
+            audio: oneof<
+                record<
+                    sent: int, trace_listed: bool, queue_full: int, complaints: list<string>,
+                    status: oneof<int, nothing>, faults: list<string>, pads: int,
+                    pad: oneof<record<accepted: int, taken: int, dropped: int>, nothing>, sounds: int,
+                    sound: oneof<record<submitted: int, returned: int, failed: int, exhausted: int>, nothing>,
+                    recorded: bool,
+                    windows: oneof<
+                        record<
+                            windows: int, first: oneof<int, nothing>, heard_from: oneof<float, nothing>, reached: bool,
+                            read: int, quiet: list<int>, first_peaks: list<int>
+                        >,
+                        nothing
+                    >,
+                    problems: list<string>
+                >,
+                nothing
+            >,
+            verdict: record<
+                pass: bool, median_us: oneof<int, nothing>, ceiling_us: int, under: oneof<bool, nothing>,
+                over: oneof<int, nothing>, frames: oneof<int, nothing>, problems: list<string>
+            >
+        >
+    >>,
+    cases: list<record<
+        case: string, kind: string, steps: list<string>, runs: table<step: string, run: int>,
+        expected: table<run: int, seed: oneof<int, nothing>, step: string>,
+        missing: table<run: int, seed: oneof<int, nothing>, step: string>, problems: list<string>,
+        reading: oneof<
+            record<passed: int, runs: int>,
+            record<
+                passed: int, runs: int,
+                windows: table<
+                    name: string, started: oneof<bool, nothing>, offered: oneof<int, nothing>,
+                    per_frame: oneof<float, nothing>, applied: oneof<int, nothing>, dropped: oneof<int, nothing>,
+                    skipped: oneof<int, nothing>, valid: oneof<bool, nothing>, apply_median_us: oneof<int, nothing>,
+                    apply_max_us: oneof<int, nothing>, age_median_us: oneof<int, nothing>,
+                    median_us: oneof<int, nothing>
+                >
+            >,
+            record<
+                met: bool,
+                runs: table<
+                    name: string, refusals: oneof<list<int>, nothing>, running: oneof<int, nothing>,
+                    median_us: oneof<int, nothing>, problems: list<string>
+                >,
+                problems: list<string>
+            >,
+            record<
+                met: bool,
+                runs: table<
+                    name: string, standing: string,
+                    reading: oneof<
+                        record<
+                            sent: int, trace_listed: bool, queue_full: int, complaints: list<string>,
+                            status: oneof<int, nothing>, faults: list<string>, pads: int,
+                            pad: oneof<record<accepted: int, taken: int, dropped: int>, nothing>, sounds: int,
+                            sound: oneof<record<submitted: int, returned: int, failed: int, exhausted: int>, nothing>,
+                            recorded: bool,
+                            windows: oneof<
+                                record<
+                                    windows: int, first: oneof<int, nothing>, heard_from: oneof<float, nothing>, reached: bool,
+                                    read: int, quiet: list<int>, first_peaks: list<int>
+                                >,
+                                nothing
+                            >,
+                            problems: list<string>
+                        >,
+                        nothing
+                    >,
+                    problems: list<string>
+                >,
+                live: list<string>, problems: list<string>
+            >,
+            record<
+                read: bool, bundles: table<name: string, probed: bool, bundle: oneof<string, nothing>>,
+                runs: list<oneof<
+                    record<label: string, run: int, dir: nothing, stage: string, refusals: list<string>>,
+                    record<
+                        label: string, run: int, dir: string, seed: oneof<int, nothing>, cadence: oneof<int, nothing>,
+                        identity_from: string,
+                        capture: record<
+                            schema: oneof<int, nothing>, complete: bool, valid: bool, frames: int,
+                            under: oneof<bool, nothing>
+                        >,
+                        stage: string, refusals: list<string>
+                    >,
+                    record<
+                        label: string, run: int, dir: string, seed: oneof<int, nothing>, cadence: oneof<int, nothing>,
+                        identity_from: string,
+                        capture: record<
+                            schema: oneof<int, nothing>, complete: bool, valid: bool, frames: int,
+                            under: oneof<bool, nothing>
+                        >,
+                        stage: string, refusals: list<string>,
+                        bundle: record<
+                            profile: string,
+                            run: record<
+                                process: oneof<int, nothing>, nonce: oneof<string, nothing>, capture_nonce: oneof<int, nothing>,
+                                qemu_pid: oneof<int, nothing>, guest_nonce: oneof<int, nothing>
+                            >,
+                            reader: record<
+                                host: oneof<
+                                    record<
+                                        repos: table<repo: string, commit: oneof<string, nothing>, dirty: oneof<bool, nothing>>,
+                                        runtime: table<role: string, version: string, sha256: oneof<string, nothing>>,
+                                        executables: table<name: string, sha256: string>
+                                    >,
+                                    nothing
+                                >,
+                                box: record<
+                                    repos: table<repo: string, commit: oneof<string, nothing>, dirty: oneof<bool, nothing>>,
+                                    runtime: table<role: string, version: string, sha256: oneof<string, nothing>>,
+                                    executables: table<name: string, sha256: string>
+                                >,
+                                same: bool
+                            >,
+                            trace: oneof<
+                                record<
+                                    flushes: int, uploads: int, set_scanouts: int, max_lag_us: oneof<int, nothing>,
+                                    median_lag_us: oneof<int, nothing>, p99_lag_us: oneof<int, nothing>, resolution_us: int,
+                                    open_last: bool, slow: table<upload: int, lag_us: int>
+                                >,
+                                nothing
+                            >
+                        >
+                    >,
+                    record<
+                        label: string, run: int, dir: string, seed: oneof<int, nothing>, cadence: oneof<int, nothing>,
+                        identity_from: string,
+                        capture: record<
+                            schema: oneof<int, nothing>, complete: bool, valid: bool, frames: int,
+                            under: oneof<bool, nothing>
+                        >,
+                        stage: string, refusals: list<string>,
+                        bundle: record<
+                            profile: string,
+                            run: record<
+                                process: oneof<int, nothing>, nonce: oneof<string, nothing>, capture_nonce: oneof<int, nothing>,
+                                qemu_pid: oneof<int, nothing>, guest_nonce: oneof<int, nothing>
+                            >,
+                            reader: record<
+                                host: oneof<
+                                    record<
+                                        repos: table<repo: string, commit: oneof<string, nothing>, dirty: oneof<bool, nothing>>,
+                                        runtime: table<role: string, version: string, sha256: oneof<string, nothing>>,
+                                        executables: table<name: string, sha256: string>
+                                    >,
+                                    nothing
+                                >,
+                                box: record<
+                                    repos: table<repo: string, commit: oneof<string, nothing>, dirty: oneof<bool, nothing>>,
+                                    runtime: table<role: string, version: string, sha256: oneof<string, nothing>>,
+                                    executables: table<name: string, sha256: string>
+                                >,
+                                same: bool
+                            >,
+                            trace: oneof<
+                                record<
+                                    flushes: int, uploads: int, set_scanouts: int, max_lag_us: oneof<int, nothing>,
+                                    median_lag_us: oneof<int, nothing>, p99_lag_us: oneof<int, nothing>, resolution_us: int,
+                                    open_last: bool, slow: table<upload: int, lag_us: int>
+                                >,
+                                nothing
+                            >
+                        >,
+                        flips: record<source: string, origin: record<lo: int, hi: int, width: int>>,
+                        pairing: record<
+                            verdict: string, refusals: table<refusal: string, count: int>,
+                            bracket: oneof<
+                                record<
+                                    status: string, reason: oneof<string, nothing>, drift_ppm: int,
+                                    best: oneof<
+                                        record<
+                                            b: string, b_ppm: float, margin: string, margin_ticks: float, offset_lo_ticks: float,
+                                            offset_hi_ticks: float
+                                        >,
+                                        nothing
+                                    >,
+                                    feasible: oneof<
+                                        record<
+                                            b_lo: string, b_hi: string, b_lo_ppm: float, b_hi_ppm: float, offset_lo_ticks: float,
+                                            offset_hi_ticks: float
+                                        >,
+                                        nothing
+                                    >,
+                                    free: oneof<
+                                        record<feasible: bool, b_lo_ppm: oneof<float, nothing>, b_hi_ppm: oneof<float, nothing>>,
+                                        nothing
+                                    >,
+                                    binding: oneof<record<ceiling: list<int>, floor: list<int>>, nothing>
+                                >,
+                                nothing
+                            >,
+                            shifts: table<name: string, status: string>,
+                            window: oneof<record<first: int, last: int, presents: int, uploads: int>, nothing>,
+                            fit: oneof<record<offset_s: float, drift: float, max_residual_ms: float>, nothing>,
+                            stalls: record<
+                                calls: table<
+                                    ordinal: int, call_ms: float, median_ms: float,
+                                    place: oneof<record<first_ms: float, last_ms: float>, nothing>, bound: oneof<string, nothing>
+                                >,
+                                outer: table<
+                                    ordinal: int, call_ms: float, median_ms: float,
+                                    place: oneof<record<first_ms: float, last_ms: float>, nothing>, bound: oneof<string, nothing>
+                                >
+                            >
+                        >,
+                        k: record<eps: int, period: int, violations: int, first: table<index: int, witness: int, gap: int, bound: int>>
+                    >,
+                    record<
+                        label: string, run: int, dir: string, seed: oneof<int, nothing>, cadence: oneof<int, nothing>,
+                        identity_from: string,
+                        capture: record<
+                            schema: oneof<int, nothing>, complete: bool, valid: bool, frames: int,
+                            under: oneof<bool, nothing>
+                        >,
+                        bundle: record<
+                            profile: string,
+                            run: record<
+                                process: oneof<int, nothing>, nonce: oneof<string, nothing>, capture_nonce: oneof<int, nothing>,
+                                qemu_pid: oneof<int, nothing>, guest_nonce: oneof<int, nothing>
+                            >,
+                            reader: record<
+                                host: oneof<
+                                    record<
+                                        repos: table<repo: string, commit: oneof<string, nothing>, dirty: oneof<bool, nothing>>,
+                                        runtime: table<role: string, version: string, sha256: oneof<string, nothing>>,
+                                        executables: table<name: string, sha256: string>
+                                    >,
+                                    nothing
+                                >,
+                                box: record<
+                                    repos: table<repo: string, commit: oneof<string, nothing>, dirty: oneof<bool, nothing>>,
+                                    runtime: table<role: string, version: string, sha256: oneof<string, nothing>>,
+                                    executables: table<name: string, sha256: string>
+                                >,
+                                same: bool
+                            >,
+                            trace: oneof<
+                                record<
+                                    flushes: int, uploads: int, set_scanouts: int, max_lag_us: oneof<int, nothing>,
+                                    median_lag_us: oneof<int, nothing>, p99_lag_us: oneof<int, nothing>, resolution_us: int,
+                                    open_last: bool, slow: table<upload: int, lag_us: int>
+                                >,
+                                nothing
+                            >
+                        >,
+                        flips: record<source: string, origin: record<lo: int, hi: int, width: int>>,
+                        pairing: record<
+                            verdict: string, refusals: table<refusal: string, count: int>,
+                            bracket: oneof<
+                                record<
+                                    status: string, reason: oneof<string, nothing>, drift_ppm: int,
+                                    best: oneof<
+                                        record<
+                                            b: string, b_ppm: float, margin: string, margin_ticks: float, offset_lo_ticks: float,
+                                            offset_hi_ticks: float
+                                        >,
+                                        nothing
+                                    >,
+                                    feasible: oneof<
+                                        record<
+                                            b_lo: string, b_hi: string, b_lo_ppm: float, b_hi_ppm: float, offset_lo_ticks: float,
+                                            offset_hi_ticks: float
+                                        >,
+                                        nothing
+                                    >,
+                                    free: oneof<
+                                        record<feasible: bool, b_lo_ppm: oneof<float, nothing>, b_hi_ppm: oneof<float, nothing>>,
+                                        nothing
+                                    >,
+                                    binding: oneof<record<ceiling: list<int>, floor: list<int>>, nothing>
+                                >,
+                                nothing
+                            >,
+                            shifts: table<name: string, status: string>,
+                            window: oneof<record<first: int, last: int, presents: int, uploads: int>, nothing>,
+                            fit: oneof<record<offset_s: float, drift: float, max_residual_ms: float>, nothing>,
+                            stalls: record<
+                                calls: table<
+                                    ordinal: int, call_ms: float, median_ms: float,
+                                    place: oneof<record<first_ms: float, last_ms: float>, nothing>, bound: oneof<string, nothing>
+                                >,
+                                outer: table<
+                                    ordinal: int, call_ms: float, median_ms: float,
+                                    place: oneof<record<first_ms: float, last_ms: float>, nothing>, bound: oneof<string, nothing>
+                                >
+                            >
+                        >,
+                        k: record<eps: int, period: int, violations: int, first: table<index: int, witness: int, gap: int, bound: int>>,
+                        stage: nothing, refusals: list<string>, renders: int,
+                        whole: record<
+                            frames: int,
+                            presented_interval: record<
+                                count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                                p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                            >,
+                            upload_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            render_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            age: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            shown_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            shown: int, superseded: int, repeated: int, unshown_at_end: int,
+                            share_shown: oneof<float, nothing>, longest_superseded: int, longest_repeat: int,
+                            critical: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            submission_age: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >
+                        >,
+                        legs: table<
+                            leg: string, frames: int,
+                            presented_interval: record<
+                                count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                                p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                            >,
+                            upload_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            render_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            age: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            shown_interval: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            shown: int, superseded: int, repeated: int, unshown_at_end: int,
+                            share_shown: oneof<float, nothing>, longest_superseded: int, longest_repeat: int,
+                            critical: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >,
+                            submission_age: record<
+                                count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                                p99: oneof<int, nothing>, max: oneof<int, nothing>
+                            >
+                        >
+                    >
+                >>,
+                cadences: table<
+                    cadence: oneof<int, nothing>, runs: list<string>, verdicts: table<verdict: string, runs: int>,
+                    whole: record<
+                        frames: int,
+                        presented_interval: record<
+                            count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                            p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                        >,
+                        upload_interval: record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        render_interval: record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        age: record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        shown_interval: record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        shown: int, superseded: int, repeated: int, unshown_at_end: int,
+                        share_shown: oneof<float, nothing>, longest_superseded: int, longest_repeat: int,
+                        critical: record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        submission_age: record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >
+                    >,
+                    legs: table<
+                        leg: string, frames: int,
+                        presented_interval: record<
+                            count: int, min: oneof<float, nothing>, median: oneof<float, nothing>,
+                            p95: oneof<float, nothing>, p99: oneof<float, nothing>, max: oneof<float, nothing>
+                        >,
+                        upload_interval: record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        render_interval: record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        age: record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        shown_interval: record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        shown: int, superseded: int, repeated: int, unshown_at_end: int,
+                        share_shown: oneof<float, nothing>, longest_superseded: int, longest_repeat: int,
+                        critical: record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        submission_age: record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >
+                    >
+                >,
+                unread: table<label: string, run: int, stage: string, refusals: list<string>>,
+                problems: list<string>
+            >,
+            record<
+                met: bool, admissible: bool,
+                measures: table<
+                    measure: string, probed: oneof<number, nothing>, plain: oneof<number, nothing>,
+                    effect: oneof<number, nothing>, noise: oneof<float, nothing>, within: bool,
+                    runs: table<arm: string, name: string, value: oneof<number, nothing>>
+                >,
+                problems: list<string>
+            >,
+            record<
+                met: bool,
+                legs: table<
+                    leg: string,
+                    runs: table<
+                        name: string, selection: string, workers: oneof<int, nothing>, critical_us: oneof<int, nothing>,
+                        raster_us: oneof<int, nothing>
+                    >
+                >,
+                harts: table<
+                    name: string, selection: string, workers: oneof<int, nothing>, interval: oneof<float, nothing>,
+                    threads: table<name: string, utilization: oneof<float, nothing>>
+                >,
+                problems: list<string>
+            >,
+            nothing
+        >,
+        applicable: bool, why: string
+    >>,
+    diagnostics: list<record<
+        case: string, legs: list<string>, fields: list<string>,
+        readings: list<oneof<
+            record<name: string, leg: string, missing: bool, fields: nothing>,
+            record<
+                name: string, leg: string, missing: bool,
+                fields: record<
+                    frames: int, over: oneof<int, nothing>,
+                    critical: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    draw: record<
+                        count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                        p99: oneof<int, nothing>, max: oneof<int, nothing>
+                    >,
+                    preparation: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    raster: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    tiles: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    tiles_built: oneof<int, nothing>, building_frames: oneof<int, nothing>,
+                    tiled_pixels: oneof<int, nothing>, fallback_pixels: oneof<int, nothing>
+                >
+            >,
+            record<
+                name: string, leg: string, missing: bool,
+                fields: record<
+                    frames: int, over: oneof<int, nothing>,
+                    critical: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    draw: record<
+                        count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                        p99: oneof<int, nothing>, max: oneof<int, nothing>
+                    >,
+                    preparation: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    raster: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    tiled_pixels: oneof<int, nothing>, fallback_pixels: oneof<int, nothing>
+                >
+            >,
+            record<
+                name: string, leg: string, missing: bool,
+                fields: record<
+                    frames: int, over: oneof<int, nothing>,
+                    critical: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    draw: record<
+                        count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                        p99: oneof<int, nothing>, max: oneof<int, nothing>
+                    >,
+                    sprites: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >
+                >
+            >,
+            record<
+                name: string, leg: string, missing: bool,
+                fields: record<
+                    frames: int,
+                    tiles: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    tiles_built: oneof<int, nothing>, building_frames: oneof<int, nothing>,
+                    evicted: oneof<int, nothing>, missed_blocks: oneof<int, nothing>,
+                    slots_used_max: oneof<int, nothing>,
+                    build: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    overrun: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >
+                >
+            >,
+            record<
+                name: string, leg: string, missing: bool,
+                fields: record<
+                    frames: int, over: oneof<int, nothing>,
+                    critical: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    tiles_built: oneof<int, nothing>, evicted: oneof<int, nothing>,
+                    slots_used_max: oneof<int, nothing>, ring_fill_max: oneof<int, nothing>,
+                    memory_peak: oneof<int, nothing>,
+                    build: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    overrun: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >
+                >
+            >,
+            record<
+                name: string, leg: string, missing: bool,
+                fields: record<
+                    frames: int, workers: oneof<list<int>, nothing>, grains: oneof<list<int>, nothing>,
+                    raster: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    slowest: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    busy: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    dispatch: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >,
+                    barrier: oneof<
+                        record<
+                            count: int, min: oneof<int, nothing>, median: oneof<int, nothing>, p95: oneof<int, nothing>,
+                            p99: oneof<int, nothing>, max: oneof<int, nothing>
+                        >,
+                        nothing
+                    >
+                >
+            >
+        >>,
+        missing: list<string>
+    >>,
+    ledger: table<row: string, kind: string, carried: bool, state: string, evidence: list<string>, why: string, problems: list<string>>,
+    verdicts: record<subset: record<rows: list<string>, passes: bool, verdict: string>, final: record<passes: bool, failed: list<string>, pending: table<row: string, dependency: string>, verdict: string>>
+>

@@ -6,13 +6,29 @@ records are held in three representations, each to its own record: the
 landed run to its manifest, inventory, and storage; a restoration to its
 receipt; and a reader's needs to the consumer table. Structure is the SDK's
 `nutype problems` against the models in `nu/type/data/`; the meaning of a
-field, which a model's types cannot say, is this module's own.
+field, which a model's types cannot say, is this module's own. A reader's
+output is held to its own model as it lands (outputs).
 
 ## const TYPES
 
 The models of the data repository's records, `Run.nutype` for a manifest of
 schema 2, `RunSchemaOne.nutype` for one written before, and the inventory,
 storage, restoration, and log container models beside them.
+
+## const OUTPUTS
+
+The output table, `nu/nuon/runner/record/outputs.nuon`: a row a reader's
+output, its pattern relative to a run, the sets it lands in as
+`<subject>/<set>` (none for every set, where the file's name is its
+reader's alone), and its model, a path in the checkout the row's
+`repository` names. Its model is `nu/type/runner/record/Output.nutype`
+(OUTPUT_TYPE).
+
+## const REPOSITORIES
+
+The checkouts an output's model sits in: this workbench, `jab-stress`, and
+jab beside it, `jab`, whose gauge writes `gauge.nuon`. A model sits beside
+the module that writes its output, in the writer's own checkout.
 
 ## const ROLES
 
@@ -120,6 +136,17 @@ same SHA-256, and every file of the run but its manifest is restored. For a
 run of schema 2, the receipt's inventory and storage are the run's by
 SHA-256, every restored file is its inventory row's, only a derived or
 hash-only original is absent, and every kept or archived one is restored.
+
+## def outputs
+
+A run's reader outputs held to their models before it lands: every file
+under the run's directory that an output row's pattern matches, where the
+row takes the run's set, held to that row's model, each problem prefixed
+with the file's path in the run, and a file that does not parse named. A
+table that breaks its model raises. Only a landing holds a run to it,
+since a run landed before a model existed keeps its records as written;
+the files no row names, a build's `flags`, `home`, and sources and the
+evidence's own records and bytes among them, are kept as written.
 
 ## def required
 

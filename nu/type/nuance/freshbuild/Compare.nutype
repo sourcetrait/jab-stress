@@ -1,0 +1,19 @@
+record<
+    before: record<file: string, commit: string>,
+    after: record<file: string, commit: string>,
+    moves: record<
+        paths: table<from: string, to: string>,
+        names: table<program: string, from: string, to: string>
+    >,
+    rows: int,
+    same: int,
+    remade: table<
+        key: string,
+        before: string,
+        after: string,
+        remade: string,
+        held: bool,
+        cause: string
+    >,
+    refusals: table<kind: string, key: string, detail: string>
+>

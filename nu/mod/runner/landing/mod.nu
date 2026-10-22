@@ -184,6 +184,8 @@ export def land [dir: path, subject: string, set: string, stamp: string, manifes
     let entries = (entries-of $src "")
     let classed = (classify $entries ($given | get -o retention | default []) [])
     clashes $classed
+    let shapes = (record outputs $src $"($subject)/($set)")
+    if ($shapes | is-not-empty) { error make { msg: $"the run's outputs break their models, ($shapes | length) problems: ($shapes | first 8 | str join '; ')" } }
     mkdir $dest
     try {
         let rows = (landed $dest $classed (if $source == "" { $set } else { $source }))

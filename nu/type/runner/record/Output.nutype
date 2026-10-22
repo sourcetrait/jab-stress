@@ -1,0 +1,1 @@
+table<pattern: string, sets: list<string>, repository: string, model: string>

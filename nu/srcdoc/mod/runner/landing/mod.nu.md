@@ -109,7 +109,10 @@ launch's monitor, API, and pad pipes among them, and is left out, named in
 the result's `wires`; reading one would wait on a writer that has gone. A
 link refuses the landing by name. `manifest` is a NUON file of the
 record's own fields, `task`, `scope`, `builds` at schema 2, and `kept`,
-and optionally `retention`. A failure removes the run it began. The
+and optionally `retention`. Before anything is written, every reader
+output the run holds is held to its model (`runner record outputs` over
+`<subject>/<set>`), and any problem refuses the landing, the first eight
+named with their count. A failure removes the run it began. The
 retention rule's changes to the set's other runs and the commit stay the
 lander's steps, as the layout note's third and fourth are, since a prune
 turns on which documents still cite a run.

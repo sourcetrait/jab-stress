@@ -1,0 +1,27 @@
+record<
+    contract: record<
+        file: string,
+        sha256: string,
+        commits: record<jab: string, stress: string>
+    >,
+    trees: record<
+        jab: record<commit: string, dirty: bool>,
+        jab-stress: record<commit: string, dirty: bool>
+    >,
+    landed: list<string>,
+    checked: record<
+        sources: int,
+        declarations: int,
+        contract_defs: int,
+        imports: int,
+        consumer_calls: int
+    >,
+    refusals: table<
+        kind: string,
+        repo: string,
+        file: string,
+        line: int,
+        item: string,
+        detail: string
+    >
+>

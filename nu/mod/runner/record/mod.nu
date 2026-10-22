@@ -6,6 +6,15 @@ const TYPES = path self ../../../type/data
 const CONSUMERS = path self ../../../nuon/runner/record/consumers.nuon
 # The consumer table's model
 const CONSUMER_TYPE = path self ../../../type/runner/record/Consumer.nutype
+# The output table: each reader output's pattern, its sets, and its model
+const OUTPUTS = path self ../../../nuon/runner/record/outputs.nuon
+# The output table's model
+const OUTPUT_TYPE = path self ../../../type/runner/record/Output.nutype
+# The checkouts an output's model sits in, by the name its row gives
+const REPOSITORIES = {
+    "jab-stress": (path self ../../../.. | path expand)
+    jab: (path self ../../../../../jab | path expand)
+}
 # The classes a run's file takes, the landing's class table's
 const ROLES = [log stream record picture build source fixture asset]
 # What becomes of an original artifact
@@ -238,6 +247,23 @@ export def restored [dir: path]: nothing -> list<string> {
     let absent = ($receipt.absent | where {|a| $a.disposition not-in $ABSENT } | each {|a| $"($a.path) is absent as ($a.disposition), where only a derived or hash-only original may be" })
     let unrestored = ($inventory | where {|r| $r.disposition in $HELD and $r.path not-in ($receipt.restored | get path) } | each {|r| $"($r.path) is ($r.disposition) and not restored" })
     $laid ++ $extra ++ $sums ++ $rows ++ $absent ++ $unrestored
+}
+
+# A run's reader outputs held to their models, each problem named
+export def outputs [dir: path, set: string]: nothing -> list<string> {
+    let table = (open --raw $OUTPUTS | decode utf-8 | from nuon)
+    let shape = (nutype problems $table (open --raw $OUTPUT_TYPE | decode utf-8) $OUTPUT_TYPE)
+    if ($shape | is-not-empty) { error make {msg: $"($OUTPUTS) breaks its model: ($shape | str join '; ')"} }
+    let dir = ($dir | path expand)
+    $table | where {|r| ($r.sets | is-empty) or $set in $r.sets } | each {|r|
+        let model = ($REPOSITORIES | get $r.repository | path join $r.model)
+        let text = (open --raw $model | decode utf-8)
+        glob ($dir | path join $r.pattern) --no-dir | sort | each {|f|
+            let rel = ($f | path relative-to $dir)
+            let value = (read-nuon $f)
+            if $value == null { [$"($rel) does not parse"] } else { nutype problems $value $text $model | each {|p| $"($rel): ($p)" } }
+        } | flatten
+    } | flatten
 }
 
 # A reader's required inputs a restoration lacks, each named

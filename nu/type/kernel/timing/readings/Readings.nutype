@@ -1,0 +1,108 @@
+record<
+    strategy: string,
+    checks: table<check: string, run: string, run_sha256: string, step: string>,
+    calibration: record<state: string, eps: int, qualifying: record<1ka1: int, 1kb1: int>>,
+    freeze: record<
+        images: table<role: string, sha256: string>,
+        kernels: table<role: string, sha256: string>
+    >,
+    runs: list<oneof<
+        record<
+            id: string, dir: string, nonce: oneof<int, nothing>, host: string,
+            target: oneof<string, nothing>, battery: string, workload: string, backend: string,
+            kernel: oneof<string, nothing>, order: string, timing: bool, probed: bool,
+            position: int, seed: oneof<int, nothing>,
+            image_sha256: oneof<string, nothing>, kernel_sha256: oneof<string, nothing>,
+            valid: bool, invalid: list<string>, k_violations: oneof<int, nothing>,
+            contract: record<available: bool, reason: string>,
+            legs: table<leg: string, critical_median_ms: oneof<float, nothing>, presented_p95_ms: oneof<float, nothing>>,
+            submission_age_median_ms: oneof<float, nothing>,
+            late_wakes: oneof<int, nothing>, catch_ups: oneof<int, nothing>
+        >,
+        record<
+            id: string, dir: string, nonce: oneof<int, nothing>, host: string,
+            target: oneof<string, nothing>, battery: string, workload: string, backend: string,
+            kernel: oneof<string, nothing>, order: string, timing: bool, probed: bool,
+            position: int, seed: oneof<int, nothing>,
+            image_sha256: oneof<string, nothing>, kernel_sha256: oneof<string, nothing>,
+            valid: bool, invalid: list<string>, k_violations: oneof<int, nothing>,
+            contract: record<available: bool, reason: string>,
+            legs: table<leg: string, critical_median_ms: oneof<float, nothing>, presented_p95_ms: oneof<float, nothing>>,
+            submission_age_median_ms: oneof<float, nothing>,
+            late_wakes: oneof<int, nothing>, catch_ups: oneof<int, nothing>,
+            shown_p95_ms: oneof<float, nothing>
+        >,
+        record<
+            id: string, dir: string, nonce: oneof<int, nothing>, host: string,
+            target: oneof<string, nothing>, battery: string, workload: string, backend: string,
+            kernel: oneof<string, nothing>, order: string, timing: bool, probed: bool,
+            position: int, seed: oneof<int, nothing>,
+            image_sha256: oneof<string, nothing>, kernel_sha256: oneof<string, nothing>,
+            valid: bool, invalid: list<string>, k_violations: oneof<int, nothing>,
+            contract: record<available: bool, reason: string>,
+            presented_median_ms: oneof<float, nothing>, presented_p95_ms: oneof<float, nothing>
+        >,
+        record<
+            id: string, dir: string, nonce: oneof<int, nothing>, host: string,
+            target: oneof<string, nothing>, battery: string, workload: string, backend: string,
+            kernel: oneof<string, nothing>, order: string, timing: bool, probed: bool,
+            position: int, seed: oneof<int, nothing>,
+            image_sha256: oneof<string, nothing>, kernel_sha256: oneof<string, nothing>,
+            valid: bool, invalid: list<string>, k_violations: oneof<int, nothing>,
+            contract: record<available: bool, reason: string>,
+            presented_median_ms: oneof<float, nothing>, presented_p95_ms: oneof<float, nothing>,
+            d_median_ms: oneof<float, nothing>,
+            phases: oneof<
+                record<
+                    work: record<median_ms: oneof<float, nothing>, p95_ms: oneof<float, nothing>, count: int>,
+                    wait: record<median_ms: oneof<float, nothing>, p95_ms: oneof<float, nothing>, count: int>,
+                    call: record<median_ms: oneof<float, nothing>, p95_ms: oneof<float, nothing>, count: int>
+                >,
+                nothing
+            >
+        >
+    >>,
+    controls: list<oneof<
+        record<
+            kind: string, host: string, target: oneof<string, nothing>, kernel: oneof<string, nothing>,
+            runs: list<string>, passing: bool,
+            effects: table<
+                measure: string,
+                probed: oneof<number, nothing>,
+                plain: oneof<number, nothing>,
+                effect: oneof<number, nothing>,
+                noise: oneof<float, nothing>,
+                within: bool
+            >,
+            problems: list<string>
+        >,
+        record<
+            kind: string, host: string, target: oneof<string, nothing>, kernel: oneof<string, nothing>,
+            order: string, runs: list<string>, passing: bool,
+            effects: table<
+                measure: string,
+                on: oneof<float, nothing>,
+                off: oneof<float, nothing>,
+                effect: oneof<float, nothing>,
+                noise: oneof<float, nothing>,
+                within: bool
+            >
+        >
+    >>,
+    host_limits: table<
+        host: string,
+        target: oneof<string, nothing>,
+        admissible: bool,
+        limit: record<
+            rule: string,
+            figures: table<run: string, kernel: string, render_median_us: int, presented_median_us: float>
+        >,
+        runs: list<string>
+    >,
+    spec: string,
+    assembler: record<
+        repos: table<repo: string, commit: oneof<string, nothing>, dirty: oneof<bool, nothing>>,
+        runtime: table<role: string, version: string, sha256: oneof<string, nothing>>,
+        executables: table<name: string, sha256: string>
+    >
+>

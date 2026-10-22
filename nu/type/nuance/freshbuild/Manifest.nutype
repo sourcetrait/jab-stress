@@ -1,0 +1,13 @@
+record<
+    commit: string,
+    builds: table<program: string, symbols: list<string>, exit: int>,
+    rows: table<
+        program: string,
+        profile: string,
+        symbols: list<string>,
+        role: string,
+        path: string,
+        sha256: string,
+        size: int
+    >
+>

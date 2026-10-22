@@ -1,0 +1,147 @@
+record<
+    strategy: oneof<string, nothing>,
+    hosts: list<string>,
+    validation: record<
+        refused: list<string>,
+        insufficient: list<string>,
+        complete: list<string>,
+        controls: table<
+            kind: string,
+            host: string,
+            target: string,
+            on: string,
+            off: string,
+            passing: bool,
+            complete: bool
+        >,
+        limits: table<
+            host: string,
+            target: string,
+            admissible: bool,
+            limit: oneof<
+                record<
+                    rule: string,
+                    figures: table<run: string, kernel: string, render_median_us: int, presented_median_us: float>
+                >,
+                nothing
+            >
+        >
+    >,
+    calibration: record<
+        declared: oneof<
+            record<state: string, eps: int, qualifying: record<1ka1: int, 1kb1: int>>,
+            nothing
+        >,
+        recomputed: record<
+            state: string,
+            eps: oneof<int, nothing>,
+            complete: bool,
+            targets: table<
+                target: string,
+                runs: int,
+                qualifying: int,
+                p999: oneof<int, nothing>,
+                past_cap: int,
+                problems: list<string>,
+                complete: bool
+            >
+        >,
+        calibrated: bool
+    >,
+    eligibility: record<
+        state: string,
+        checks: table<check: string, state: string, why: string>,
+        runs: table<
+            key: string,
+            position: int,
+            run: oneof<string, nothing>,
+            state: string,
+            k: oneof<int, nothing>,
+            why: string
+        >,
+        why: list<string>
+    >,
+    regression: list<oneof<
+        record<
+            host: string, target: string, leg: nothing, state: string,
+            base: nothing, compared: nothing, d: nothing, n: nothing, runs: nothing,
+            regressing: bool
+        >,
+        record<
+            host: string, target: string, leg: string, state: string,
+            base: float, compared: float, d: float, n: float, runs: list<int>,
+            regressing: bool
+        >
+    >>,
+    presentation: record<
+        guest: list<oneof<
+            record<
+                host: string, target: string, leg: nothing, state: string,
+                base: nothing, compared: nothing, d: nothing, n: nothing, runs: nothing,
+                worse: bool
+            >,
+            record<
+                host: string, target: string, leg: string, state: string,
+                base: float, compared: float, d: float, n: float, runs: list<int>,
+                worse: bool
+            >
+        >>,
+        display: list<oneof<
+            record<
+                host: string, target: string,
+                base: nothing, compared: nothing, d: nothing, n: nothing,
+                worse: bool, state: string, why: string
+            >,
+            record<
+                host: string, target: string,
+                base: float, compared: float, d: float, n: float, runs: list<int>,
+                worse: bool, state: string, why: string
+            >
+        >>
+    >,
+    walk: record<
+        gate: list<oneof<
+            record<
+                host: string, target: string, order: string,
+                median: nothing, p95: nothing,
+                fails: bool, state: string, why: string
+            >,
+            record<
+                host: string, target: string, order: string,
+                median: record<
+                    base: oneof<float, nothing>, compared: oneof<float, nothing>,
+                    d: oneof<float, nothing>, n: oneof<float, nothing>, runs: list<int>
+                >,
+                p95: record<
+                    base: oneof<float, nothing>, compared: oneof<float, nothing>,
+                    d: oneof<float, nothing>, n: oneof<float, nothing>, runs: list<int>
+                >,
+                fails: bool, state: string, why: string
+            >
+        >>,
+        phases: table<
+            host: string,
+            target: string,
+            kernel: string,
+            order: string,
+            d_ms: oneof<float, nothing>,
+            evidence: string
+        >
+    >,
+    noise: record<
+        passed: bool,
+        over: table<what: string, host: string, target: string, n: float>
+    >,
+    blockers: list<string>,
+    outcome: string,
+    scope: oneof<string, nothing>,
+    box: record<outcome: string, standing: oneof<string, nothing>>,
+    contract: string,
+    readings_sha256: string,
+    matrix_sha256: string,
+    selector: record<
+        repos: table<repo: string, commit: oneof<string, nothing>, dirty: oneof<bool, nothing>>,
+        runtime: table<role: string, version: string, sha256: oneof<string, nothing>>,
+        executables: table<name: string, sha256: string>
+    >
+>
