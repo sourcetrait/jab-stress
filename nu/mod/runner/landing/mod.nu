@@ -146,7 +146,7 @@ def landed [dest: path, classed: list<record>, producer: string]: nothing -> rec
             let to = ($dest | path join $object)
             mkdir ($to | path dirname)
             if $object != $c.path {
-                log wrap $c.from $to (source-of $c.path $producer) (stream-of $c.path)
+                log container $c.from $to (source-of $c.path $producer) (stream-of $c.path)
                 if ((log original $to | hash sha256) != $orig.sha256) { error make { msg: $"($c.path)'s container does not give back its bytes" } }
             } else {
                 cp $c.from $to

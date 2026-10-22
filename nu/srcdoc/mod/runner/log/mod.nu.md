@@ -6,9 +6,10 @@ file held them. Bytes, never lines: a CR, a lone LF, a last fragment with no
 newline, invalid UTF-8, and the spacing of an error's excerpt all survive,
 since nothing is split or decoded, and nothing is repaired.
 
-## def wrap
+## def container
 
-The header `{schema: 1, kind: "log", source, stream, captured}`, `captured`
+A file written as its container, the name its own since `wrap` is a
+builtin's. The header `{schema: 1, kind: "log", source, stream, captured}`, `captured`
 the original's modification time; the chunks `{seq, bytes}`, 64 KiB at most
 each, `seq` from 0 with no gap; the trailer `{end: true, chunks, length,
 sha256, terminated}`, the original's length and SHA-256 and whether its last

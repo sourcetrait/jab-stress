@@ -7,7 +7,7 @@ const MODEL = path self ../../../type/data/Log.nutype
 const CHUNK = 65536
 
 # A file wrapped as a log container: its header, its chunks, its trailer
-export def wrap [file: path, container: path, source: string, stream: string] {
+export def container [file: path, container: path, source: string, stream: string]: nothing -> nothing {
     let b = (open --raw $file | into binary)
     let n = ($b | bytes length)
     let count = (if $n == 0 { 0 } else { ($n + $CHUNK - 1) // $CHUNK })
