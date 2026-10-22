@@ -42,7 +42,9 @@ measured, and the record held by `runner record stored`.
 `nu nu/bin/nuance.nu runner migrate <run> <manifest> <scratch> [--data
 <root>]`: a run committed at schema 1 moved to schema 2 with its further
 originals from the trees its manifest names, by retention, restored whole
-before it replaces the run, and its receipt written under `migration/`.
+before it replaces the run, and its receipt written under `migration/`; or
+a schema 2 run's `kept.why` alone revised, its manifest holding `migration`
+and `why`, under a receipt of `run.nuon`'s bytes before and after.
 
 ## def main runner restore
 
