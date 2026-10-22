@@ -44,9 +44,7 @@ def reopened [bench: path, inventory: string]: nothing -> record<checked: int, p
     { checked: ($read | length), problems: ($problems ++ $absent) }
 }
 
-# A step's probed runs whose bundle the bench kept none of, each laid out in
-# `work` beside the step's report, where the record finds a run first, and
-# bundled again by the sdl probe's bundler at the reader's revision
+# A step's probed runs the bench kept no bundle of, bundled again in `work`
 def rebundled [bench: path, work: path, label: string]: nothing -> list<string> {
     glob ($bench | path join $label "run_*" "sdl.log") | sort | each {|log|
         let run = ($log | path dirname)
@@ -59,8 +57,7 @@ def rebundled [bench: path, work: path, label: string]: nothing -> list<string> 
     } | compact
 }
 
-# The bench laid out again in `work`, every step's report made again and
-# every probed run without its bundle bundled again; the runs bundled
+# The bench laid out again in `work`, its reports and bundles made again
 def rebuilt [bench: path, work: path]: nothing -> list<string> {
     mkdir $work
     for f in ["bench.nuon" "watch.nuon"] {
@@ -119,7 +116,7 @@ def history-of [stored: record, fresh: record]: nothing -> list<any> {
     $runs ++ $gone ++ $cases ++ $bench
 }
 
-# A record derived again from its reopened inputs, checked, its ledger recomputed
+# A record derived again from its reopened inputs and checked
 export def check-of [r: any, bench: path, work: path, --inventory: string = "", --candidate: string = "", --readers: any = null]: nothing -> record {
     let schema = (schema-problems $r)
     if not ($schema | is-empty) { return { problems: $schema, ledger: [], verdicts: null, history: [], reopened: null, record: null } }
@@ -138,7 +135,7 @@ export def check-of [r: any, bench: path, work: path, --inventory: string = "", 
     { problems: $problems, ledger: $ledger, verdicts: $verdicts, history: (history-of $r $fresh), reopened: { inventory: (if $inventory == "" { null } else { $inventory | path expand }), checked: $held.checked, problems: $held.problems }, rebundled: ($rebundled | each {|d| $d | path relative-to $work }), record: $fresh }
 }
 
-# A record derived again from its bench's kept inputs into `out`, verdicts printed
+# A record derived again from its bench's kept inputs, its verdicts printed
 export def main [record: path, --bench: string = "", --inventory: string = "", --candidate: string = "", --out: string = ""]: nothing -> nothing {
     let readers = (record readers-of)
     let r = (open $record)

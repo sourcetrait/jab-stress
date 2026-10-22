@@ -1,4 +1,4 @@
-# The battery's base new, its labels distinct, walk's wrapper there; the base made, its batches kept
+# The battery checked before its launch, its base made and its batches kept
 export def ready [a: record]: nothing -> record {
     if ($a.base | path exists) { error make { msg: $"($a.base) exists; a battery is written once" } }
     let twice = ($a.batches | get label | uniq --repeated)

@@ -28,9 +28,10 @@ def "main disks" [bench: path, inventory: path, out: path] {
     qualification disks $bench $inventory $out
 }
 
-# The candidate's host package for a target, one tar from its export and each named build's
+# The candidate's host package for a target, one tar of its export and builds
 def "main package" [candidate: path, export: path, target: string, out: path, --stage: string = "", --exports: string = "{}"] {
     qualification package $candidate $export $target $out --stage $stage --exports $exports
 }
 
+# The bin's help, its verbs listed, when called with no verb
 def main [] { help main }

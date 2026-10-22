@@ -36,9 +36,7 @@ const VERDICTS = [whole declared_holds secant_holds departures_hold revised_hold
 # The files of a still copy the crate's reference reads: its map and its images
 const REFERENCE_READS = ['\.jabfps\.map$' '\.png$']
 
-# A still copy's files, its tree and its disk, each by its path in the run,
-# held to the capture's inventory rows: every one absent, of another
-# SHA-256, or not the capture's
+# A still copy's files held to the capture's inventory rows, each difference
 def still-differ [base: path, rel: list<string>, rows: list<any>, disk: string]: nothing -> list<record<path: string, how: string>> {
     let files = (glob ($base | path join "tree" "**" "*") --no-dir | append ($base | path join $disk) | where {|f| $f | path exists })
     let built = ($files | each {|f| $rel | append ($f | path relative-to $base | path split) | path join })
@@ -52,9 +50,7 @@ def still-differ [base: path, rel: list<string>, rows: list<any>, disk: string]:
     } | compact) ++ ($built | where {|p| $p not-in ($rows | get path) } | each {|p| { path: $p, how: "is in the copy made again and not the capture's" } })
 }
 
-# A still copy remade in `into` with its tile.nuon naming the content where
-# the capture's checkout held it, as a tree compiled before jab c804ccb did:
-# the map source's place in the checkout at the capture's commit
+# A still copy remade in `into` as a checkout compiled it before jab c804ccb
 def remade-still [disk: record, c: record, into: path]: nothing -> record<content: any, problems: list<string>> {
     let jab = ($GAME | path join .. .. | path expand)
     let commit = ($c | get -o tool.commit)
@@ -75,11 +71,7 @@ def remade-still [disk: record, c: record, into: path]: nothing -> record<conten
     { content: $content, problems: [] }
 }
 
-# A still copy made again, held file by file to the capture's inventory, once
-# a copy, `held.nuon` beside it: a file the reference reads that differs is a
-# problem, and every differing file's path is kept. A copy that differs is
-# remade as the capture's checkout compiled it, and the copy holds when either
-# is the capture's whole
+# A still copy made again and held file by file to the capture's inventory
 def still-held [disk: record, out: path, inventory: list<any>, c: record]: nothing -> record<problems: list<string>, differ: list<string>, remade_problems: list<string>, remade_differ: list<string>, disk: record> {
     let base = ($disk.disk | path dirname)
     let kept = ($base | path join "held.nuon")

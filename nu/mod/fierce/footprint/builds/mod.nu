@@ -2,7 +2,7 @@ use (path self ../../../../../../jab/nu/mod/build)
 use (path self ../../../../../../jab/nu/mod/identity)
 use (path self ../../freeze) [symbols-of provenance-of]
 
-# The images an export is built as, each a label, its set, and the poses' kind it serves
+# The images an export is built as: each a label, a set, and the poses' kind
 const BUILDS = [
     [label, set, kind];
     [picture, "debug", view]
@@ -18,7 +18,7 @@ const BUILDS = [
 # The images' record, in the export's own directory
 export const IMAGES = "footprint_images.nuon"
 
-# The 1/z floor an image was assembled with: its ELF's IZ_MIN, an integer in 6.26
+# The 1/z floor an image was assembled with: its ELF's IZ_MIN, in 6.26
 export def iz-min-of [elf: path, prefix: string]: nothing -> int {
     let listed = (^$"($prefix)nm" $elf | complete)
     if $listed.exit_code != 0 { error make { msg: $"nm of ($elf): ($listed.stderr)" } }
@@ -34,7 +34,7 @@ def program-of [export: path]: nothing -> string {
     $manifests | first | path dirname
 }
 
-# An export's five debug images built with their kernels and provenance
+# An export's eight debug images built with their kernels and provenance
 export def images [export: path]: nothing -> nothing {
     let export = ($export | path expand)
     let record = ($export | path join $IMAGES)

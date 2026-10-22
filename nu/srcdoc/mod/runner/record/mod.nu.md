@@ -38,12 +38,6 @@ and a picture, build, source, fixture, or asset. A control file, such as a
 supervised launch's JSON wire files, never reaches a landing, so it has no
 role here.
 
-## const EXPORT_FIELDS
-
-An export part's record of the export it ran: its name, its source commit,
-its provenance record's path, its symbols, its image's SHA-256, and the
-kernel's ELF it ran with, null where it ran none or none was recorded.
-
 ## const DISPOSITIONS
 
 What becomes of an original artifact: `kept`, stored in the run as raw
@@ -56,6 +50,12 @@ bytes or a container; `archived`, a member of the run's archive;
 The files a landed run holds beside its payload. They sit outside the
 payload they describe, so no record holds its own hash: the manifest names
 the inventory's and the storage's SHA-256, and those two name the payload.
+
+## const EXPORT_FIELDS
+
+An export part's record of the export it ran: its name, its source commit,
+its provenance record's path, its symbols, its image's SHA-256, and the
+kernel's ELF it ran with, null where it ran none or none was recorded.
 
 ## const RECEIPT
 
@@ -124,7 +124,7 @@ held to its model, then its inventory and storage are bound to the
 manifest by their SHA-256, held to their models, and held against each
 other and against the files the run holds, and each export part against
 its provenance. `--root` names the repository for a provenance outside the
-run.
+run, by default the one the run sits in.
 
 ## def restored
 

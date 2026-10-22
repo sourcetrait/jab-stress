@@ -60,6 +60,9 @@ selection rule on a paired run. sdl report's `frames_shown`, whose
 A run's measures from its paired reading, null where the reading stopped
 before its flips.
 
+The measures: the guest's presented interval from the receipts, the host's
+flip interval of the presented flips, the slow stretches, and the share shown.
+
 ## def run-of
 
 One run read: its probe's identity, its image's and kernel's SHA-256, its

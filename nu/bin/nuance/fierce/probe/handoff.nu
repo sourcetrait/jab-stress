@@ -18,4 +18,5 @@ def "main builder-on" [image: path, out: path] {
     handoff builder-on $image $out
 }
 
+# The bin's help, its verbs listed, when called with no verb
 def main [] { help main }

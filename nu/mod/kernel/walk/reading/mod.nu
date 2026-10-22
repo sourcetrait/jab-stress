@@ -41,7 +41,7 @@ export def receipt-faults [frames: list<record>, origin: int, timing: bool]: not
     (faults-of "the receipt's flip" $issue {|f| $"frame ($f.frame): issued ($f.issued), status ($f.status), s ($f.s), T ($f.t)" }) ++ ($ordinals | sort-by rule) ++ (faults-of "the acceptance" $accepted {|f| $"frame ($f.frame): s ($f.s), T ($f.t)" })
 }
 
-# The identity's build held to the header; one naming no build read as historical
+# The identity's build held to the header; one naming none read as historical
 def identity-stage [stream: record, identity: record, replay: any]: nothing -> record<historical: bool, faults: list<any>, unchecked: list<string>, build: any> {
     let fl = (flags-of $stream.header.flags)
     let present = ($BUILD_FIELDS | where {|k| ($identity | get -o $k) != null })

@@ -1,4 +1,4 @@
-# The series' base new, its labels distinct, the probe's directory named; the base made
+# The series checked before its launch, its base made
 export def ready [a: record]: nothing -> record {
     if ($a.base | path exists) { error make { msg: $"($a.base) exists; a series is written once" } }
     let twice = ($a.runs | get label | uniq --repeated)
@@ -9,7 +9,7 @@ export def ready [a: record]: nothing -> record {
     {}
 }
 
-# Each run's sdl probe of the program in order, its directory and record kept apart
+# Each run's sdl probe of the program in order, its directory and record kept
 export def main [a: record]: nothing -> record {
     mut done = []
     for r in $a.runs {

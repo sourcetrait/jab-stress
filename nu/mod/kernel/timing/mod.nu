@@ -107,8 +107,7 @@ def figure-problems [r: record, c: record, legs: list<string>]: nothing -> list<
     }
 }
 
-# A kept run's wake delays over its qualifying frames, s less T in ticks, its
-# capture complete and valid and its receipt stage passed
+# A kept run's wake delays over its qualifying frames, s less T in ticks
 def wake-delays [dir: string]: nothing -> list<int> {
     let read = (gauge identity corrected ($dir | path join "identity.nuon"))
     let legs = (gauge report legs-for $dir $read.identity "" | get legs)
@@ -150,7 +149,7 @@ def calibration-figures [targets: list<string>, runs: list<any>]: nothing -> rec
     { state: $state, eps: $eps, targets: $per }
 }
 
-# eps recomputed from the calibration's source conditions' runs, complete on every target
+# eps recomputed from the calibration's source conditions' runs
 def calibration-of [m: record, conds: list<any>, runs: list<any>, complete: list<string>]: nothing -> record {
     let src = $m.calibration
     let targets = ($m.hosts | where host == $src.host | get 0.targets)
@@ -168,7 +167,7 @@ def calibration-of [m: record, conds: list<any>, runs: list<any>, complete: list
     }
 }
 
-# eps from a calibration capture's runs, each run's target its identity's spec, written as calibration.nuon
+# eps from a calibration capture's runs, written as calibration.nuon
 export def calibrate [base: path, out: path]: nothing -> nothing {
     let selector = (identity reader [$STRESS $JAB])
     let mx = (matrix-of $MATRIX)
@@ -272,7 +271,6 @@ export def validate [readings: record, m: record]: nothing -> record {
     let seated = ($placed | where {|r| $r.why == null })
     let doubled = ($seated | group-by {|r| $"($r.key) ($r.position)" } | items {|k, v| if ($v | length) > 1 { $"($k) filled ($v | length) times" } } | compact)
 
-    # the freeze: every run's image and kernel its condition's declared export
     let freeze = ($readings | get -o freeze | default {})
     let roles = {|kind: string, role: string| $freeze | get -o $kind | default [] | where {|x| ($x | get -o role) == $role } | get -o 0.sha256 }
     let unnamed = ($conds | each {|c| [[images $c.image] [kernels $c.kernel]] | each {|p| if (do $roles $p.0 $p.1) == null { $"the freeze names no ($p.0 | str substring 0..-2) of role ($p.1)" } } | compact } | flatten | uniq)
@@ -282,7 +280,6 @@ export def validate [readings: record, m: record]: nothing -> record {
     })
     let mixed = ($foreign_build | each {|r| $"run ($r.id) of ($r.key) is not its condition's frozen export" })
 
-    # each condition's slots filled once by valid runs holding every figure
     let short = ($conds | each {|c|
         let these = ($seated | where key == $c.key)
         let missing = ($c.slots | where {|s| ($these | where {|r| $r.position == $s.position } | is-empty) })
@@ -298,12 +295,10 @@ export def validate [readings: record, m: record]: nothing -> record {
     let complete = ($short | where {|x| ($x.problems | is-empty) and $x.key not-in $refused_keys } | each {|x| $x.key })
     let good = ($seated | where {|r| $r.key in $complete })
 
-    # the controls and the host limits, each bound to its runs
     let bound = ($readings | get -o controls | default [] | each {|c| control-binding $c $placed $conds $complete })
     let pairs = ($bound | each {|b| $b.pair } | compact)
     let limited = ($readings | get -o host_limits | default [] | each {|l| limit-binding $l $placed $conds $m $pairs })
 
-    # the calibration, recomputed from its own runs' captures
     let recomputed = (calibration-of $m $conds $good $complete)
     let declared = ($readings | get -o calibration)
     let cal_refused = (if $recomputed.complete { calibration-problems $declared $recomputed } else if not (($declared | describe) | str starts-with "record") or ($declared | get -o state) not-in $STATES { ["the calibration's state is none of the plan's"] } else { [] })
@@ -358,7 +353,7 @@ def restoration-of [run: string, scratch: path]: nothing -> record<run: string, 
     } catch {|e| { run: $run, tree: null, why: $e.msg } }
 }
 
-# A check read from its landed run's restored step: demonstrated, failed, or unproven
+# A check read from its landed run's step: demonstrated, failed, or unproven
 def check-state [c: any, name: string, restored: list<any>]: nothing -> record<check: string, state: string, why: string> {
     let unproven = {|why: string| { check: $name, state: "unproven", why: $why } }
     if $c == null { return (do $unproven "no landed run bound") }
@@ -396,8 +391,7 @@ def slot-state [key: string, position: int, r: any, p2: any]: nothing -> record<
     do $state "demonstrated" ""
 }
 
-# P2's eligibility, demonstrated, failed, or unproven: its checks read from
-# their landed runs, K from every P2 slot and run on the frozen P2 kernel
+# P2's eligibility, demonstrated, failed, or unproven, from checks and K
 def eligibility [readings: record, m: record, scratch: path]: nothing -> record<state: string, checks: list<any>, runs: list<any>, why: list<string>> {
     let given = ($readings | get -o checks)
     let bound = (if (($given | describe) | str starts-with "table") or (($given | describe) | str starts-with "list") { $given } else { [] })

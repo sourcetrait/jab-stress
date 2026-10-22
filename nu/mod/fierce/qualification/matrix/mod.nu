@@ -18,8 +18,7 @@ export const MAP = "render_0"
 # A target's record's file in its directory
 export const RECORD = "qualification.nuon"
 
-# The matrix's cases: kind, reading, each target's steps, and why a target
-# holding none of a case's steps leaves it not applicable
+# The matrix's cases: kind, reading, steps by target, why not applicable
 export const CASES = [
     [case, kind, reading, steps, absent];
     ["normal play", acceptance, verdicts, {"1ka1": [auto_1 auto_2], "1kb1": [auto_1 auto_2]}, {}]
@@ -51,7 +50,7 @@ export const DIAGNOSTICS = [
     ["worker balance", [], [frames workers grains raster slowest busy dispatch barrier]]
 ]
 
-# Every final obligation past the bench's cases: its kind, and by target its dependency or its reason
+# Every final obligation past the bench's cases, its kind and state by target
 export const OBLIGATIONS = [
     [row, kind, state, why];
     ["the parity", correctness, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the parity tool on both maps' still copies at the freeze", "1kb1": "the parity tool on both maps' still copies at the freeze"}]
@@ -64,12 +63,12 @@ export const OBLIGATIONS = [
     ["the reports and the evidence package", reports, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the reports from the final records and the evidence package landed (EvidenceRetention)", "1kb1": "the reports from the final records and the evidence package landed (EvidenceRetention)"}]
 ]
 
-# The bench's verb in a step's words, play, run, or audio, whatever script names it
+# The bench's verb in a step's words, play, run, or audio, wherever it stands
 export def step-verb [words: list<string>]: nothing -> any {
     $words | skip 1 | where {|w| $w in [play run audio] } | get -o 0
 }
 
-# The named build a step's words run, its first `{build:<name>}`, null for the tree's own
+# The named build a step's words run, null for the tree's own
 export def role-of [words: list<string>]: nothing -> any {
     $words | each {|w| $w | parse --regex '\{build:(?P<name>[a-z][a-z0-9_]*)\}' | each {|p| $p.name } } | flatten | get -o 0
 }
@@ -79,8 +78,7 @@ export const PACKAGED = {
     image: "fierce/fierce.jab", kernel: "kernel/jab.elf", assets: "asset/render_0", route: "route/route_render_0.nuon",
 }
 
-# The candidate's bench as its package runs it: the preflight, packaged inputs;
-# a step naming its image keeps it, a named build's that the package lays
+# The candidate's bench as its package runs it, the preflight first
 export def packaged-bench [definition: record, target: string]: nothing -> record {
     let at = {|rel: string| $"{package}/($rel)" }
     let images = ["--image" (do $at $PACKAGED.image) "--kernel" (do $at $PACKAGED.kernel)]
@@ -96,9 +94,7 @@ export def packaged-bench [definition: record, target: string]: nothing -> recor
     }))
 }
 
-# A bench's definition as a run of it read its words: every `{package}` the
-# package's directory and every `{build:<name>}` that build's directory under
-# `root`, the bench run's record of where its builds lay
+# A bench's definition with its words as a run of it read them
 export def resolved-in [definition: record, package: any, root: any]: nothing -> record {
     $definition | update steps ($definition.steps | each {|s|
         let placed = (if $package == null { $s.run } else { $s.run | each {|w| $w | str replace --all "{package}" $package } })
@@ -138,8 +134,7 @@ def same-commit [recorded: any, candidate: string]: nothing -> bool {
     $recorded != null and ($recorded | str length) >= 7 and ($candidate | str starts-with $recorded)
 }
 
-# The build a step's runs are held to: the candidate's release build, or the
-# named build its words run, each with its tree and the QEMU words its step carries
+# The build a step's runs are held to: the release build or a named one
 export def build-of [candidate: record, role: any, words: list<string>]: nothing -> record {
     let overrides = (if (step-verb $words) == "audio" { $AUDIO_WORDS } else { [] })
     if $role == null {
@@ -150,7 +145,7 @@ export def build-of [candidate: record, role: any, words: list<string>]: nothing
     { name: $"the candidate's ($role) build's", image_sha256: $b.image_sha256, elf_sha256: $b.elf_sha256, kernel_sha256: $b.kernel_sha256, tree: $b.tree, overrides: $overrides, missing: null }
 }
 
-# Where a run's identity disagrees with its build, the candidate, and the target, named
+# Where a run's identity disagrees with its build, candidate, and target
 export def agreement-of [id: record, candidate: record, build: record, target: string, spec: record]: nothing -> list<string> {
     let m = ($id.machine | default {})
     let named = ($m | get -o spec)
@@ -230,9 +225,7 @@ export def tag-state [tag: any, commit: string]: nothing -> record<state: string
     { state: "met", why: $"($tag) names the candidate's commit in jab" }
 }
 
-# Why a run cannot certify the steady service load, each named: its capture
-# holding the service's records, a start answered, one window closed, no quota
-# skipped; a window's own breaks stand in the run's standing
+# Why a run cannot certify the steady service load, each reason named
 export def service-problems [run: record]: nothing -> list<string> {
     let sv = ($run.measured | get -o service)
     if $sv == null { return ["its capture holds no service record, so its image is no SERVICE build's"] }
@@ -243,8 +236,7 @@ export def service-problems [run: record]: nothing -> list<string> {
     ] | compact
 }
 
-# An acceptance run's verdict: valid, its build's, under the ceiling; with
-# `--service`, its steady service load admissible as well
+# An acceptance run's verdict: valid, its build's, under the ceiling
 export def verdict-of [run: record, --service]: nothing -> record {
     let whole = ($run.measured | get -o whole)
     let median = ($whole | get -o critical.median)

@@ -6,7 +6,7 @@ export def ready [a: record]: nothing -> record {
     {}
 }
 
-# A workbench bin's verb in the jab-stress checkout, its environment given, logged
+# A workbench bin's verb run in the jab-stress checkout, its output logged
 export def main [a: record]: nothing -> record {
     let given = ($a.env | reduce --fold {} {|e, acc| $acc | insert $e.name $e.value })
     cd $a.stress

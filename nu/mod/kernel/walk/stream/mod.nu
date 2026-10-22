@@ -253,7 +253,7 @@ def untimed-faults [frames: list<record>]: nothing -> list<any> {
     (faults-of "a TIMING field without TIMING" $fields {|f| $"frame ($f.frame)" }) ++ (faults-of "the stamps' order" $order {|r| $"frame ($r.item.frame)" })
 }
 
-# Each frame's raw elapsed its start less the one before, a measured dt its clamp
+# Each frame's raw elapsed held to its starts, a measured dt to its clamp
 def elapsed-faults [frames: list<record>, replay: bool]: nothing -> list<any> {
     let raws = ($frames | enumerate | each {|r|
         let previous = (if $r.index == 0 { 0 } else { $frames | get ($r.index - 1) | get start })

@@ -1,7 +1,7 @@
 use (path self ../../../../../../jab/nu/mod/package)
 use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge)
 
-# jab beside the workbench, whose tree the asset tree, the route, and the benches come from
+# jab beside the workbench, the source of the asset tree, route, and benches
 const JAB = (path self ../../../../../../jab | path expand)
 
 # The targets a bench is written for, one bench each
@@ -31,7 +31,7 @@ def frozen [s: record, kind: string, role: string]: nothing -> string {
     $file | path expand
 }
 
-# The first fps run's identity of the spec's batteries, the inputs every run played
+# The first fps run's identity among the batteries: the inputs every run played
 def played [s: record]: nothing -> record {
     let first = ($s.batteries | each {|b|
         glob ($b.base | path expand | path join "*" "run_*" "identity.nuon") | sort | each {|f| open $f } | where {|id| ($id | get -o build.image) != null }
@@ -40,9 +40,7 @@ def played [s: record]: nothing -> record {
     $first
 }
 
-# JointTiming's host package: the frozen exports by role, the asset tree and
-# the route every fps run played, and a bench a target, laid by jab's
-# package module into one tar
+# JointTiming's host package: exports, asset tree, route, and benches, a tar
 export def main [spec: path, out: path, --stage: string = ""]: nothing -> record<package: string, sha256: string, root: string, artifacts: int, bytes: int, stored_once: list<record<sha256: string, paths: list<string>>>> {
     let s = (open $spec)
     let id = (played $s)

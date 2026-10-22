@@ -55,7 +55,7 @@ def "main runner land" [dir: path, subject: string, set: string, stamp: string, 
     landing land $dir $subject $set $stamp $manifest --data $data --source $source
 }
 
-# A schema 1 run moved to schema 2 with its further originals, a receipt written.
+# A schema 1 run moved to schema 2 with its further originals, receipt written
 def "main runner migrate" [run: path, manifest: path, scratch: path, --data: string = ""] {
     landing migrate $run $manifest $scratch --data $data
 }
@@ -135,4 +135,5 @@ def "main fierce census reader-holds" [tree: path, serial: path] {
     census reader-holds $tree $serial
 }
 
+# The bin's help, its verbs listed, when called with no verb
 def main [] { help main }

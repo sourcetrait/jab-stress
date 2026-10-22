@@ -13,4 +13,5 @@ def "main bench" [battery: string, args: path] {
     runner bench $battery $args $STRESS
 }
 
+# The bin's help, its verbs listed, when called with no verb
 def main [] { help main }

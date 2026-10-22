@@ -11,7 +11,7 @@ use (path self ../../workerparity) [disk-of answered-frames]
 # The game's directory in jab, checked out beside the workbench
 export const GAME = path self ../../../../../../jab/kit/fierce
 
-# Each kind of pose's images: the OWNER capture's, the two LEVELS captures', the pictures'
+# Each kind of pose's images: its OWNER, LEVELS, and picture captures'
 export const KINDS = {
     view: { owner: owner, levels: [levels levels_candidate], pictures: [picture picture_candidate] }
     clamp: { owner: owner_clamp, levels: [levels_clamp levels_candidate_clamp], pictures: [] }
@@ -218,7 +218,7 @@ export def capture [export: path, poses: path, out: path, --only: string = ""]: 
     }
 }
 
-# The clamp's plan over a captured pose: its threshold, clamped blocks, witnesses
+# The clamp's plan over a captured pose: threshold, clamped blocks, witnesses
 export def clamp-plan [dir: path, surface: int, --owner: string = "owner", --levels: string = "levels"]: nothing -> nothing {
     let c = (open ($dir | path join "pose.nuon"))
     let s = ($c.rows | where label == $levels | first | get binding.state)

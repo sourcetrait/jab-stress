@@ -46,7 +46,7 @@ def step-words [label: string, listed: record, definition: any]: nothing -> list
     if $defined != null { $defined } else { $listed.steps | where label == $label | get -o 0.run | default [] }
 }
 
-# A step's named build, from the candidate's definition before its words are resolved
+# A step's named build, read from the candidate's definition
 def step-role [label: string, raw: any]: nothing -> any {
     matrix role-of ($raw | get -o steps | default [] | where label == $label | get -o 0.run | default [])
 }
@@ -156,7 +156,7 @@ def scaling-reading [runs: list<any>, missing: list<any>, target: string]: nothi
     { met: ($problems | is-empty), legs: $by_leg, harts: $harts, problems: $problems }
 }
 
-# The presentation's reading: ProbeRuns' reader over the probed runs by directory
+# The presentation's reading: ProbeRuns' reader over the probed runs
 def presentation-reading [runs: list<any>, missing: list<any>, target: string]: nothing -> record {
     let unbundled = ($runs | where {|r| $r.bundle == null or (not $r.probed) })
     let named = ($runs | where {|r| $r.standing != "valid" or (not ($r.agreement | is-empty)) } | append $unbundled | each {|r| matrix run-name $r })
@@ -173,8 +173,7 @@ def presentation-reading [runs: list<any>, missing: list<any>, target: string]: 
     }
 }
 
-# The service active's reading: its runs' verdicts, each window's offered
-# rate, quotas skipped, apply phase, and oldest age beside its median
+# The service active's reading: its runs' verdicts and each window's figures
 def service-reading [runs: list<any>]: nothing -> record {
     {
         passed: ($runs | where {|r| $r.verdict.pass } | length),
@@ -192,8 +191,7 @@ def service-reading [runs: list<any>]: nothing -> record {
     }
 }
 
-# The feature unavailable's reading: the start refused under the floor, no
-# window opened, and the play valid past it, its median reported, never judged
+# The feature unavailable's reading: the start refused, the play valid past it
 def refusal-reading [runs: list<any>, missing: list<any>, target: string]: nothing -> record {
     let read = ($runs | each {|r|
         let sv = ($r.measured | get -o service)
@@ -212,8 +210,7 @@ def refusal-reading [runs: list<any>, missing: list<any>, target: string]: nothi
     { met: ($problems | is-empty), runs: $read, problems: $problems }
 }
 
-# The audio's reading: each debug run's driver counters and QEMU log, and its
-# continuity where its sound was recorded, its standing beside and never judged
+# The audio's reading: each debug run's counters, QEMU log, and continuity
 def audio-reading [runs: list<any>, missing: list<any>, target: string]: nothing -> record {
     let absent = ($missing | each {|m| $"($m.step) run ($m.run) is missing" })
     let foreign = ($runs | where {|r| not ($r.agreement | is-empty) } | each {|r| $"(matrix run-name $r) is not the candidate's debug run on ($target): ($r.agreement | str join '; ')" })
@@ -256,8 +253,7 @@ def watch-of [bench: path]: nothing -> any {
     if ($file | path exists) { open $file } else { null }
 }
 
-# A packaged bench's freeze: the candidate holding its package's ELFs, its
-# own and each named build's
+# A packaged bench's freeze: the candidate holding its package's ELFs
 def frozen-of [bench: path, cand: record, candidate: path]: nothing -> record<cand: record, manifest: any, problems: list<string>> {
     let file = ($bench | path join "preflight" "package.nuon")
     if not ($file | path exists) { return { cand: $cand, manifest: null, problems: [$"the packaged bench carries no package manifest at ($file), so the freeze's ELF is unknown"] } }

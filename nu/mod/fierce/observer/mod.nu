@@ -22,7 +22,7 @@ def statistic [whole: any, path: list<string>]: nothing -> any {
     $whole | get -o ($path | into cell-path)
 }
 
-# Two named arms' effect, the first's statistic less the second's, each measure judged
+# Two named arms' effect, the first's statistic less the second's, judged
 def arms-effect [first: string, firsts: list<record>, second: string, seconds: list<record>]: nothing -> record<measures: list<any>, admissible: bool, problems: list<string>> {
     let empty = ([[$first $firsts] [$second $seconds]] | where {|a| ($a.1 | is-empty) } | each {|a| $"the ($a.0) arm holds no run" })
     let measures = ($MEASURES | each {|m|

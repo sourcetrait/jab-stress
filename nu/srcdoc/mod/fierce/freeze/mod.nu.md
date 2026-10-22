@@ -76,3 +76,8 @@ stem's too, when one sits beside the image.
 
 The game's place at a commit: kit/fierce from KitFierce, game/fps/1k
 before FpsRootLayout, game/fps between.
+
+## def main
+
+A commit's program exported and built release, or debug with `--debug`,
+gated, its provenance kept.

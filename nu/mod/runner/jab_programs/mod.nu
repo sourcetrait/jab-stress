@@ -3,7 +3,7 @@ export def ready [a: record]: nothing -> record {
     {}
 }
 
-# Each program's tests through jab's driver in turn, one log, the failures' heads
+# Each program's tests through jab's driver in turn, one log, failures' heads
 export def main [a: record]: nothing -> record {
     cd $a.jab
     let runs = ($a.paths | each {|p|

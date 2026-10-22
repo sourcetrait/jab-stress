@@ -65,8 +65,7 @@ def sig-at [sigs: record, repo: string, file: string, def: string]: nothing -> o
     $sigs | get -o ([$repo $file] | str join '|') | default {} | get -o $def
 }
 
-# Each monolith def in its old place or its new, never both, never the old once
-# its group landed, its signature the contract's.
+# Each monolith def in its old place or its new, never both, signature checked
 export def places [contract: record, landed: list<string>, decls: table, sigs: record]: nothing -> table {
     let live = (keyed $decls)
     mut out = []
@@ -249,8 +248,7 @@ export def ownership [contract: record, landed: list<string>, decls: table]: not
     $out
 }
 
-# The module a file of the contract holds, by its file or a leaf's old file
-# where the landed groups have moved it.
+# The module a file of the contract holds, its own file or a leaf's old one
 def module-at [contract: record, landed: list<string>, key: string]: nothing -> oneof<record, nothing> {
     let m = ($contract.modules | where {|m| (key-of $m.repo $m.file '' '') == $key } | get -o 0)
     if $m != null { return $m }
@@ -407,8 +405,7 @@ export def bin-rules [contract: record, sources: table, decls: table]: nothing -
     $out
 }
 
-# Once FierceModules lands: each case in its part with the contract's signature,
-# the orchestrator calling each once in the table's order.
+# Once FierceModules lands: each case in its part, called once in order
 export def case-rules [
     contract: record, landed: list<string>, sources: table, decls: table, sigs: record
 ]: nothing -> table {

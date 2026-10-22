@@ -162,3 +162,6 @@ strategy as given, the checks bound, the calibration's state, eps, and qualifyin
 the freeze's roles, the runs, the shim's and the TIMING controls, and the host
 limits; written as readings.nuon with the spec's path and the identity, a line
 printed a run and a summary after.
+
+The calibration is taken as `calibrate` wrote it, and the freeze's roles
+by their files' SHA-256.

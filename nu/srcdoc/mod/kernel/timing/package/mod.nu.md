@@ -49,3 +49,5 @@ tree held to the runs' digest; the route held to their SHA-256; both benches
 from jab's committed tree. Its manifest's identities name the freeze's roles
 by SHA-256, fps's commit, the assets, the route, and the benches' commit. The
 package is named for jab's commit, and its inputs and stage are written once.
+
+The package is laid by jab's package module (`package make`) into one tar.

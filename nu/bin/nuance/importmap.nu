@@ -8,4 +8,5 @@ def "main check" [jab: path, stress: path, --landed: string = '', --contract: st
     importmap check $jab $stress --landed $landed --contract $contract --out $out
 }
 
+# The bin's help, its verbs listed, when called with no verb
 def main [] { help main }

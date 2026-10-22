@@ -16,8 +16,7 @@ def assets-of [bench: path, step: string]: nothing -> record<key: any, problems:
     { key: ($keys | first), problems: [] }
 }
 
-# An asset tree compiled from today's content into `dir`, its digest held to
-# the recorded one, else rooted as the bench's checkout compiled it; its disk
+# An asset tree compiled again from today's content into `dir`, and its disk
 def made-again [key: record, dir: path]: nothing -> record {
     let ran = (^nu ($GAME | path join "nu" "bin" "nuance" "map.nu") compile ($GAME | path join "content" "map" $"($key.map).nuon") $dir --content ($GAME | path join "content") | complete)
     if $ran.exit_code != 0 { error make { msg: $"compiling ($key.map): ($ran.stderr | str trim)" } }
@@ -33,10 +32,7 @@ def made-again [key: record, dir: path]: nothing -> record {
     { map: $key.map, digest: $key.digest, content: $key.content, again: $again, rooted: $rooted, held: ($again == $key.digest or $rooted == $key.digest), disk: (open --raw $disk | hash sha256) }
 }
 
-# A bench's disk copies made again from today's content and held to its
-# records: each step's one asset tree compiled into `out`, its digest the one
-# its runs' identities record, and its disk each copy's SHA-256 in the
-# inventory; `disks.nuon` written, the verdicts printed
+# A bench's disk copies made again from today's content, held to its records
 export def main [bench: path, inventory: path, out: path]: nothing -> nothing {
     let bench = ($bench | path expand)
     let out = ($out | path expand)

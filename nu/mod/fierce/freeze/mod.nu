@@ -1,11 +1,10 @@
 use (path self ../../../../../jab/nu/mod/identity)
 use (path self ../../../../../jab/nu/mod/supervise)
 
-# The timing domain a launch under the supervisor measures in, as a freeze records it
+# The timing domain a supervised launch measures in, as a freeze records it
 const TIMING = "the supervisor's monotonic clock: the go's Instant, as the supervisor lets QEMU run, the origin of every receipt time, in nanoseconds; QEMU's CPU read by the supervisor every cpu_ns; a result's times in seconds from the go and its wall_seconds from the go to the reap; the caller's realtime clock gives dates alone. A run captured before this freeze keeps the timing it was captured under, its times from the caller's realtime start."
 
-# The launcher a freeze's measurements run under: the supervisor's binary, its
-# checkout, its bounds, and its timing domain
+# The launcher a freeze's measurements run under
 export def launcher-of [repo: string]: nothing -> record {
     let bin = (supervise binary)
     {
@@ -65,8 +64,7 @@ def game-place [repo: string, full: string]: nothing -> list<string> {
     if (do $has "kit/fierce") { ["kit" "fierce"] } else if (do $has "game/fps/1k") { ["game" "fps" "1k"] } else { ["game" "fps"] }
 }
 
-# A commit's program exported and built release, or debug with `--debug`,
-# gated, its provenance kept
+# A commit's program exported, built, and gated, its provenance kept
 export def main [repo: string, commit: string, cands: string, expected: string, --set: string = "", --program: string = "", --debug]: nothing -> nothing {
     let full = (^git -C $repo rev-parse $commit | complete | get stdout | str trim)
     if $full == "" { error make { msg: $"($commit) names no commit in ($repo)" } }

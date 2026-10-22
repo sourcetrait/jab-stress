@@ -19,8 +19,7 @@ def held [file: path, sha: string, what: string]: nothing -> string {
     $file
 }
 
-# A named build's artifacts from its own export, each held to the candidate's
-# build of that name, laid at build/<name> as a bench's {build:<name>} names it
+# A named build's artifacts from its own export, laid at build/<name>
 def named-artifacts [cand: record, name: string, build: record, export: path]: nothing -> record<artifacts: list<any>, identity: record> {
     let program = (program-of ($export | path expand))
     let source = (open ($program | path join "source.nuon"))
@@ -47,8 +46,7 @@ def named-artifacts [cand: record, name: string, build: record, export: path]: n
     }
 }
 
-# The candidate's host package for a target, from its export and each named
-# build's own, `exports` a NUON record of name to export directory, its bench packaged
+# The candidate's host package for a target, from its export and named builds
 export def main [candidate: path, export: path, target: string, out: path, --stage: string = "", --exports: string = "{}"]: nothing -> record<package: string, sha256: string, root: string, artifacts: int, bytes: int, stored_once: list<record<sha256: string, paths: list<string>>>> {
     let cand = (open --raw $candidate | decode utf-8 | from nuon)
     let target = ($target | str lowercase)

@@ -157,7 +157,7 @@ def original-of [dir: path, row: record, storage: list<any>]: nothing -> any {
     }
 }
 
-# Each export part held to its provenance: present, its commit, symbols, and image
+# Each export part held to its provenance: present, commit, symbols, and image
 def export-problems [dir: path, root: any, run: record, inventory: list<any>, storage: list<any>]: nothing -> list<string> {
     $run.builds | where source == "export" | each {|b|
         let e = ($b | get -o export | default {})
@@ -178,10 +178,7 @@ def export-problems [dir: path, root: any, run: record, inventory: list<any>, st
     } | flatten
 }
 
-# A landed run's problems, none where it holds: its record, inventory, storage, files
-#
-# `root` is the repository a provenance path outside the run is read from, by
-# default the one the run sits in.
+# A landed run's problems, none if it holds: record, inventory, storage, files
 export def stored [run: path, --root: string = ""]: nothing -> list<string> {
     let dir = ($run | path expand)
     let record = (read-nuon ($dir | path join "run.nuon"))

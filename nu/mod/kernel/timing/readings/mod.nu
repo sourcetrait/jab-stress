@@ -39,8 +39,7 @@ def word-of [words: list<string>, flag: string, label: string]: nothing -> strin
     $v
 }
 
-# The rule a kernel export was built under, from the provenance beside its
-# ELF: P2 when its symbols hold P2, else P0; null without a provenance
+# The rule a kernel export was built under, P2 or P0, from its provenance
 def rule-of [elf: any]: nothing -> any {
     if $elf == null { return null }
     let file = ($elf | path dirname | path join "provenance.nuon")
@@ -69,8 +68,7 @@ def calibration-of [given: path]: nothing -> record {
     open $file
 }
 
-# An fps run read at eps: its identity's fields, its capture measured anew
-# through jab's gauge, a probed run's frames shown through ProbeRuns' reader
+# An fps run read at eps: its identity, its capture measured anew by the gauge
 def fps-run [place: record, vars: list<any>, eps: int]: nothing -> record {
     let dir = $place.dir
     let id = (gauge identity corrected ($dir | path join "identity.nuon")).identity
@@ -103,8 +101,7 @@ def fps-run [place: record, vars: list<any>, eps: int]: nothing -> record {
     { run: ($run | merge $shown), whole: $m.whole, host: $host }
 }
 
-# A walk run read guest-only at eps: its identity's fields, its stream's
-# flags and seed, its presented interval, K, and with TIMING its phases
+# A walk run read guest-only at eps: identity, stream, interval, K, phases
 def walk-run [place: record, eps: int]: nothing -> record {
     let dir = $place.dir
     let id = (open --raw ($dir | path join "identity.nuon") | into binary | decode | from nuon)
@@ -134,7 +131,7 @@ def walk-run [place: record, eps: int]: nothing -> record {
     { run: ($run | merge $phased), whole: null, host: null }
 }
 
-# A battery's runs in its order, each placed at its target's position and read at eps
+# A battery's runs in its order, each at its target's position, read at eps
 def battery-of [b: record, eps: int]: nothing -> list<record> {
     let base = ($b.base | path expand)
     let batches = (open ($base | path join "batches.nuon"))
@@ -157,8 +154,7 @@ def battery-of [b: record, eps: int]: nothing -> list<record> {
     } | flatten
 }
 
-# Two arms' effect on a statistic of their valid runs: each arm's nearest-rank
-# median, the effect the first's less the second's, the noise half the larger range
+# Two arms' effect on a statistic of their valid runs, and its noise
 def effect-of [measure: string, on: list<any>, off: list<any>, stat: closure]: nothing -> record {
     let a = ($on | each {|r| do $stat $r } | compact)
     let b = ($off | each {|r| do $stat $r } | compact)
@@ -171,9 +167,7 @@ def effect-of [measure: string, on: list<any>, off: list<any>, stat: closure]: n
     { measure: $measure, on: $first, off: $second, effect: $effect, noise: $noise, within: ($effect != null and $noise != null and ($effect | math abs) <= $noise) }
 }
 
-# The shim's controls: on each host, target, battery, and kernel whose fps runs
-# are probed and unprobed both, ProbeRuns' observer effect over the valid runs'
-# whole summaries, passing when admissible, naming every run of both arms
+# The shim's controls, ProbeRuns' observer effect over probed and plain runs
 def shim-controls [read: list<any>]: nothing -> list<any> {
     let fps = ($read | where {|x| $x.run.workload == "fps" })
     $fps | group-by {|x| $"($x.run.host)/($x.run.target)/($x.run.battery)/($x.run.kernel)" } | values | each {|g|
@@ -188,10 +182,7 @@ def shim-controls [read: list<any>]: nothing -> list<any> {
     } | compact
 }
 
-# The TIMING controls: on each host, target, battery, kernel, and loop order
-# whose walk runs are TIMING on and off both, the guest's presented interval's
-# median and 95th on against off, passing when every run is valid and each
-# effect lies within its noise
+# The TIMING controls: walk's presented interval, TIMING on against off
 def timing-controls [read: list<any>]: nothing -> list<any> {
     let walks = ($read | where {|x| $x.run.workload == "walk" })
     $walks | group-by {|x| $"($x.run.host)/($x.run.target)/($x.run.battery)/($x.run.kernel)/($x.run.order)" } | values | each {|g|
@@ -208,10 +199,7 @@ def timing-controls [read: list<any>]: nothing -> list<any> {
     } | compact
 }
 
-# The hosts' display limits: on each host, target, and battery holding probed
-# fps runs of both kernels, a limit found when every one of those runs reads
-# SDL's render interval's median past the guest's presented interval's median
-# by more than half a period, admissible when both kernels' shim controls pass
+# The hosts' display limits, where SDL's renders lag the guest's presents
 def host-limits [read: list<any>, controls: list<any>]: nothing -> list<any> {
     let probed = ($read | where {|x| $x.run.workload == "fps" and $x.run.probed })
     let half_us = ($PERIOD / $US_TICKS / 2)
@@ -227,11 +215,7 @@ def host-limits [read: list<any>, controls: list<any>]: nothing -> list<any> {
     } | compact
 }
 
-# The readings a comparison's captures give, assembled from a spec: the
-# strategy and the checks as given, the calibration as `calibrate` wrote it,
-# the freeze's roles by their files' SHA-256, and every battery's runs read at
-# the calibrated eps with the controls and host limits over them; written as
-# readings.nuon in `out`, each run's line printed
+# The readings a comparison's captures give, assembled from a spec
 export def main [spec: path, out: path]: nothing -> nothing {
     let assembler = (identity reader [$STRESS $JAB])
     let s = (open $spec)

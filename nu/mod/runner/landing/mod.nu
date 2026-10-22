@@ -103,7 +103,7 @@ def object-of [c: record]: nothing -> string {
     if $c.lands == container and not $c.committed { $"($c.path).nuonl" } else { $c.path }
 }
 
-# The stored objects' names held apart from one another and from the run's records
+# The stored objects' names held apart from each other and the run's records
 def clashes [classed: list<record>]: nothing -> nothing {
     let kept = ($classed | where disposition == kept | each {|c| object-of $c })
     let objects = (if ($classed | any {|c| $c.disposition == archived }) { $kept | append $ARCHIVE } else { $kept })
@@ -201,7 +201,7 @@ export def land [dir: path, subject: string, set: string, stamp: string, manifes
     }
 }
 
-# A schema 2 run's kept and archived originals laid out under `tree`, each checked
+# A schema 2 run's kept and archived originals laid under `tree`, each checked
 def laid [run: path, tree: path, inventory: list<record>, storage: list<record>, unpacked: path]: nothing -> list<record> {
     for a in ($storage | where kind == "archive") {
         mkdir $unpacked
@@ -292,7 +292,7 @@ export def reread [run: path, scratch: path, reader: string, bin: path, ...words
     $done
 }
 
-# The stored object carrying a run's original, null for one the run does not store
+# The stored object carrying a run's original, null for one it does not store
 def carrier-of [path: string, storage: list<record>]: nothing -> any {
     $storage | where {|s| $path in $s.holds } | get -o 0.object
 }

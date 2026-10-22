@@ -199,6 +199,11 @@ unread. A condition is complete when each slot holds a valid run with every
 figure and no run of it is refused; only complete conditions' runs reach the
 rule.
 
+Its checks run in that order: the freeze, every run's image and kernel its
+condition's declared export; each condition's slots, filled once by valid runs
+holding every figure; the controls and the host limits, each bound to its runs;
+and the calibration, recomputed from its own runs' captures.
+
 ## def figure-of
 
 An arm's figure for a statistic, the median of its runs' values, beside

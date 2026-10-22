@@ -19,12 +19,12 @@ def "main calibrate" [base: path, out: path] {
     timing calibrate $base $out
 }
 
-# The readings a comparison's captures give, from a spec, written as readings.nuon
+# The readings a comparison's captures give, from a spec, as readings.nuon
 def "main readings" [spec: path, out: path] {
     readings $spec $out
 }
 
-# JointTiming's host package from a readings spec's freeze and jab's benches, one tar
+# JointTiming's host package: a readings spec's freeze and jab's benches, a tar
 def "main package" [spec: path, out: path, --stage: string = ""] {
     package $spec $out --stage $stage
 }

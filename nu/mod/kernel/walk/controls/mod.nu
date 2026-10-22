@@ -10,8 +10,7 @@ const STRETCH_FLIPS = 5
 # Uploads closer than this to the flip before join it, sdl report's grouping
 const JOIN_S = 0.005
 
-# The box series' controls: each an arm against another, its runs by their
-# labels less `_<n>`, and the side its measures are read from
+# The box series' controls, each an arm against another and the side it reads
 export const CONTROLS = [
     [control, first, second, side];
     ["the instrumentation", timing, cadence, paired]
@@ -52,13 +51,7 @@ def rank [values: list<number>, q: float]: nothing -> any {
     $values | sort | get ([$at 0] | math max)
 }
 
-# A run's flips on the host from its shim's log as sdl report groups its
-# uploads, each flip's first and last upload; the intervals between their
-# starts in ms, the slow stretches by STRETCH_MS and STRETCH_FLIPS, and the
-# share shown: a render shows the last flip landed since the render before,
-# so the flips shown are the renders that found at least one, as ProbeRuns'
-# selection reads a paired run; sdl report's `shown` counts the renders that
-# found exactly one, and is kept beside it as the report's
+# A run's flips on the host from its shim's log, as sdl report groups uploads
 export def host-side [probe: path]: nothing -> record {
     let log = ($probe | path join "sdl.log")
     let report = (sdl report $log)
@@ -104,9 +97,7 @@ export def host-side [probe: path]: nothing -> record {
     }
 }
 
-# A run's measures from its paired reading: the guest's presented interval
-# from the receipts, the host's flip interval of the presented flips, the
-# slow stretches, the share shown; null where the reading stopped
+# A run's measures from its paired reading, null where the reading stopped
 def paired-side [reading: record]: nothing -> any {
     if not $reading.valid or ($reading | get -o flips) == null { return null }
     {
@@ -119,8 +110,7 @@ def paired-side [reading: record]: nothing -> any {
     }
 }
 
-# One run of the series read: its probe's identity, its paired reading where
-# its build is CADENCE's, and its host side from its shim's log
+# One run of the series read: identity, paired reading, and host side
 def run-of [base: path, label: string, words: list<string>, readings: path]: nothing -> record {
     let probe = ($base | path join $label "probe")
     let identity = (open --raw ($probe | path join "identity.nuon") | decode | from nuon)
@@ -159,7 +149,7 @@ def control-of [c: record, runs: list<any>]: nothing -> record {
     { control: $c.control, first: $c.first, second: $c.second, side: $c.side, measures: $measures, within: (($problems | is-empty) and ($measures | all {|m| $m.within })), problems: $problems }
 }
 
-# The images each set built, every run of a set one image, held to its expected SHA-256
+# The images each set built, one a set, held to its expected SHA-256
 def images-of [runs: list<any>, expected: record]: nothing -> list<any> {
     $runs | group-by {|r| $r.cadence | str join "," } | transpose set rows | each {|g|
         let shas = ($g.rows | get image_sha256 | uniq)
@@ -175,8 +165,7 @@ def images-of [runs: list<any>, expected: record]: nothing -> list<any> {
     }
 }
 
-# The box series read: every run, each control's effects, the oracle, and
-# the images, written to `out` with each paired reading beside it
+# The box series read: runs, effects, oracle, and images, written to `out`
 export def main [base: path, out: path, --expected: string = "{}"]: nothing -> nothing {
     let base = ($base | path expand)
     let runs_file = ($base | path join "runs.nuon")

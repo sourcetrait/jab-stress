@@ -4,8 +4,7 @@ use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge)
 use (path self ../matrix)
 use (path self ../matrix) [JAB MAP STRESS TARGETS]
 
-# The named builds the qualification's bench files declare at jab's HEAD,
-# each name one set in every file
+# The named builds the qualification's bench files declare at jab's HEAD
 def named-builds []: nothing -> list<any> {
     let declared = ($TARGETS | each {|t| open ($JAB | path join "kit" "fierce" "bench" $"qual_($t).nuon") | get -o builds | default [] } | flatten)
     $declared | each {|x| $x.name } | uniq | each {|n|
@@ -15,8 +14,7 @@ def named-builds []: nothing -> list<any> {
     }
 }
 
-# A named build made in its tree at the candidate's commit, as a bench makes
-# it, its image's, ELF's, and kernel's SHA-256 and its flags
+# A named build made in its tree at the candidate's commit, as a bench does
 def named-build [x: record]: nothing -> record {
     let b = (bench build-set $JAB ($JAB | path join kit fierce) $x.set)
     let flags = (open --raw ($b.out | path join "flags") | decode | lines | first)
@@ -35,8 +33,7 @@ def head-of [repo: path]: nothing -> record<commit: string, dirty: bool> {
     { commit: $commit, dirty: $dirty }
 }
 
-# The candidate at its freeze: the release build, each named build the bench
-# files declare made before it, and every digest
+# The candidate at its freeze: the release build, the named builds, digests
 export def candidate-of [tag: string]: nothing -> record {
     let repos = [[repo, dir]; [jab $JAB] [stress $STRESS]]
     let heads = ($repos | each {|r|
