@@ -92,7 +92,7 @@ def summary [rows: list<any>]: nothing -> record {
 }
 
 # The cadence lane's summary of the batches under `base`, saved
-export def main [base: string, out: string, ...labels: string] {
+export def main [base: string, out: string, ...labels: string]: nothing -> nothing {
     analyse $base $labels | to nuon --indent 1 | save --raw -f $out
     print $"lane: ($labels | length) batches summarised to ($out)"
 }

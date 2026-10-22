@@ -168,7 +168,7 @@ def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>,
 }
 
 # A restored footprint run read again against a pose set, the first beside it
-export def reread [tree: path, out: path, poses: path] {
+export def reread [tree: path, out: path, poses: path]: nothing -> nothing {
     let tree = ($tree | path expand)
     let out = ($out | path expand)
     let run = (restored-run $tree)

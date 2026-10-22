@@ -82,7 +82,7 @@ def dump-headers [api: binary, --bare]: nothing -> list<any> {
 }
 
 # The probe in one mode under a slot cap, every settle dumped and read back
-export def main [kernel: path, image: path, disk: path, out: path, mode: string, slots: int = 0, --view: string = "bay", --cycles: int = 2, --modes: int = 0, --tag: string = ""] {
+export def main [kernel: path, image: path, disk: path, out: path, mode: string, slots: int = 0, --view: string = "bay", --cycles: int = 2, --modes: int = 0, --tag: string = ""]: nothing -> nothing {
     let a = { name: "a", x: 29.0, y: 2.5, z: 1.6, yaw: 150, pitch: 0 }
     let b = { name: "b", x: 29.0, y: 2.5, z: 1.6, yaw: 330, pitch: 0 }
     let at = {|ms: int, bytes: binary| { at: ($ms * 1ms), bytes: $bytes } }
@@ -179,7 +179,7 @@ export def main [kernel: path, image: path, disk: path, out: path, mode: string,
 }
 
 # The probe on jab's debug tree, or on another image beside its kernel and disk
-export def on-debug [mode: string, out: path, slots: int = 0, --image: string = "", --view: string = "bay", --cycles: int = 2, --modes: int = 0, --tag: string = ""] {
+export def on-debug [mode: string, out: path, slots: int = 0, --image: string = "", --view: string = "bay", --cycles: int = 2, --modes: int = 0, --tag: string = ""]: nothing -> nothing {
     let p = (places)
     main $p.kernel (if $image == "" { $p.image } else { $image }) $p.disk $out $mode $slots --view $view --cycles $cycles --modes $modes --tag $tag
 }

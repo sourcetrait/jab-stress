@@ -282,7 +282,7 @@ export def report-text [checks: list<record>, compared: any]: nothing -> string 
 }
 
 # The report over checks, the last path its Markdown file
-export def main [...paths: path, --compared: string = ""] {
+export def main [...paths: path, --compared: string = ""]: nothing -> nothing {
     if ($paths | length) < 2 { error make { msg: "report takes one check or more, then the report's file" } }
     let out = ($paths | last)
     let checks = ($paths | drop 1 | each {|p| open $p })

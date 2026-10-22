@@ -83,13 +83,13 @@ export def table-of [c: record, builds: list<string>]: nothing -> string {
 }
 
 # A battery's gain curves saved to `out` and summarised
-export def main [mode: string, base: string, out: string, ...labels: string] {
+export def main [mode: string, base: string, out: string, ...labels: string]: nothing -> nothing {
     let c = (curves $mode $base $labels)
     $c | to nuon --indent 1 | save --raw -f $out
     print $"gaincurves ($mode): ($c.builds | length) builds, ($c.problems | length) problems, identities alike ($c.identities_alike); ($out)"
 }
 
 # A saved reading's builds printed as a markdown table
-export def show [reading: string, ...builds: string] {
+export def show [reading: string, ...builds: string]: nothing -> nothing {
     table-of (open $reading) $builds | print
 }

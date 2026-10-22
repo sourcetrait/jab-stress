@@ -162,7 +162,7 @@ def bake-problems [rows: list<any>, reference: record]: nothing -> list<string> 
 }
 
 # Each pose captured on every image, then referenced and differed
-export def capture [export: path, poses: path, out: path, --only: string = ""] {
+export def capture [export: path, poses: path, out: path, --only: string = ""]: nothing -> nothing {
     let export = ($export | path expand)
     let made = (open ($export | path join $IMAGES))
     let wanted = (if $only == "" { [] } else { $only | split row "," })
@@ -219,7 +219,7 @@ export def capture [export: path, poses: path, out: path, --only: string = ""] {
 }
 
 # The clamp's plan over a captured pose: its threshold, clamped blocks, witnesses
-export def clamp-plan [dir: path, surface: int, --owner: string = "owner", --levels: string = "levels"] {
+export def clamp-plan [dir: path, surface: int, --owner: string = "owner", --levels: string = "levels"]: nothing -> nothing {
     let c = (open ($dir | path join "pose.nuon"))
     let s = ($c.rows | where label == $levels | first | get binding.state)
     let screen = {|label: string| $c.rows | where label == $label | first | get screen }

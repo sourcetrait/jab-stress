@@ -17,7 +17,7 @@ const CASES = [
 ]
 
 # Each case's candidate tree written from the game's src at a commit
-export def main [cands: path, commit: string, ...names: string] {
+export def main [cands: path, commit: string, ...names: string]: nothing -> nothing {
     let jab = ($GAME | path join .. .. | path expand)
     let head = (^git -C $jab rev-parse HEAD | str trim)
     if not ($head | str starts-with $commit) {

@@ -35,7 +35,7 @@ def program-of [export: path]: nothing -> string {
 }
 
 # An export's five debug images built with their kernels and provenance
-export def images [export: path] {
+export def images [export: path]: nothing -> nothing {
     let export = ($export | path expand)
     let record = ($export | path join $IMAGES)
     if ($record | path exists) { error make { msg: $"($record) exists; an export's images are made once" } }

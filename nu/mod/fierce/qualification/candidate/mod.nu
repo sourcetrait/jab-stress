@@ -87,7 +87,7 @@ export def candidate-of [tag: string]: nothing -> record {
 }
 
 # The candidate's record at its freeze, written to `out`
-export def main [out: path, --tag: string = ""] {
+export def main [out: path, --tag: string = ""]: nothing -> nothing {
     let c = (candidate-of $tag)
     $c | to nuon --indent 2 | save --raw $out
     print $"qualification: the candidate ($c.tag | default 'untagged') at jab (matrix short $c.jab), jab-stress (matrix short $c.stress), image ($c.image_sha256); ($out)"

@@ -14,7 +14,7 @@ def raise-frame [levels: int]: nothing -> binary {
 }
 
 # The held-off views drawn by two images and held byte for byte
-export def main [kernel: path, base: path, new: path, handoff_disk: path, still_disk: path, out: path] {
+export def main [kernel: path, base: path, new: path, handoff_disk: path, still_disk: path, out: path]: nothing -> nothing {
     let head = { name: "head", x: 6.5, y: 9.5, z: 1.6, yaw: 90, pitch: 0 }
     let oblique = { name: "oblique", x: 11.02, y: 11.5, z: 1.6, yaw: 135, pitch: 0 }
     let light = {|lighting: string| if $lighting == "gradient" { level-frame false true --gradient } else { level-frame false true --parity } }
@@ -43,7 +43,7 @@ export def main [kernel: path, base: path, new: path, handoff_disk: path, still_
 }
 
 # A base image's held-off views against jab's debug image, on its debug kernel
-export def on-debug [base: path, handoff_disk: path, still_disk: path, out: path] {
+export def on-debug [base: path, handoff_disk: path, still_disk: path, out: path]: nothing -> nothing {
     let p = (places)
     main $p.kernel $base $p.image $handoff_disk $still_disk $out
 }

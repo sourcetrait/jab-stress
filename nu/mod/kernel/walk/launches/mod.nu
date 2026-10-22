@@ -66,7 +66,7 @@ const EXITS = [
 ]
 
 # walk's own CADENCE_TEST launches against a Jab checkout
-export def main [jab_dir: path, scratch: path, --only: string = ""] {
+export def main [jab_dir: path, scratch: path, --only: string = ""]: nothing -> nothing {
     if ($scratch | path exists) { error make { msg: $"the scratch exists: ($scratch)" } }
     let only = (if $only == "" { [] } else { $only | split row "," | each {|c| $c | str trim } })
     let unknown = ($only | where {|c| $c not-in $CASES })
@@ -185,7 +185,7 @@ def recorded [out: path, label: string, --replay: path]: nothing -> record {
 }
 
 # A landed run's cases read again by today's reader, each held as it was held
-export def reread [tree: path, out: path] {
+export def reread [tree: path, out: path]: nothing -> nothing {
     let root = ($tree | path expand)
     let runs = ($root | path join "runs")
     let has = {|name: string| $runs | path join $name "api.out" | path exists }

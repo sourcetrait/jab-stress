@@ -177,7 +177,7 @@ def images-of [runs: list<any>, expected: record]: nothing -> list<any> {
 
 # The box series read: every run, each control's effects, the oracle, and
 # the images, written to `out` with each paired reading beside it
-export def main [base: path, out: path, --expected: string = "{}"] {
+export def main [base: path, out: path, --expected: string = "{}"]: nothing -> nothing {
     let base = ($base | path expand)
     let runs_file = ($base | path join "runs.nuon")
     if not ($runs_file | path exists) { error make { msg: $"($base) holds no runs.nuon, so it is no series' base" } }

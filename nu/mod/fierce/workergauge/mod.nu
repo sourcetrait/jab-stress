@@ -224,7 +224,7 @@ export def analyse [mode: string, base: string, labels: list<string>]: nothing -
 }
 
 # WorkerGauge's reading saved to `out` and summarised
-export def main [mode: string, base: string, out: string, ...labels: string] {
+export def main [mode: string, base: string, out: string, ...labels: string]: nothing -> nothing {
     let doc = (analyse $mode $base $labels)
     $doc | to nuon --indent 1 | save --raw -f $out
     let corrected = ($doc.identities | where {|i| not ($i.corrected | is-empty) } | length)

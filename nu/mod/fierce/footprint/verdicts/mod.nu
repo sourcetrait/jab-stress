@@ -80,7 +80,7 @@ def population-of [c: record, rows: path, listed: record]: nothing -> record<cou
 }
 
 # Every captured pose judged against the pose set, reading.nuon written
-export def read [out: path, poses: path] {
+export def read [out: path, poses: path]: nothing -> nothing {
     let set = (open $poses)
     let inventory = ($set | get name)
     let captured = (glob ($out | path join "*" "pose.nuon") | sort | each {|f| open $f })

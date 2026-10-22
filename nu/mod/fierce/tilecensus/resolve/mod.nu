@@ -1,7 +1,7 @@
 use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge)
 
 # Each run request resolved, the answers printed as NUON
-export def main [requests: string] {
+export def main [requests: string]: nothing -> nothing {
     $requests | from nuon | each {|q|
         let g = (open $q.report)
         let r = ($g.runs | where run == $q.run | first)

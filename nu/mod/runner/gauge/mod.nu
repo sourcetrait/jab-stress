@@ -9,7 +9,7 @@ def measured [fps: path, tree: string, runs: int, flags: list<string>]: nothing 
 }
 
 # One batch measured under `base`, its log beside it, a failure its last lines
-export def batch [fps: path, base: path, label: string, tree: string, runs: int, flags: list<string>, --name: string = ""] {
+export def batch [fps: path, base: path, label: string, tree: string, runs: int, flags: list<string>, --name: string = ""]: nothing -> nothing {
     let r = (measured $fps $tree $runs ($flags ++ [--out ($base | path join $label) --label $label]))
     $r.text | save --raw -f ($base | path join $"($label).log")
     let who = (if $name == "" { $label } else { $"($name) ($label)" })

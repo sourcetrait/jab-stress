@@ -10,7 +10,7 @@ def render-one []: nothing -> record {
 }
 
 # handoff-holds alone on the debug tree, its reading saved and its time printed
-export def holds [out: path] {
+export def holds [out: path]: nothing -> nothing {
     let p = (places)
     let s = (date now)
     let r = (handoff-holds $p.kernel $p.image $out "DEBUG,COUNT" (render-one) $GAME)
@@ -19,7 +19,7 @@ export def holds [out: path] {
 }
 
 # builder-holds alone on the debug tree, its reading saved and printed
-export def builder [out: path] {
+export def builder [out: path]: nothing -> nothing {
     let p = (places)
     let r = (builder-holds $p.kernel $p.image $out "DEBUG" (render-one) $GAME)
     $r | to nuon --indent 1 | save -f ($out | path join builder.nuon)
@@ -27,7 +27,7 @@ export def builder [out: path] {
 }
 
 # builder-holds alone on another image beside the debug kernel, printed
-export def builder-on [image: path, out: path] {
+export def builder-on [image: path, out: path]: nothing -> nothing {
     let p = (places)
     let r = (builder-holds $p.kernel $image $out "DEBUG" (render-one) $GAME)
     print ($r | reject by_level | to nuon)

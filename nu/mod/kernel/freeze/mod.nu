@@ -1,7 +1,7 @@
 use (path self ../../../../../jab/nu/mod/identity)
 
 # A commit's kernel exported and built release, gated, its provenance kept
-export def main [repo: string, commit: string, cands: string, symbols: string, expected: string] {
+export def main [repo: string, commit: string, cands: string, symbols: string, expected: string]: nothing -> nothing {
     let full = (^git -C $repo rev-parse $commit | complete | get stdout | str trim)
     if $full == "" { error make { msg: $"($commit) names no commit in ($repo)" } }
     let short = ($full | str substring 0..<7)

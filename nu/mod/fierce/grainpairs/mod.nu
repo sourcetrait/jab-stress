@@ -108,7 +108,7 @@ def report [r: record]: nothing -> string {
 }
 
 # A battery's two band heights read as matched pairs, saved and printed
-export def main [mode: string, base: string, out: string, a: string, b: string, count: int] {
+export def main [mode: string, base: string, out: string, a: string, b: string, count: int]: nothing -> nothing {
     let r = (pairs $mode $base $a $b $count)
     $r | to nuon --indent 1 | save --raw -f $out
     print (report $r)

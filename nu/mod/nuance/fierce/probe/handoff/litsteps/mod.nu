@@ -16,7 +16,7 @@ def apart-ints [ia: list<int>, ib: list<int>]: nothing -> list<int> {
 }
 
 # The most a capture steps between neighbours along a rectangle's rows
-export def main [capture: path, rect: string, crosshair: int] {
+export def main [capture: path, rect: string, crosshair: int]: nothing -> nothing {
     let r = ($rect | from nuon)
     let bytes = (open --raw $capture | into binary)
     let head = (($bytes | bytes index-of --all 0x[0a] | get 2) + 1)

@@ -37,7 +37,7 @@ def made-again [key: record, dir: path]: nothing -> record {
 # records: each step's one asset tree compiled into `out`, its digest the one
 # its runs' identities record, and its disk each copy's SHA-256 in the
 # inventory; `disks.nuon` written, the verdicts printed
-export def main [bench: path, inventory: path, out: path] {
+export def main [bench: path, inventory: path, out: path]: nothing -> nothing {
     let bench = ($bench | path expand)
     let out = ($out | path expand)
     if ($out | path exists) { error make { msg: $"($out) exists; a bench's disks are made again once" } }

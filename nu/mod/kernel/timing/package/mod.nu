@@ -43,7 +43,7 @@ def played [s: record]: nothing -> record {
 # JointTiming's host package: the frozen exports by role, the asset tree and
 # the route every fps run played, and a bench a target, laid by jab's
 # package module into one tar
-export def main [spec: path, out: path, --stage: string = ""] {
+export def main [spec: path, out: path, --stage: string = ""]: nothing -> record<package: string, sha256: string, root: string, artifacts: int, bytes: int, stored_once: list<record<sha256: string, paths: list<string>>>> {
     let s = (open $spec)
     let id = (played $s)
     let fps = (frozen $s images fps)

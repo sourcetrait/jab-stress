@@ -233,7 +233,7 @@ def stripped [out: path, work: path]: nothing -> record {
 }
 
 # The controls run, one NUON record kept under `out` and printed
-export def main [out: path, work: path] {
+export def main [out: path, work: path]: nothing -> nothing {
     let out = ($out | path expand)
     let work = ($work | path expand)
     if ($out | path type) != null { error make {msg: $"($out) is already there; a run's record is written once"} }
@@ -291,7 +291,7 @@ def stripped-target [log: path]: nothing -> record<problem: string, path: string
 }
 
 # A controls run's record reread by the current reader, nothing run
-export def reread [record: path] {
+export def reread [record: path]: nothing -> nothing {
     let dir = ($record | path expand)
     let saved = (open --raw ($dir | path join "controls.nuon") | into binary | decode | from nuon)
     let unran = { reread: false, why: "the control did not run" }

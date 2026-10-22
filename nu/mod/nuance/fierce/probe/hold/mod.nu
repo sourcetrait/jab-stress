@@ -16,7 +16,7 @@ def jobs-frame [delayed: int, delay_us: int, cancel: bool, fault: int, --hold]: 
 }
 
 # W 2 in fixed bands with worker 2 held to the join, or unheld, read back
-export def main [kernel: path, image: path, disk: path, out: path, --name: string = "hold", --no-hold, --seconds: int = 8, --no-capture] {
+export def main [kernel: path, image: path, disk: path, out: path, --name: string = "hold", --no-hold, --seconds: int = 8, --no-capture]: nothing -> nothing {
     let sends = [
         { at: $SET_AT, bytes: (console workers 2 0) }
         { at: $SET_AT, bytes: (jobs-frame 2 0 false 0 --hold=(not $no_hold)) }
@@ -41,7 +41,7 @@ export def main [kernel: path, image: path, disk: path, out: path, --name: strin
 }
 
 # The hold on jab's debug tree, or on another image beside its kernel and disk
-export def on-debug [out: path, --image: string = "", --name: string = "hold", --no-hold, --seconds: int = 8, --no-capture] {
+export def on-debug [out: path, --image: string = "", --name: string = "hold", --no-hold, --seconds: int = 8, --no-capture]: nothing -> nothing {
     let p = (places)
     main $p.kernel (if $image == "" { $p.image } else { $image }) $p.disk $out --name $name --no-hold=$no_hold --seconds $seconds --no-capture=$no_capture
 }

@@ -294,7 +294,7 @@ export def read-or-refuse [mode: string, base: string, labels: list<string>]: no
 }
 
 # PoolCore's reading saved to `out` and summarised, or refused
-export def main [mode: string, base: string, out: string, ...labels: string] {
+export def main [mode: string, base: string, out: string, ...labels: string]: nothing -> nothing {
     let r = (read-or-refuse $mode $base $labels)
     if not ($r.refused | is-empty) { error make { msg: $"poolgauge refuses the reading: ($r.refused | str join '; ')" } }
     $r.doc | to nuon --indent 1 | save --raw -f $out

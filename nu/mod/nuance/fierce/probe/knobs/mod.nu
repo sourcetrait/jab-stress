@@ -38,7 +38,7 @@ def pool-trace [serial: string]: nothing -> table<frame: int, requesting: list<i
 }
 
 # The pool's knobs probed in one mode on the debug build, probe.nuon kept
-export def main [mode: string, out: path, --seconds: int = 10] {
+export def main [mode: string, out: path, --seconds: int = 10]: nothing -> nothing {
     let dbg = (target root $JAB | path join debug)
     let kernel = ($dbg | path join kernel jab.elf)
     let image = ($dbg | path join kit fierce fierce.jab)

@@ -1,7 +1,7 @@
 use (path self ../../../../../../../../jab/kit/fierce/nu/mod/gauge)
 
 # A handoff run's last rows of the pool's counters, printed as NUON
-export def main [api: path] {
+export def main [api: path]: nothing -> nothing {
     let s = (gauge stream (open --raw $api | into binary))
     print ($s | columns | to nuon)
     let m = (gauge measure (open --raw $api | into binary) [{ name: "start", places: [], pad: [] }])

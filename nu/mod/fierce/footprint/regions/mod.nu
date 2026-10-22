@@ -2,7 +2,7 @@ use (path self ../../../../../../jab/nu/mod/target)
 use (path self ../captures) [GAME]
 
 # Each region where a pose's pictures differ cut out of both as PNGs
-export def crops [out: path, pose: string, --pad: int = 16] {
+export def crops [out: path, pose: string, --pad: int = 16]: nothing -> nothing {
     let c = (open ($out | path join $pose "pose.nuon"))
     if $c.pictures == null { error make { msg: $"($pose) was refused at capture: ($c.problems | str join '; ')" } }
     let crops = ($out | path join $pose "crops")

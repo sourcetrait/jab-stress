@@ -232,7 +232,7 @@ def host-limits [read: list<any>, controls: list<any>]: nothing -> list<any> {
 # the freeze's roles by their files' SHA-256, and every battery's runs read at
 # the calibrated eps with the controls and host limits over them; written as
 # readings.nuon in `out`, each run's line printed
-export def main [spec: path, out: path] {
+export def main [spec: path, out: path]: nothing -> nothing {
     let assembler = (identity reader [$STRESS $JAB])
     let s = (open $spec)
     if not (($s.checks | describe) | str starts-with "table") { error make { msg: "the spec's checks are no table of landed runs; each a check, a landed run, and its step" } }

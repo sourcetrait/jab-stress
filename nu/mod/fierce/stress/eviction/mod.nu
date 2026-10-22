@@ -4,7 +4,7 @@ use (path self ./reuse)
 use (path self ../../places)
 
 # The eviction fixtures named, every one by default, each result kept
-export def main [kernel: path, image: path, disk: path, out: path, ...fixtures: string] {
+export def main [kernel: path, image: path, disk: path, out: path, ...fixtures: string]: nothing -> nothing {
     let asked = (if ($fixtures | is-empty) { ["cycle" "rebuild" "held" "reuse"] } else { $fixtures })
     mkdir $out
     for f in $asked {
@@ -23,7 +23,7 @@ export def main [kernel: path, image: path, disk: path, out: path, ...fixtures: 
 }
 
 # The fixtures on jab's debug tree, or another image beside its kernel and disk
-export def on-debug [out: path, ...fixtures: string, --image: string = ""] {
+export def on-debug [out: path, ...fixtures: string, --image: string = ""]: nothing -> nothing {
     let p = (places)
     main $p.kernel (if $image == "" { $p.image } else { $image }) $p.disk $out ...$fixtures
 }

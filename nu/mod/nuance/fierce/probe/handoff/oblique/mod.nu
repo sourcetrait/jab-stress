@@ -28,7 +28,7 @@ def pool-frame [--modes: int = 0, --cold, --slots: int = 0]: nothing -> binary {
 }
 
 # The oblique pose's held, tiled, and partial runs at each level
-export def main [kernel: path, image: path, disk: path, out: path, spec: string] {
+export def main [kernel: path, image: path, disk: path, out: path, spec: string]: nothing -> nothing {
     let s = ($spec | from nuon)
     let place = { name: "oblique", x: $s.x, y: $s.y, z: 1.6, yaw: $s.yaw, pitch: 0 }
     let placed = (pose pose-frame $place)
@@ -66,7 +66,7 @@ export def main [kernel: path, image: path, disk: path, out: path, spec: string]
 }
 
 # The oblique probe on jab's debug kernel and image over a handoff map's disk
-export def on-debug [spec: string, disk: path, out: path] {
+export def on-debug [spec: string, disk: path, out: path]: nothing -> nothing {
     let p = (places)
     main $p.kernel $p.image $disk $out $spec
 }

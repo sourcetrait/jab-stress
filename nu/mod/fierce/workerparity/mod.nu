@@ -145,7 +145,7 @@ def row-of [run: record, p: record, m: record, cancel: bool]: nothing -> record 
 }
 
 # A still copy's views drawn by each mode and judged against W 0's
-export def main [kernel: path, image: path, out: path, --set: string = "debug", --poses: string = "spawn,bay,up", --modes: string = "0:0,2:0,1:0,2:16", --map: string = "render_0", --harts: int = 4, --bootargs: string = "", --cancel] {
+export def main [kernel: path, image: path, out: path, --set: string = "debug", --poses: string = "spawn,bay,up", --modes: string = "0:0,2:0,1:0,2:16", --map: string = "render_0", --harts: int = 4, --bootargs: string = "", --cancel]: nothing -> nothing {
     let wanted = ($poses | split row ",")
     let modes = (modes-of $modes)
     let poses = (poses-all | where {|x| $x.name in $wanted })
@@ -202,7 +202,7 @@ def judge [parity: record, out: path, cancel: bool, harts: int, bootargs: string
 }
 
 # A parity judged again from its recorded launches, the old verdict kept
-export def rejudge [out: path, --cancel, --harts: int = 4, --bootargs: string = ""] {
+export def rejudge [out: path, --cancel, --harts: int = 4, --bootargs: string = ""]: nothing -> nothing {
     let before = ($out | path join "verdict_before.nuon")
     if ($before | path exists) { error make { msg: $"($before) exists; a parity is judged again once" } }
     let parity = (open ($out | path join "parity.nuon"))
@@ -213,7 +213,7 @@ export def rejudge [out: path, --cancel, --harts: int = 4, --bootargs: string = 
 }
 
 # A worker's fault at each count, the run ended through the kernel
-export def fault [kernel: path, image: path, out: path, --set: string = "debug", --pose: string = "spawn", --modes: string = "1:0,2:0,3:0,4:0,5:0,6:0,7:0", --map: string = "render_0", --harts: int = 8, --bootargs: string = "", --started: string = ""] {
+export def fault [kernel: path, image: path, out: path, --set: string = "debug", --pose: string = "spawn", --modes: string = "1:0,2:0,3:0,4:0,5:0,6:0,7:0", --map: string = "render_0", --harts: int = 8, --bootargs: string = "", --started: string = ""]: nothing -> nothing {
     let modes = (modes-of $modes | where workers > 0)
     let harts_started = (if $started == "" { 1..<$harts | each {|h| $h } } else { $started | split row "," | each {|h| $h | into int } })
     let p = (poses-all | where name == $pose | get 0)

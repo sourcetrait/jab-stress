@@ -139,7 +139,7 @@ export def check-of [r: any, bench: path, work: path, --inventory: string = "", 
 }
 
 # A record derived again from its bench's kept inputs into `out`, verdicts printed
-export def main [record: path, --bench: string = "", --inventory: string = "", --candidate: string = "", --out: string = ""] {
+export def main [record: path, --bench: string = "", --inventory: string = "", --candidate: string = "", --out: string = ""]: nothing -> nothing {
     let readers = (record readers-of)
     let r = (open $record)
     let out = (if $out == "" { $record | path expand | path dirname | path join "check" } else { $out | path expand })

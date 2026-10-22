@@ -1,7 +1,7 @@
 use (path self ../../../../../../../../jab/kit/fierce/nu/mod/gauge)
 
 # The pool's counters a frame from a capture, from its own configuration on
-export def main [api: path] {
+export def main [api: path]: nothing -> nothing {
     let bytes = (open --raw $api | into binary)
     let cold = ((gauge stream $bytes).configs | last | get from)
     let m = (gauge measure $bytes [{ name: "start", places: [], pad: [] }])

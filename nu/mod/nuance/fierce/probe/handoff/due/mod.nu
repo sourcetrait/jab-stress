@@ -6,7 +6,7 @@ def names [order: list<any>]: nothing -> list<string> {
 }
 
 # The launch module's due order over its cases, printed as NUON
-export def main [] {
+export def main []: nothing -> nothing {
     let p = { kind: "send", index: 0, at: 2300ms }
     let e = { kind: "send", index: 1, at: 3800ms }
     let late = (names (launch due-order [$p $e] 3500ms 3900ms))

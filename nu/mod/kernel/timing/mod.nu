@@ -169,7 +169,7 @@ def calibration-of [m: record, conds: list<any>, runs: list<any>, complete: list
 }
 
 # eps from a calibration capture's runs, each run's target its identity's spec, written as calibration.nuon
-export def calibrate [base: path, out: path] {
+export def calibrate [base: path, out: path]: nothing -> nothing {
     let selector = (identity reader [$STRESS $JAB])
     let mx = (matrix-of $MATRIX)
     if not ($mx.problems | is-empty) { error make { msg: $"($MATRIX): ($mx.problems | str join '; ')" } }
@@ -564,7 +564,7 @@ export def decide [readings: record, m: record, scratch: path]: nothing -> recor
 }
 
 # The decision over one readings record, written as decision.nuon
-export def main [readings: path, out: path] {
+export def main [readings: path, out: path]: nothing -> nothing {
     let selector = (identity reader [$STRESS $JAB])
     let mx = (matrix-of $MATRIX)
     if not ($mx.problems | is-empty) { error make { msg: $"($MATRIX): ($mx.problems | str join '; ')" } }

@@ -60,7 +60,7 @@ export def read-or-refuse [batches: list<record>]: nothing -> record<refused: li
 }
 
 # The admission reading of the batches under `base`, saved and printed
-export def main [base: path, out: path, ...labels: string] {
+export def main [base: path, out: path, ...labels: string]: nothing -> nothing {
     let r = (read-or-refuse (load $base $labels))
     if not ($r.refused | is-empty) { error make { msg: $"admission refuses the reading: ($r.refused | str join '; ')" } }
     $r.reading | to nuon | save -f $out

@@ -237,7 +237,7 @@ export def observer-reading [base: string, probed: list<string>, plain: list<str
 }
 
 # The observer sets' reading saved, each measure's effect against its noise
-export def observer-sets [base: string, out: string, --probed: string, --plain: string] {
+export def observer-sets [base: string, out: string, --probed: string, --plain: string]: nothing -> nothing {
     let reading = (observer-reading $base (labels-of probed $probed) (labels-of plain $plain))
     $reading | to nuon --indent 1 | save --raw -f $out
     for m in $reading.measures {
@@ -283,7 +283,7 @@ export def window-reading [base: string, windowed: list<string>, headless: list<
 }
 
 # The window's cost reading saved, each measure's effect against its noise
-export def window-sets [base: string, out: string, --windowed: string, --headless: string] {
+export def window-sets [base: string, out: string, --windowed: string, --headless: string]: nothing -> nothing {
     let reading = (window-reading $base (labels-of windowed $windowed) (labels-of headless $headless))
     $reading | to nuon --indent 1 | save --raw -f $out
     for m in $reading.measures {
@@ -303,7 +303,7 @@ def line-of [s: record]: nothing -> string {
 }
 
 # ProbeRuns' reading of the probed batches under `base`, saved
-export def main [base: string, out: string, ...labels: string, --eps: int = 10000] {
+export def main [base: string, out: string, ...labels: string, --eps: int = 10000]: nothing -> nothing {
     let reading = (analyse $base $labels --eps $eps)
     $reading | to nuon --indent 1 | save --raw -f $out
     for r in $reading.runs {

@@ -1,5 +1,5 @@
 # A pair run's dumps read against a views run's key sets, printed as NUON
-export def main [pair: path, sets: path, a: int = 0, b: int = 4] {
+export def main [pair: path, sets: path, a: int = 0, b: int = 4]: nothing -> nothing {
     let s = (open $pair)
     let v = (open $sets)
     let keys = [($v.dumps | get $a | get key) ($v.dumps | get $b | get key)]

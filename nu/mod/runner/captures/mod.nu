@@ -14,6 +14,6 @@ export def by-set [nuance: path, kernel: path, root: path, sets: list<record>, m
 }
 
 # Each set's directory under `root` refused where it exists
-export def fresh [root: path, sets: list<record>] {
+export def fresh [root: path, sets: list<record>]: nothing -> nothing {
     for s in $sets { if ($root | path join $s.name | path exists) { error make { msg: $"($s.name) exists under ($root)" } } }
 }

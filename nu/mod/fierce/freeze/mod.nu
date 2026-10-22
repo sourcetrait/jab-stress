@@ -67,7 +67,7 @@ def game-place [repo: string, full: string]: nothing -> list<string> {
 
 # A commit's program exported and built release, or debug with `--debug`,
 # gated, its provenance kept
-export def main [repo: string, commit: string, cands: string, expected: string, --set: string = "", --program: string = "", --debug] {
+export def main [repo: string, commit: string, cands: string, expected: string, --set: string = "", --program: string = "", --debug]: nothing -> nothing {
     let full = (^git -C $repo rev-parse $commit | complete | get stdout | str trim)
     if $full == "" { error make { msg: $"($commit) names no commit in ($repo)" } }
     let short = ($full | str substring 0..<7)

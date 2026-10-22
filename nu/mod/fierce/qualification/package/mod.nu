@@ -49,7 +49,7 @@ def named-artifacts [cand: record, name: string, build: record, export: path]: n
 
 # The candidate's host package for a target, from its export and each named
 # build's own, `exports` a NUON record of name to export directory, its bench packaged
-export def main [candidate: path, export: path, target: string, out: path, --stage: string = "", --exports: string = "{}"] {
+export def main [candidate: path, export: path, target: string, out: path, --stage: string = "", --exports: string = "{}"]: nothing -> record<package: string, sha256: string, root: string, artifacts: int, bytes: int, stored_once: list<record<sha256: string, paths: list<string>>>> {
     let cand = (open --raw $candidate | decode utf-8 | from nuon)
     let target = ($target | str lowercase)
     let given = ($exports | from nuon)

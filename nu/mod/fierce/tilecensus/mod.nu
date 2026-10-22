@@ -236,7 +236,7 @@ export def analyse [base: string, labels: list<string>]: nothing -> record {
 }
 
 # TileCensus's reading saved to `out` and summarised
-export def main [base: string, out: string, ...labels: string] {
+export def main [base: string, out: string, ...labels: string]: nothing -> nothing {
     let doc = (analyse $base $labels)
     $doc | to nuon --indent 1 | save --raw -f $out
     for b in $doc.batches {

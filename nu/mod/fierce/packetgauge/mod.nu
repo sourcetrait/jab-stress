@@ -146,7 +146,7 @@ export def analyse [mode: string, base: string, labels: list<string>]: nothing -
 }
 
 # PacketGauge's reading saved to `out` and summarised
-export def main [mode: string, base: string, out: string, ...labels: string] {
+export def main [mode: string, base: string, out: string, ...labels: string]: nothing -> nothing {
     let doc = (analyse $mode $base $labels)
     $doc | to nuon --indent 1 | save --raw -f $out
     print $"packetgauge ($mode): ($labels | length) batches, ($doc.problems | length) problems, identities alike ($doc.identities_alike); ($out)"

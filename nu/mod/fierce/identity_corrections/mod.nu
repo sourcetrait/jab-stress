@@ -4,7 +4,7 @@ use (path self ../../../../../jab/kit/fierce/nu/mod/gauge)
 const DEBUG_ONLY = [msg_workers msg_lost_bands msg_unjoined job_delay job_delay_us]
 
 # Each battery identity checked, its correction written and read back
-export def main [base: string, release_flags_file: string, nm: string, out: string, ...batteries: string] {
+export def main [base: string, release_flags_file: string, nm: string, out: string, ...batteries: string]: nothing -> nothing {
     let release_flags = (open --raw $release_flags_file | decode | lines | first)
     if ($release_flags =~ '--defsym DEBUG=') { error make { msg: $"($release_flags_file) is a debug build's: ($release_flags)" } }
     let files = ($batteries | each {|b| glob ($base | path join $b "*" "run_*" "identity.nuon") } | flatten | sort)

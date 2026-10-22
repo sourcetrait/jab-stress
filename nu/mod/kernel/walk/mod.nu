@@ -43,14 +43,14 @@ def show [record: record]: nothing -> nothing {
 }
 
 # A probed run read paired, saved
-export def main [probe: path, out: path, --eps: int = 10000, --replay: path] {
+export def main [probe: path, out: path, --eps: int = 10000, --replay: path]: nothing -> nothing {
     let record = (paired-reading $probe --eps $eps --replay $replay)
     write $record $out
     show $record
 }
 
 # An unprobed run read from its own records, guest-only, saved
-export def guest [run: path, out: path, --eps: int = 10000, --replay: path] {
+export def guest [run: path, out: path, --eps: int = 10000, --replay: path]: nothing -> nothing {
     let dir = ($run | path expand)
     let identity = (open --raw ($dir | path join "identity.nuon") | into binary | decode | from nuon)
     let api = ($dir | path join "api.out")
@@ -61,7 +61,7 @@ export def guest [run: path, out: path, --eps: int = 10000, --replay: path] {
 }
 
 # Every run under a set's tree read guest-only, each saved as <name>.guest.nuon
-export def guest-runs [tree: path, out: path, --eps: int = 10000] {
+export def guest-runs [tree: path, out: path, --eps: int = 10000]: nothing -> nothing {
     let root = ($tree | path expand)
     let runs = (glob ($root | path join "**" "api.out") --no-dir | each {|a| $a | path dirname } | where {|d| $d | path join "identity.nuon" | path exists } | sort)
     if ($runs | is-empty) { error make { msg: $"no run under ($root): no directory there holds an api.out and an identity.nuon" } }
@@ -78,7 +78,7 @@ export def guest-runs [tree: path, out: path, --eps: int = 10000] {
 }
 
 # A replay stream written from a run's own records
-export def replay-of [run: path, stream: path] {
+export def replay-of [run: path, stream: path]: nothing -> nothing {
     let bytes = (open --raw ($run | path expand | path join "api.out") | into binary)
     replay-stream $bytes | save --raw $stream
     print $"replay-of: ($stream), (open --raw $stream | into binary | bytes length) bytes"

@@ -378,7 +378,7 @@ export def record-of [bench: path, candidate: path, target: string, --readers: a
 }
 
 # A target's record written to `out`, its own verdicts printed
-export def main [bench: path, candidate: path, target: string, out: path] {
+export def main [bench: path, candidate: path, target: string, out: path]: nothing -> nothing {
     let readers = (readers-of)
     mkdir $out
     let r = (record-of $bench $candidate $target --readers $readers)
