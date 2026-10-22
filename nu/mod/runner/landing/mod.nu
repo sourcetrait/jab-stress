@@ -303,12 +303,14 @@ export def migrate [run: path, manifest: path, scratch: path, --data: string = "
     let parts = ($run | path relative-to ($root | path join runs) | path split)
     if ($parts | length) != 3 { error make { msg: $"($run) is not a run of ($root)" } }
     let old = (open --raw ($run | path join run.nuon) | decode utf-8 | from nuon)
-    if (record schema-of $old) != 1 { error make { msg: $"($run) is at schema (record schema-of $old), where a migration takes schema 1" } }
+    let schema = (record schema-of $old)
+    if $schema not-in [1 2] { error make { msg: $"($run) is at schema ($schema), where a migration takes schema 1, or a schema 2 run's kept.why" } }
     let at = ($run | path relative-to $root)
     let status = (^git -C $root status --porcelain --untracked-files=all -- $at | complete)
     if $status.exit_code != 0 or ($status.stdout | str trim) != "" { error make { msg: $"($at) holds what git has not committed" } }
     let commit = (^git -C $root rev-parse HEAD | str trim)
     let given = (open --raw $manifest | decode utf-8 | from nuon)
+    if $schema == 2 { return (revised $run $root $at $commit $given $out) }
     let withs = ($given | get -o with | default [])
     let committed = (entries-of $run "" | where path != "run.nuon")
     let named = ($committed | get path)
@@ -363,4 +365,47 @@ export def migrate [run: path, manifest: path, scratch: path, --data: string = "
     $receipt | to nuon --indent 1 | save $file
     rm -r $aside
     { run: $run, receipt: $file, originals: ($rows.inventory | length), archived: ($rows.inventory | where disposition == archived | length), unstored: ($rows.inventory | where {|r| $r.disposition in $UNSTORED } | length), restored: $back.restored }
+}
+
+# A schema 2 run's kept.why revised alone, its record's bytes before and after
+def revised [run: path, root: path, at: string, commit: string, given: record, out: path]: nothing -> record {
+    let fields = ($given | columns | sort)
+    if $fields != [migration why] { error make { msg: $"a schema 2 run's revision takes migration and why alone; the manifest holds ($fields | str join ', ')" } }
+    if ($given.why | describe) != "string" or ($given.why | str trim) == "" { error make { msg: "the why given is no line of text" } }
+    let file = ($run | path join run.nuon)
+    let raw = (open --raw $file | into binary)
+    let before = (measured $file)
+    let old = ($raw | decode utf-8 | from nuon)
+    if $old.kept.why == $given.why { error make { msg: $"the why given is ($at)'s own; nothing to revise" } }
+    let stamp = (date now | date to-timezone UTC | format date "%Y%m%dT%H%M%S")
+    let rfile = ($root | path join migration $"($stamp)-($given.migration | str lowercase).nuon")
+    if ($rfile | path dirname | path type) != "dir" { error make { msg: $"($root) holds no migration directory for the receipt" } }
+    if ($rfile | path exists) { error make { msg: $"($rfile) exists" } }
+    mkdir $out
+    $raw | save --raw ($out | path join run.nuon.before)
+    $old | update kept.why $given.why | to nuon --indent 1 | save -f $file
+    try {
+        let back = (open --raw $file | decode utf-8 | from nuon)
+        let same = (($back | reject kept) == ($old | reject kept)) and ($back.kept | columns) == ($old.kept | columns) and $back.kept.as == $old.kept.as and $back.kept.why == $given.why
+        let problems = (if $same { record stored $run --root $root } else { ["the rewritten record differs past kept.why"] })
+        if ($problems | is-not-empty) { error make { msg: ($problems | str join '; ') } }
+        let after = (measured $file)
+        let path = ($at | path join run.nuon)
+        let receipt = {
+            migration: $given.migration, stamp: $stamp, complete: true, run: $at, revision: "kept.why",
+            sources: [{ repository: "jab-stress-data", commit: $commit, paths: [$path] }],
+            phases: [[phase, done]; [Revised, true] [Held, true]],
+            checks: [
+                { phase: Revised, check: "every field of run.nuon but kept.why equal to the committed record's", ok: true }
+                { phase: Held, check: "the revised run held to its record by runner record stored", ok: true }
+            ],
+            source_files: [{ repository: "jab-stress-data", path: $path, sha256: $before.sha256, bytes: $before.length, fate: { kind: revised, as: "run.nuon", to: "run.nuon" } }],
+            destination_files: [{ repository: "jab-stress-data", path: $path, sha256: $after.sha256, bytes: $after.length, origin: { kind: record, phase: Revised } }],
+        }
+        $receipt | to nuon --indent 1 | save $rfile
+        { run: $run, receipt: $rfile, before: $before.sha256, after: $after.sha256 }
+    } catch {|e|
+        $raw | save --raw -f $file
+        error make { msg: $"($at)'s revision refused, its run.nuon put back: ($e.msg)" }
+    }
 }

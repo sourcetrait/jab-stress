@@ -153,8 +153,9 @@ its `why` naming the run it read.
 ## def migrate
 
 `migrate <run> <manifest> <scratch>`: a run committed at schema 1 moved to
-schema 2, the layout's migration. The run must be one of the repository's,
-at schema 1, with nothing git has not committed. `manifest` carries the new
+schema 2, the layout's migration, or a schema 2 run's `kept.why` revised
+(`revised`). The run must be one of the repository's, at schema 1 or 2, with
+nothing git has not committed. For schema 1, `manifest` carries the new
 record's fields, `retention`, `migration`, the receipt's WikiWord name, and
 `with`, a list of `{from, to}`: a tree outside the repository holding more
 of the run's originals, laid at `to` in the run. A further original at a
@@ -168,3 +169,18 @@ old one moved aside and put back if the swap fails. The receipt,
 further tree, every original with its SHA-256, size, disposition, and the
 object carrying it, every file the run now holds, the checks, and counts.
 The commit is the lander's step.
+
+## def revised
+
+A schema 2 run's reason for keeping restated, everything else it holds left
+as committed: an interpretation a later finding qualifies is corrected beside
+the originals, never by trimming or replacing them. `manifest` holds
+`migration` and `why` alone, the why a line of text other than the run's
+own. Before any write, the receipt's `migration/` must exist and its file
+must not; the committed `run.nuon`'s bytes go to `<scratch>/run.nuon.before`,
+then `run.nuon` is written with `kept.why` replaced, in the landing's own
+`to nuon --indent 1`, and held: every other field equal to the committed
+record's and the run held by `record stored`. A failure there or at the
+receipt puts the committed bytes back. The receipt names the commit the run
+left and `run.nuon`'s SHA-256 and size before and after, from its raw bytes;
+the commit is the lander's step.
