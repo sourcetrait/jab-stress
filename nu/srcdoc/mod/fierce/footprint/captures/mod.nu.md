@@ -1,39 +1,12 @@
 # mod.nu
 
-FootprintEstimate's comparison of the mip level a block reads (FrameCeiling.md's
-FootprintEstimate, with its fix plan's ClampedReference, SpanEndpoint, and
-JudgedPopulation). `images` builds an export's debug images, each in a copy of
-the export's program with its set (BUILDS), the kernel built with it and its
-provenance beside it (freeze's `provenance-of`), and the 1/z floor it was
-assembled with. `capture` launches a pose's kind's images (KINDS) on its map's
-still copy, or a copy keeping the androids it names, under the picture
-contract, binds each screen to the settled frame it shows, drawn by the serial
-backend, a LEVELS frame from one packet, and asks each launch for its frames'
-snapshots (CONSOLE_X); then the game's footprint crate holds the LEVELS
-captures' blocks to its reference over the OWNER capture at the images' floor,
-each capture's snapshot bound to its frame, and boxes where a view's two
-pictures differ. `clamp-plan` plans the clamp pose's threshold and witnesses
-from a capture at the release floor. `read` judges the pose set whole, every
-view's blocks accounted for by class before any count, by the declared criteria
-and the revised one; `crops` cuts each region where a view's pictures differ out
-of both. `reread` reads a landed run again from its restoration, each pose's
-disk rebuilt, its launches bound again, its reference taken anew at today's
-revision, the first reading kept beside the new (EvidenceRetention's removal
-gate). Its bin: `nu/bin/nuance/fierce/footprint.nu
-images|capture|read|clamp-plan|crops|reread`.
+Each pose captured on its kind's images under the picture contract, its
+screens bound to their frames, then referenced and differed by the crate; and
+the clamp's plan over a captured pose (footprint's captures).
 
 ## const GAME
 
 the game's directory, jab checked out beside this repository
-
-## const BUILDS
-
-the images, each a label, the set it is built with, and the kind of pose it
-serves: for a view, today's picture and the candidate's, the surfaces, and
-today's levels and the candidate's; for the clamp, the surfaces and both
-levels with IZ_TEST, the debug-only symbol that raises IZ_MIN to 5.5 m, so the
-OWNER capture, both LEVELS captures, and their span tables share one floor. The
-copy of the export each builds in is `<export>_<label>`.
 
 ## const KINDS
 
@@ -51,10 +24,6 @@ screen shows is among them under any cadence
 the console's A with its byte 4 set: every actor held at its spawn state, no
 thought and no motion, its animation's first row (actor.S's `actors_held`),
 JudgedPopulation's actor fixture
-
-## const IMAGES
-
-the images' record, in the export's own directory
 
 ## const CONSOLE_P
 
@@ -113,29 +82,6 @@ The game's footprint crate built release where cargo puts its targets: its
 binary's path, SHA-256, the checkout's commit it was built from, and whether
 the checkout held changes.
 
-## def iz-min-of
-
-ClampedReference's provenance rule: the floor is the integer the image was
-assembled with, read from its ELF's `IZ_MIN` symbol by the toolchain's nm, never
-a symbol's name or a nominal distance; 4096 on an ordinary debug build and
-12,201,612 under IZ_TEST.
-
-## def program-of
-
-The export's program directory, the one holding a manifest.
-
-## def images
-
-The images of an export (BUILDS), each its program copied beside the
-export as `<export>_<label>`, its src/, manifest, and source.nuon, the
-manifest still naming the export's SDK and the checkout's workspace;
-the checkout's kernel and then the copy built debug with its set by the
-checkout's tool; its flags holding DEBUG and every symbol of its set;
-that kernel copied beside it as `kernel.elf` with its loaded bytes,
-objcopy's flat image, as `kernel.bin`, every image's the same; and
-provenance.nuon beside it. The record, every image's label, set, kind,
-image, kernel, digests, and IZ_MIN, goes to the export's IMAGES.
-
 ## def kept-disk
 
 A map's copy with its androids dropped but those a pose keeps, compiled by
@@ -188,178 +134,3 @@ screens at the bound LEVELS frame's state, its threshold, its clamped
 blocks, its strongest witnesses, and a derivative witness, written to
 `clamp_plan.nuon` beside the pose and printed. The witness the pose set
 records is the strongest.
-
-## def judged
-
-A level's verdict against a reference level and its band, as the
-crate's judge gives it: within the band either level beside its
-boundary agrees.
-
-## def blocks-of
-
-A pose's judged blocks (rows.nuon) read block by block: by the declared
-reference, the candidate's sharper blocks today's are not (its own) and
-those both are; and each estimator's blocks the declared reference
-judges off and the secant reference passes, the along-span step's,
-since the two references differ in that term alone, with how many of
-them the along term decides and the block's step over the start's
-derivative there; and the candidate's blocks off the declared reference
-where today's agrees with it (`new_off`), its no-new-departure count.
-
-## def verdict-of
-
-A view's verdict by one reference, `prefix` "" the declared one and
-"secant_" the secant's: outside the bands the candidate's disagreements,
-sharper and coarser, at most today's, and none sharper.
-
-## def departure-of
-
-A view's no-new-departure check by its blocks: the candidate never off
-the declared reference where today's agrees with it, and never sharper by
-it where today's is not; a departure both share before the change counts
-for neither.
-
-## def population-of
-
-JudgedPopulation's rule on a pose: every unresolved class named with its
-blocks, at least one block judged, a held pose's actor blocks judged, and
-a pose recording a witness its witness judged, clamped, and the candidate's
-level there the clamped reference's.
-
-## def read
-
-The pose set's names required whole: a pose missing from `out` or refused
-at capture leaves the reading incomplete, never passing on the rest. Each
-view's tallies, today's and the candidate's, by the declared reference and
-by the secant reference, its population (population-of), its verdict by
-the criteria (verdict-of), its blocks read one by one (blocks-of), its
-no-new-departure check (departure-of), and the pictures' differing pixels
-and regions. A view holds only resolved; the criteria hold only when the
-reading is whole and every view holds. reading.nuon holds it, the declared
-criteria's whole verdict as recorded, and the revised criterion's
-(SecantCriterion), the secant's verdicts and no new departure on every
-view together.
-
-The revised criterion tests whether the candidate's row estimate gives
-the level a block's footprint asks when the along term is the engine's own
-step, the secant over the block's true length, and the down term the
-analytic derivative at the block's start on the engine's mapping; whether
-the engine's along stepping matches the analytic derivative is
-AlongSpanFootprint's. The declared criteria's result stands as recorded.
-The clamp's limit (ClampedReference): the release floor, IZ_MIN 4096, a
-depth of 16,384 m, is reached by no surface of the inventoried content at
-the inventoried poses, so the clamp stands proved at the test threshold
-alone, IZ_TEST's on the clamp pose.
-
-## def restored-run
-
-The run a restored tree came from: the `run` its restoration's receipt,
-`restoration.nuon` beside the tree, names; a tree with no receipt is no
-restoration's and refused.
-
-## def restored-file
-
-A capture's file at its path inside the run, laid in the restored tree: one
-missing named, and one whose SHA-256 is not the capture's recorded digest named,
-where the capture recorded one.
-
-## def floor-of
-
-An image's IZ_MIN: the images' record's own where it holds one, else read from
-the archived ELF of the image's recorded SHA-256 in the tree's exports by its
-flags' nm (iz-min-of); an images' record written before ClampedReference holds
-none.
-
-## const AGAIN
-
-A reread's own record in its `out`, `again.nuon`, beside the `reread.nuon`
-that `runner reread` writes there.
-
-## const VERDICTS
-
-A reading's whole verdicts, as `again.nuon` keeps both readings': whole,
-the declared, the secant, no new departure, the revised criterion, and the
-candidate's own sharper blocks.
-
-## const REFERENCE_READS
-
-The files of a still copy the crate's reference reads: the map and the images,
-a material's and a sprite frame's.
-
-## def still-differ
-
-A still copy's files, its tree and its disk, each by its path in the run,
-held to the capture's inventory rows: every row absent from the copy, every
-file of another SHA-256, and every file the capture's rows do not name.
-
-## def remade-still
-
-A still copy remade in `into` as a checkout compiled it before jab c804ccb:
-its tree copied whole, the variant's source beside the map's tree, its
-`tile.nuon` naming each source under the content where the capture's
-checkout held it (tilesources), and the disk made over it with the volume
-`fps`. The
-content's place is the map source's in the checkout at the capture's
-commit, `game/fps/content` before the game moved to `kit/fierce`; a commit
-holding no single source of the map is a problem.
-
-## def still-held
-
-A still copy made again, held file by file to the capture's inventory rows
-under its directory (still-differ), `disk.nuon` apart since the still path
-writes its own; held once a copy, its result kept as `held.nuon` beside it. A
-file that differs is a problem where the reference reads it. A copy that
-differs only elsewhere is remade (remade-still), and holds when the remade
-copy's every file and its disk are the capture's: a copy compiled after jab
-c804ccb names its sources relative to the content, where the capture's
-named them by the checkout's absolute path, so its `tile.nuon` and its disk
-are made again otherwise. The result names the files that differ, those
-that differ after the remaking and the remaking's problems, the first
-disk's SHA-256, the copy's, the remade one's, the content's place, and
-whether it held.
-
-## def reread-pose
-
-One pose read again from the restored tree into `out`. Its still copy made
-again by the still path (disk-for) and held to the capture's (still-held), a
-problem leaving the reference unread. Each launch's screen held to its
-recorded SHA-256, its stream and UART log restored; each screen bound again
-(bind) and each UART's fault lines read again, every difference from the
-recorded row named, the recorded row standing. The reference taken anew at
-today's revision on the recorded bindings, its words as `capture` gives them,
-a capture's export passed only where its recorded tally holds a snapshot: a
-capture taken before the console's X carries no span table, and its level is
-named in `no_span_table` rather than filled, the crate then reading a block's
-end from its pixels; the still copy's hold kept as `still`.
-The block table's SHA-256 beside the first's from the run's inventory; the
-pictures differed again and held to the recorded pixels and regions. The pose's
-record written as `capture` writes one, its rows' screens the restored paths,
-with `reread`: the record read, the first tool, the differences, the levels
-without a span table, and both tables' digests.
-
-## def reread
-
-A restored run read again: the run from the restoration's receipt, its
-inventory, the images' record, every captured pose; the crate built
-(footprint-tool); the pose set the run took written as `poses.nuon`, each pose
-read again (reread-pose), then `read` over them, so the reading is today's
-reader's on today's reference. Beside it the first reading, the restored `reading.nuon`,
-each view's fields that changed from it named, old and new apart, neither
-replacing the other; the fields compared are those every view of the first
-reading holds, and those it lacks, a reading made before its reader read
-them, are named. `again.nuon` holds the run, the tool, every pose's result,
-the fields compared and lacked, and both readings' whole verdicts, a verdict
-the first reader held none of null, apart from the `reread.nuon` that
-`runner reread` writes beside it. Its own outputs only: the restored
-tree is read and never written.
-
-## def crops
-
-Each region where a pose's two pictures differ cut out of both, today's
-above or left and the candidate's below or right, `pad` pixels of
-context about the box held to the screen, as PNGs under
-`<out>/<pose>/crops/`, any made before retired.
-
-- each picture cropped in a list of its own, since an operator acts
-  on every image of the list it meets; a wide region stacked, a tall
-  one side by side
