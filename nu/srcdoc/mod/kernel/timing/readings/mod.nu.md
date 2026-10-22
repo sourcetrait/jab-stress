@@ -17,8 +17,9 @@ limits.
 One NUON record:
 
 - `strategy`: `reordered` or `tradeoff`, as TheUser chose it.
-- `checks`: `function_cases`, `model`, and `cadence_fixtures`, each true
-  when exact, beside whatever evidence names them; passed through whole.
+- `checks`: a table of `check`, `run`, and `step`, each of P2's checks
+  (`function_cases`, `cadence_fixtures`) bound to the landed run in
+  jab-stress-data and the step of it that ran the check (check-of).
 - `calibration`: `calibrate`'s calibration.nuon, or the directory holding it.
 - `freeze`: `images` and `kernels`, each a table of `role` and `file`.
 - `batteries`: a table of `host`, `battery`, and `base`, each base a
@@ -65,12 +66,21 @@ the words name none, so a batch's target and size are its declaration's.
 
 A run's kernel rule from its export's provenance beside the ELF, P2 when the
 build's symbols hold P2, else P0; null for a kernel no export made, which the
-selector then matches to no condition.
+selector then matches to no condition. A label for that matching alone: the
+selector attributes a K to P2 by the kernel's SHA-256 against the frozen P2
+export, never by this label (TimingSelector's E9).
 
 ## def roles-of
 
 The freeze's roles, each its file's SHA-256, the frozen exports a condition
 names by role.
+
+## def check-of
+
+A check bound to its landed run: its name, the run's directory, its
+`run.nuon`'s SHA-256, and its step; refused where the spec's row names no
+check, run, or step or the run holds no `run.nuon`. No verdict is read here:
+the selector reads each check from its run (TimingSelector's E9).
 
 ## def calibration-of
 
@@ -88,7 +98,8 @@ ProbeRuns' capture problems name nothing, its receipts were read, its target is
 its batch's, and a probed run's ProbeRuns reading passed every stage. Its
 figures: each leg's critical path's median and presented interval's 95th, by
 the acceptance intervals, the submission age's median, the late wakes, the
-catch-ups, and K's violations; a probed run's shown frames' 95th, and kept
+catch-ups, and K's violations, with the gauge's contract, whether its receipt
+stage passed and why not, K null without it; a probed run's shown frames' 95th, and kept
 apart for the host limits, SDL's render interval's median and the guest's
 presented interval's, all as ProbeRuns' reader pools them. Its whole summary is
 kept for the shim's controls.
@@ -99,8 +110,10 @@ A walk run read guest-only at eps (walk/reading's `guest-reading`): its
 identity's target, kernel, and SHA-256; its stream header's seed and flags,
 TIMING and PREPARE, its loop order and its stamps; valid when the reading is
 valid, deciding, and on its batch's target. Its figures: the presented
-interval's median and 95th from the receipts' acceptances, K's violations, and
-with TIMING its drawing D, the work phase's median, and its phases.
+interval's median and 95th from the receipts' acceptances, and with TIMING its
+drawing D, the work phase's median, and its phases; its contract walk's
+reader's, available or why not, and K's violations the contract's, read
+whatever the reading's validity and null where the contract is unavailable.
 
 ## def battery-of
 
@@ -142,9 +155,10 @@ found, the figures of every run it rests on beside it.
 
 ## def main
 
-The readings over a spec: the assembler's identity taken first; the
-calibration's eps, refused when short; every battery read at it; the strategy
-and the checks as given, the calibration's state, eps, and qualifying frames,
+The readings over a spec: the assembler's identity taken first; the checks
+bound to their landed runs, refused unless the spec gives them as a table;
+the calibration's eps, refused when short; every battery read at it; the
+strategy as given, the checks bound, the calibration's state, eps, and qualifying frames,
 the freeze's roles, the runs, the shim's and the TIMING controls, and the host
 limits; written as readings.nuon with the spec's path and the identity, a line
 printed a run and a summary after.

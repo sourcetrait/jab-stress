@@ -1,6 +1,7 @@
 use (path self ../../../../../jab/nu/mod/identity)
 use (path self ../../../../../jab/nu/mod/nutype)
 use (path self ../../../../../jab/kit/fierce/nu/mod/gauge)
+use (path self ../../runner/landing)
 
 # The workbench, the checkout a decision's selector names
 const STRESS = (path self ../../../.. | path expand)
@@ -33,6 +34,9 @@ const STATES = [calibrated capped short]
 
 # The fields a run is matched to its declared condition by
 const MATCH = [host target battery workload backend kernel order timing probed]
+
+# The checks P2's eligibility binds, each to a landed run of the product
+const CHECKS = [function_cases cadence_fixtures]
 
 # Whether a value is a finite number, a float judged by its text
 def finite [v: any]: nothing -> bool {
@@ -247,17 +251,22 @@ def limit-binding [l: record, placed: list<any>, conds: list<any>, m: record, pa
     { limit: { host: $h.host, target: $l.target, admissible: $claims, limit: ($l | get -o limit) }, problems: [] }
 }
 
-# The readings held to the matrix before any rule: refusals and the short
-export def validate [readings: record, m: record]: nothing -> record {
-    let conds = (conditions-of $m)
-    let runs = ($readings | get -o runs | default [])
-    let placed = ($runs | each {|r|
+# Each run with its declared condition's key, or why it is at no declared slot
+def placed-of [conds: list<any>, runs: list<any>]: nothing -> list<any> {
+    $runs | each {|r|
         let c = (condition-of $conds $r)
         if $c == null { $r | upsert key null | upsert why "matches no declared condition" } else {
             let slot = ($c.slots | where {|s| $s.position == ($r | get -o position) and $s.seed == ($r | get -o seed) })
             $r | upsert key $c.key | upsert why (if ($slot | is-empty) { $"of ($c.key) at position ($r | get -o position | to nuon) and seed ($r | get -o seed | to nuon), no declared slot" } else { null })
         }
-    })
+    }
+}
+
+# The readings held to the matrix before any rule: refusals and the short
+export def validate [readings: record, m: record]: nothing -> record {
+    let conds = (conditions-of $m)
+    let runs = ($readings | get -o runs | default [])
+    let placed = (placed-of $conds $runs)
     let strays = ($placed | where {|r| $r.why != null } | each {|r| $"run ($r | get -o id): ($r.why)" })
     let twice = (["id" "dir" "nonce"] | each {|f| $runs | each {|r| $r | get -o $f } | compact | uniq --count | where count > 1 | each {|x| $"($f) ($x.value) on ($x.count) runs" } } | flatten)
     let seated = ($placed | where {|r| $r.why == null })
@@ -340,12 +349,72 @@ def leg-stat [r: record, leg: string, field: string]: nothing -> any {
     $r | get -o legs | default [] | where {|l| $l.leg == $leg } | get -o 0 | default {} | get -o $field
 }
 
-# P2's eligibility: its checks exact and no K violation in any valid P2 run
-def eligibility [readings: record]: nothing -> record {
-    let checks = ([function_cases model cadence_fixtures] | where {|k| ($readings | get -o checks | default {} | get -o $k) != true } | each {|k| $"P2's ($k) not exact" })
-    let violated = ($readings | get -o runs | default [] | where {|r| ($r | get -o kernel) == "P2" and ($r | get -o valid) == true and ($r | get -o k_violations | default 0) > 0 } | each {|r| $"K violated ($r.k_violations) times in ($r.id)" })
-    let why = ($checks ++ $violated)
-    { eligible: ($why | is-empty), why: $why }
+# A landed run restored once for the decision: its tree, or why it is not
+def restoration-of [run: string, scratch: path]: nothing -> record<run: string, tree: any, why: string> {
+    let dir = ($scratch | path join ($run | path basename))
+    try {
+        landing restore $run $dir | ignore
+        { run: $run, tree: ($dir | path join "tree"), why: "" }
+    } catch {|e| { run: $run, tree: null, why: $e.msg } }
+}
+
+# A check read from its landed run's restored step: demonstrated, failed, or unproven
+def check-state [c: any, name: string, restored: list<any>]: nothing -> record<check: string, state: string, why: string> {
+    let unproven = {|why: string| { check: $name, state: "unproven", why: $why } }
+    if $c == null { return (do $unproven "no landed run bound") }
+    let manifest = ($c.run | path join "run.nuon")
+    if not ($manifest | path exists) { return (do $unproven $"($c.run) holds no run.nuon") }
+    if (open --raw $manifest | hash sha256) != ($c | get -o run_sha256) { return (do $unproven $"($c.run)'s run.nuon is not the one the readings bound") }
+    let r = ($restored | where run == $c.run | first)
+    if $r.tree == null { return (do $unproven $"($c.run) not restored: ($r.why)") }
+    let step_file = ($r.tree | path join $c.step "step.nuon")
+    let out_file = ($r.tree | path join $c.step "run.stdout")
+    if not (($step_file | path exists) and ($out_file | path exists)) { return (do $unproven $"($c.step) holds no step.nuon and run.stdout") }
+    let step = (try { open --raw $step_file | decode | from nuon } catch { null })
+    if $step == null { return (do $unproven $"($c.step)'s step.nuon unreadable") }
+    let p2 = (("P2" in ($step | get -o symbols | default [])) and ($step | get -o kernel.held) == true and ($step | get -o kernel_source.equal) == true)
+    if not $p2 { return (do $unproven $"($c.step) is no P2 build held to its symbols on the comparison's kernel source") }
+    if ($step | get -o exit) != 0 or ($step | get -o ok) != true { return { check: $name, state: "failed", why: $"($c.step) exited ($step | get -o exit | to nuon), its assertions failing" } }
+    let passed = (open --raw $out_file | decode | lines | any {|l| $l =~ '^\S+: ok$' })
+    if not $passed { return (do $unproven $"($c.step)'s output holds no line of its program passing") }
+    { check: $name, state: "demonstrated", why: "" }
+}
+
+# A declared P2 slot's K on its frozen kernel: 0 demonstrated, past it failed
+def slot-state [key: string, position: int, r: any, p2: any]: nothing -> record<key: string, position: int, run: any, state: string, k: any, why: string> {
+    let at = { key: $key, position: $position, run: ($r | get -o id) }
+    let k = ($r | get -o k_violations)
+    let state = {|s: string, why: string| $at | merge { state: $s, k: $k, why: $why } }
+    if $r == null { return (do $state "unproven" "its run missing") }
+    let contract = ($r | get -o contract)
+    if $contract == null or ($contract | get -o available) != true { return (do $state "unproven" $"its contract unavailable: ($contract | get -o reason | default 'none recorded')") }
+    let sha = ($r | get -o kernel_sha256)
+    if $sha == null { return (do $state "unproven" "its kernel unattributed, no hash recorded") }
+    if $p2 == null or $sha != $p2 { return (do $state "unproven" "its kernel unattributed, another export's") }
+    if not (finite $k) { return (do $state "unproven" "its K unread") }
+    if $k > 0 { return (do $state "failed" $"K violated ($k) times") }
+    do $state "demonstrated" ""
+}
+
+# P2's eligibility, demonstrated, failed, or unproven: its checks read from
+# their landed runs, K from every P2 slot and run on the frozen P2 kernel
+def eligibility [readings: record, m: record, scratch: path]: nothing -> record<state: string, checks: list<any>, runs: list<any>, why: list<string>> {
+    let given = ($readings | get -o checks)
+    let bound = (if (($given | describe) | str starts-with "table") or (($given | describe) | str starts-with "list") { $given } else { [] })
+    let restored = ($bound | each {|c| $c | get -o run } | compact | uniq | each {|r| restoration-of $r $scratch })
+    let checks = ($CHECKS | each {|name| check-state ($bound | where {|c| ($c | get -o check) == $name } | get -o 0) $name $restored })
+    let p2 = ($readings | get -o freeze.kernels | default [] | where {|x| ($x | get -o role) == "P2" } | get -o 0.sha256)
+    let conds = (conditions-of $m)
+    let runs = ($readings | get -o runs | default [])
+    let placed = (placed-of $conds $runs)
+    let slots = ($conds | where kernel == "P2" | each {|c| $c.slots | each {|s|
+        slot-state $c.key $s.position ($placed | where {|r| $r.key == $c.key and ($r | get -o position) == $s.position } | get -o 0) $p2
+    } } | flatten)
+    let observed = ($runs | where {|r| $p2 != null and ($r | get -o kernel_sha256) == $p2 and ($r | get -o contract.available) == true and (finite ($r | get -o k_violations)) and $r.k_violations > 0 } | each {|r| $"K violated ($r.k_violations) times in ($r.id) on P2's kernel" })
+    let failed = (($checks | any {|c| $c.state == "failed" }) or ($slots | any {|s| $s.state == "failed" }) or ($observed | is-not-empty))
+    let unproven = (($checks | any {|c| $c.state == "unproven" }) or ($slots | any {|s| $s.state == "unproven" }))
+    let why = (($checks | where state != "demonstrated" | each {|c| $"P2's ($c.check) ($c.state): ($c.why)" }) ++ ($slots | where state != "demonstrated" | each {|s| $"($s.key) at ($s.position) ($s.state): ($s.why)" }) ++ $observed | uniq)
+    { state: (if $failed { "failed" } else if $unproven { "unproven" } else { "demonstrated" }), checks: $checks, runs: $slots, why: $why }
 }
 
 # The regression rule on each declared host's deciding game runs
@@ -454,14 +523,14 @@ def outcome-of [hosts: list<string>, eligible: record, refused: bool, calibrated
     let insufficient = ((not $calibrated) or (not $noise.passed) or $short)
     let regressing = (($regress | any {|r| $r.regressing }) or ($guest | any {|r| $r.worse }) or ($display | any {|r| $r.worse }))
     let walk_failed = ($walk | any {|r| $r.fails })
-    let outcome = (if not $eligible.eligible { "ineligible" } else if $refused { "refused" } else if $insufficient { "insufficient" } else if $regressing { "regressing" } else if $walk_failed { "walk_failed" } else { "chosen" })
+    let outcome = (if $eligible.state == "failed" { "ineligible" } else if $refused { "refused" } else if $insufficient or $eligible.state != "demonstrated" { "insufficient" } else if $regressing { "regressing" } else if $walk_failed { "walk_failed" } else { "chosen" })
     { outcome: $outcome, noise: $noise }
 }
 
 # The decision over a readings record and the matrix, validated before any rule
-export def decide [readings: record, m: record]: nothing -> record {
+export def decide [readings: record, m: record, scratch: path]: nothing -> record {
     let v = (validate $readings $m)
-    let eligible = (eligibility $readings)
+    let eligible = (eligibility $readings $m $scratch)
     let strategy = ($readings | get -o strategy)
     let rows = {
         regression: (regression $v $m)
@@ -500,10 +569,12 @@ export def main [readings: path, out: path] {
     let mx = (matrix-of $MATRIX)
     if not ($mx.problems | is-empty) { error make { msg: $"($MATRIX): ($mx.problems | str join '; ')" } }
     let raw = (open --raw $readings | into binary)
-    let decision = (decide ($raw | decode | from nuon) $mx.matrix | merge { readings_sha256: ($raw | hash sha256), matrix_sha256: (open --raw $MATRIX | hash sha256), selector: $selector })
     mkdir $out
+    let decision = (decide ($raw | decode | from nuon) $mx.matrix ($out | path join "checks") | merge { readings_sha256: ($raw | hash sha256), matrix_sha256: (open --raw $MATRIX | hash sha256), selector: $selector })
     $decision | to nuon --indent 1 | save --raw -f ($out | path join "decision.nuon")
     print $"timing select: ($decision.outcome)(if $decision.scope == null { '' } else { ', ' + $decision.scope }), the contract ($decision.contract)"
+    print $"  eligibility: ($decision.eligibility.state)"
+    for p in $decision.eligibility.why { print $"  eligibility: ($p)" }
     for p in $decision.validation.refused { print $"  refused: ($p)" }
     for p in $decision.validation.insufficient { print $"  short: ($p)" }
     for b in $decision.blockers { print $"  blocker: ($b)" }

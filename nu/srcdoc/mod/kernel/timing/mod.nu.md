@@ -4,7 +4,7 @@ JointTiming's selector (TimingSelector): the selection rule applied to one
 readings record and written as one decision record, the readings held first
 to the declared comparison (ComparisonMatrix), so no rule runs over runs the
 matrix does not account for. The readings carry the comparison as each reader
-gives it: P2's correctness checks, eps's calibration, the freeze's exports by
+gives it: P2's checks bound to their landed runs, eps's calibration, the freeze's exports by
 role, every run's identity, condition, slot, validity, and figures, the
 controls and the host limits each naming its runs. An arm is one declared
 condition's runs, complete or absent; its figure the median of its runs'
@@ -80,6 +80,13 @@ The calibration's states: calibrated, capped, short.
 
 The fields a run is matched to its declared condition by: host, target,
 battery, workload, backend, kernel, order, TIMING, and the probe.
+
+## const CHECKS
+
+The checks P2's eligibility binds, each to a landed run of the product
+(JointTiming's E1): `function_cases`, framecap's step cases under P2, and
+`cadence_fixtures`, fierce's cadence fixtures under P2. The deadline model is
+no check, a model of the rules tested against itself.
 
 ## def finite
 
@@ -172,6 +179,13 @@ A host limit bound to its runs: a declared host, its runs exactly the probed
 runs of both kernels in that host's display battery, and a claim of
 admissible runs only where both kernels' shim controls are admitted.
 
+## def placed-of
+
+Each run with the key of the declared condition its fields name, and why it
+sits at no declared slot: a run matching no condition, or its position and
+seed none of its condition's slots. The validation and the eligibility place
+runs alike.
+
 ## def validate
 
 The readings held to the matrix before any rule. Refused: a run matching no
@@ -206,11 +220,43 @@ read from a run.
 
 A leg's statistic of a run, null where the run has no such leg.
 
+## def restoration-of
+
+A check's landed run restored once for the decision (runner landing's
+`restore`) under the scratch the bin names, `<out>/checks/<run>`, its tree,
+or why it could not be: a restoration is made once, so a directory already
+there refuses.
+
+## def check-state
+
+A check read from its landed run (TimingSelector's E9), never from a value the
+readings carry: unproven where no run is bound, the run's `run.nuon` is not
+the one the readings bound by SHA-256, its restoration failed, its step holds
+no `step.nuon` and `run.stdout`, the record is unreadable, or the step is no
+P2 build held to its symbols on the comparison's kernel source; failed where
+the step exited other than 0 or its runner judged it not ok; demonstrated
+where it exited 0 and its output holds its program's passing line, `<name>:
+ok`.
+
+## def slot-state
+
+A declared P2 slot's K: unproven where its run is missing, its contract is
+unavailable, its kernel's SHA-256 is missing or another export's than the
+frozen P2 kernel, or its K unread; failed where K is past 0; demonstrated at
+0. The run's validity does not enter: a run invalid by its workload, phases,
+probe, or target keeps its contract's K.
+
 ## def eligibility
 
-P2's eligibility: its checks exact and no K violation in any valid P2 run in
-the readings, a condition complete or not and a run refused or not, so
-incomplete evidence never hides a counterexample.
+P2's eligibility in three states (TimingSelector's E9): its checks
+(check-state), every slot of every P2 condition the matrix declares
+(slot-state), and every run of the readings on the frozen P2 kernel, by its
+SHA-256 alone, whose contract is available, its K past 0 a failure whatever
+else invalidates it. Failed where any check or any such run failed, else
+unproven where any check or slot is, else demonstrated. The record names
+each check's and each slot's state and why, and every failure and gap in
+`why`, so incomplete evidence never hides a counterexample and a missing K
+is never 0.
 
 ## def regression
 
@@ -255,14 +301,17 @@ the gate.
 ## def outcome-of
 
 The outcome over the given hosts' rows, in the plan's order, with their noise
-gate: ineligible, refused, insufficient (eps uncalibrated, the gate passed, a
-predicate short), regressing, walk_failed, chosen.
+gate: ineligible (eligibility failed), refused, insufficient (eligibility
+unproven, eps uncalibrated, the gate passed, a predicate short), regressing
+(a leg's critical path, or a presentation past P0's plus N, the guest's or
+the display's), walk_failed, chosen.
 
 ## def decide
 
-The decision over a readings record and the matrix: the validation, then every
-predicate's rows, the outcome over every declared host and over the box
-alone, the scope of a chosen outcome, and the contract.
+The decision over a readings record and the matrix: the validation, P2's
+eligibility over the matrix and the readings, its checks restored under the
+scratch given, then every predicate's rows, the outcome over every declared
+host and over the box alone, the scope of a chosen outcome, and the contract.
 
 ## def main
 
@@ -270,6 +319,7 @@ The bin's one call: the selector's identity taken first, as its code is read
 (jab's `identity reader`), since the calibration's reads run for minutes; the
 matrix held to its model and itself, its problems refusing before any reading;
 the decision over the readings, merged with the readings' and the matrix's
-SHA-256 and the selector's identity, written once as decision.nuon in `out`;
-the outcome, its scope, the contract, every refusal, every shortfall, and every
-blocker printed.
+SHA-256 and the selector's identity, written once as decision.nuon in `out`,
+its checks' restorations under `out/checks`; the outcome, its scope, the
+contract, P2's eligibility and each of its failures and gaps, every refusal,
+every shortfall, and every blocker printed.

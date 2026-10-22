@@ -53,6 +53,16 @@ def roles-of [roles: list<any>]: nothing -> list<record<role: string, sha256: st
     $roles | each {|x| { role: $x.role, sha256: (open --raw $x.file | into binary | hash sha256) } }
 }
 
+# A check bound to its landed run: the run, its run.nuon's SHA-256, and its step
+def check-of [c: record]: nothing -> record<check: string, run: string, run_sha256: string, step: string> {
+    let why = $"a check binds no landed run: ($c | to nuon), each a check, a landed run, and its step"
+    if ($c | get -o check) == null or ($c | get -o run) == null or ($c | get -o step) == null { error make { msg: $why } }
+    let run = ($c.run | path expand)
+    let record = ($run | path join "run.nuon")
+    if not ($record | path exists) { error make { msg: $why } }
+    { check: $c.check, run: $run, run_sha256: (open --raw $record | hash sha256), step: $c.step }
+}
+
 # The calibration as `calibrate` wrote it, a file or the directory holding it
 def calibration-of [given: path]: nothing -> record {
     let file = (if ($given | path type) == "dir" { $given | path join "calibration.nuon" } else { $given })
@@ -83,6 +93,7 @@ def fps-run [place: record, vars: list<any>, eps: int]: nothing -> record {
         position: $place.position, seed: ($id | get -o mode.seed),
         image_sha256: ($id | get -o build.image_sha256), kernel_sha256: ($id | get -o build.kernel_sha256),
         valid: ($problems | is-empty), invalid: $problems, k_violations: $m.contract.k_violations,
+        contract: { available: $m.contract.available, reason: ($m.contract.reason | default "") },
         legs: ($m.legs | each {|l| { leg: $l.leg, critical_median_ms: (ms ($l | get -o critical.median)), presented_p95_ms: (ms ($l | get -o acceptance_interval.p95)) } }),
         submission_age_median_ms: (ms ($m.whole | get -o submission_age.median)),
         late_wakes: $m.contract.late_wakes, catch_ups: $m.contract.catch_ups,
@@ -115,7 +126,8 @@ def walk-run [place: record, eps: int]: nothing -> record {
         timing: $timing, probed: (($id | get -o shim | default "") != ""),
         position: $place.position, seed: ($header | get -o seed),
         image_sha256: ($id | get -o image.sha256), kernel_sha256: ($id | get -o kernel.sha256),
-        valid: ($problems | is-empty), invalid: $problems, k_violations: ($r | get -o k.violations),
+        valid: ($problems | is-empty), invalid: $problems, k_violations: ($g.contract | get -o k.violations),
+        contract: { available: $g.contract.available, reason: $g.contract.reason },
         presented_median_ms: ($r | get -o presented_interval.median_ms), presented_p95_ms: ($r | get -o presented_interval.p95_ms),
     }
     let phased = (if $timing { { d_median_ms: ($r | get -o phases.work.median_ms), phases: ($r | get -o phases) } } else { {} })
@@ -223,13 +235,15 @@ def host-limits [read: list<any>, controls: list<any>]: nothing -> list<any> {
 export def main [spec: path, out: path] {
     let assembler = (identity reader [$STRESS $JAB])
     let s = (open $spec)
+    if not (($s.checks | describe) | str starts-with "table") { error make { msg: "the spec's checks are no table of landed runs; each a check, a landed run, and its step" } }
+    let checks = ($s.checks | each {|c| check-of $c })
     let cal = (calibration-of $s.calibration)
     if $cal.eps == null { error make { msg: $"the calibration is ($cal.state): no eps to read the runs at" } }
     let read = ($s.batteries | each {|b| battery-of $b $cal.eps } | flatten)
     let shim = (shim-controls $read)
     let readings = {
         strategy: $s.strategy
-        checks: $s.checks
+        checks: $checks
         calibration: { state: $cal.state, eps: $cal.eps, qualifying: $cal.qualifying }
         freeze: { images: (roles-of $s.freeze.images), kernels: (roles-of $s.freeze.kernels) }
         runs: ($read | each {|x| $x.run })

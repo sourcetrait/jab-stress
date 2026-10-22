@@ -10,7 +10,7 @@ Its command is its bin, run under the real nu:
 
 | Command | What it does |
 |---|---|
-| `nu nu/bin/nuance/kernel/timing.nu <readings> <out dir>` | Reads a readings record and writes `decision.nuon` in the directory, printing the outcome, every refusal, and every shortfall |
+| `nu nu/bin/nuance/kernel/timing.nu <readings> <out dir>` | Reads a readings record and writes `decision.nuon` in the directory, restoring each check's landed run under its `checks/`, printing the outcome, P2's eligibility, every refusal, and every shortfall |
 | `nu nu/bin/nuance/kernel/timing.nu calibrate <base> <out dir>` | Reads a calibration capture's runs and writes eps's calibration, `calibration.nuon`, in the directory, printing its state, eps, and each target's figures |
 | `nu nu/bin/nuance/kernel/timing.nu readings <spec> <out dir>` | Reads every battery a spec names at the calibrated eps and writes the readings record, `readings.nuon`, in the directory, printing a line a run, then the controls and host limits |
 | `nu nu/bin/nuance/kernel/timing.nu package <spec> <out tar>` | Lays TheUser's host package from the spec's frozen exports, the asset tree and route the runs played, and jab's two JointTiming benches, one tar |
@@ -30,8 +30,11 @@ when the file breaks its model or contradicts itself.
 ## The readings
 
 One NUON record. `strategy` is how programs that await before they draw are
-handled, `reordered` or `tradeoff`. `checks` says whether P2's function
-cases, its host model, and the cadence fixtures came out exact.
+handled, `reordered` or `tradeoff`. `checks` binds P2's two checks, its
+function cases and the cadence fixtures, each to a landed run of the
+product: the check's name, the run's directory in jab-stress-data, its
+`run.nuon`'s SHA-256, and the step of the run that ran the check. The
+readings carry no verdict of a check; the selector reads each from its run.
 `calibration` is eps's as its producer states it: its state, `calibrated`,
 `capped`, or `short`, eps in ticks, and the qualifying frames on each
 target. `freeze` names the frozen exports: `images` and `kernels`, each a
@@ -43,8 +46,12 @@ workload (`fps` or `walk`), backend (`headless`, `offscreen`, `window`),
 kernel rule (`P0` or `P2`), loop order (`await` or `prepare`), whether
 walk's phase stamps were on (`timing`), and whether it was probed; its
 `position` in its battery and its `seed`; its image's and kernel's SHA-256;
-whether its reading was `valid`, with the reasons when not; and its K
-violations. An fps run carries its legs, each with its critical path's
+whether its reading was `valid`, with the reasons when not; its
+`contract`, whether its receipt sequence held so that its K could be read,
+with the reason when not; and its K violations, null when its contract is
+unavailable. A walk run's contract is walk's reader's, kept apart from the
+reading's other rules, so an invalid run can still carry its K. An fps run
+carries its legs, each with its critical path's
 median and its presented interval's 95th from the acceptance interval, its
 submission age's median, its late wakes, and its catch-ups, and a probed one
 its shown frames' 95th. A walk run carries its presented interval's median
@@ -71,6 +78,22 @@ measured again through jab's gauge, its frames at cadence 1 that waited and
 presented give their wake delays, and the larger target's 99.9th percentile
 decides eps.
 
+## P2's eligibility
+
+Eligibility takes one of three states. It is `demonstrated` when each check's
+landed run is the one the readings bound, restored under the decision's
+`checks/` directory, and its step is P2's build on the comparison's kernel
+source, exited 0 with its program's passing line, and when every P2 run the
+matrix declares is present, its contract available, its kernel the frozen
+P2 export by SHA-256, and its K 0. It is `failed`, and the outcome
+`ineligible`, when a check's step exited otherwise, or when any run on the
+frozen P2 kernel with an available contract violated K, whatever else makes
+that run invalid. It is `unproven`, and the outcome `insufficient`, when a
+check's run is missing, changed, or not restored, or a declared P2 run is
+missing, its contract unavailable, or its kernel unattributed. A missing K
+is never read as 0, and a run's rule label from its export's provenance
+attributes nothing: only the kernel's SHA-256 does.
+
 ## The decision
 
 The decision record holds the validation's refusals and shortfalls, the
@@ -90,7 +113,8 @@ decision names the code that made it.
 ## Where the readings come from
 
 `readings` writes the readings record from the comparison's own captures, a
-spec naming them: the strategy and the checks as given, the calibration
+spec naming them: the strategy as given, each check as a table row of its
+name, its landed run, and its step, bound by the run's SHA-256, the calibration
 `calibrate` wrote, the frozen exports by role and file, and each battery's
 base by host and battery. Every run is read anew at the calibrated eps, its
 fields from its own records: an fps run through jab's gauge, which reports K's
