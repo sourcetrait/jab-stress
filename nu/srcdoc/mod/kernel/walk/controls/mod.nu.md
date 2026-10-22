@@ -2,7 +2,7 @@
 
 WalkCadence's box series read whole (WalkCadence's Controls): every run of
 the series a `jab_probes` run wrote under its base, each run's probe directory
-read paired where its build is CADENCE's (the walk module's paired-reading,
+read paired where its build is CADENCE's (walk/paired's paired-reading,
 saved beside the record) and on the host's side from its shim's log; then each
 control's effect, the oracle's reading, and the images each set built held to
 the freeze's exports.

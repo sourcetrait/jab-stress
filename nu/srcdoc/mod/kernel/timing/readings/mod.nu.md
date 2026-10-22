@@ -95,12 +95,12 @@ kept for the shim's controls.
 
 ## def walk-run
 
-A walk run read guest-only at eps (walk `guest-reading`): its identity's
-target, kernel, and SHA-256; its stream header's seed and flags, TIMING and
-PREPARE, its loop order and its stamps; valid when the reading is valid,
-deciding, and on its batch's target. Its figures: the presented interval's
-median and 95th from the receipts' acceptances, K's violations, and with
-TIMING its drawing D, the work phase's median, and its phases.
+A walk run read guest-only at eps (walk/reading's `guest-reading`): its
+identity's target, kernel, and SHA-256; its stream header's seed and flags,
+TIMING and PREPARE, its loop order and its stamps; valid when the reading is
+valid, deciding, and on its batch's target. Its figures: the presented
+interval's median and 95th from the receipts' acceptances, K's violations, and
+with TIMING its drawing D, the work phase's median, and its phases.
 
 ## def battery-of
 

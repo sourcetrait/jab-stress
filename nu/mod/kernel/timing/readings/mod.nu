@@ -2,7 +2,8 @@ use (path self ../../../../../../jab/nu/mod/identity)
 use (path self ../../../../../../jab/kit/fierce/nu/mod/gauge)
 use (path self ../../../fierce/proberuns)
 use (path self ../../../fierce/observer)
-use (path self ../../walk)
+use (path self ../../walk/reading)
+use (path self ../../walk/stream)
 
 # The workbench, the checkout the assembler's identity names
 const STRESS = (path self ../../../../.. | path expand)
@@ -98,9 +99,9 @@ def walk-run [place: record, eps: int]: nothing -> record {
     let id = (open --raw ($dir | path join "identity.nuon") | into binary | decode | from nuon)
     let api = ($dir | path join "api.out")
     let bytes = (if ($api | path exists) { open --raw $api | into binary } else { 0x[] })
-    let g = (walk guest-reading $bytes $id --eps $eps)
-    let header = (if ($bytes | bytes length) >= $WALK_HEADER { walk header-of ($bytes | bytes at 0..<$WALK_HEADER) } else { null })
-    let fl = (if $header == null { null } else { walk flags-of $header.flags })
+    let g = (reading guest-reading $bytes $id --eps $eps)
+    let header = (if ($bytes | bytes length) >= $WALK_HEADER { stream header-of ($bytes | bytes at 0..<$WALK_HEADER) } else { null })
+    let fl = (if $header == null { null } else { stream flags-of $header.flags })
     let target = ($id | get -o target)
     let r = $g.reading
     let problems = ((if $g.valid { [] } else { $g.faults | each {|f| $"($f.rule): ($f.examples | first 2 | str join '; ')" } })

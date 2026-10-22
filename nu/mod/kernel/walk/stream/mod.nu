@@ -1,7 +1,3 @@
-use (path self ../../../../../jab/nu/mod/present)
-use (path self ../../../../../jab/nu/mod/sdl)
-use (path self ../../selection)
-
 # The stream's header's bytes
 const HEADER = 80
 
@@ -21,13 +17,10 @@ const SCHEMA = 4
 const MAGIC = 0x44414357
 
 # A frame's status where no flip was issued
-const NO_STATUS = 255
-
-# The kernel's tick, the clock's 10 MHz over the cap's 60
-const PERIOD = 166666
+export const NO_STATUS = 255
 
 # The clock's ticks a second, the one rate the reader reads
-const HZ = 10000000
+export const HZ = 10000000
 
 # A measurement's least window, 60 s in ticks
 const SHORTEST = 600000000
@@ -39,7 +32,7 @@ const WINDOW = 1200000000
 const TEST_WINDOW = 100000000
 
 # The most frames a window holds, walk's frame buffer
-const FRAMES_MAX = 8192
+export const FRAMES_MAX = 8192
 
 # The most events a build buffers
 const EVENTS_MAX = 4096
@@ -74,58 +67,27 @@ const TEST = 8
 # The header's EVENT_ROOM flag
 const EVENT_ROOM = 16
 
-# Each header flag's build symbol
-const SYMBOLS = { timing: "TIMING", replay: "REPLAY", prepare: "PREPARE", test: "CADENCE_TEST", event_room: "EVENT_ROOM" }
-
-# The fields an identity names its build by
-const BUILD_FIELDS = [cadence flags image kernel workload]
-
-# What a historical reading, its identity naming no build, leaves unchecked
-const HISTORICAL_UNCHECKED = [
-    "the arm: the header's flags against the build's symbols"
-    "the build: its image's and its kernel's SHA-256"
-    "the window's field and the events' bound against the build's, held to the header's own flags alone"
-]
-
-# A replay stream's magic, WRPL little-endian
-const REPLAY_MAGIC = 0x4c505257
-
-# A replay stream's header bytes
-const REPLAY_HEADER = 64
-
-# A slow stretch's least host flip interval, 1.5 periods in microseconds
-const STRETCH_US = 25000
-
-# The least presented flips a slow stretch holds
-const STRETCH_FLIPS = 5
-
-# A measure's least rise over the run's steady median, a quarter period in ticks
-const RISE = 41666
-
-# The guest's phases a stretch is located by
-const PHASES = [work wait call]
-
 # What can end a window, by the header's code
-const ENDS = ["none" "the duration" "the frame buffer" "the event room" "the replay's last frame" "an offset's range"]
+export const ENDS = ["none" "the duration" "the frame buffer" "the event room" "the replay's last frame" "an offset's range"]
 
 # A little-endian word of `size` bytes at `at`, the eight-byte one signed
-def le [b: binary, at: int, size: int]: nothing -> int {
+export def le [b: binary, at: int, size: int]: nothing -> int {
     let w = ($b | bytes at $at..<($at + $size))
     if $size == 8 { $w | into int --endian little --signed } else { $w | into int --endian little }
 }
 
 # A fault as the reading names it: rule, count, and examples
-def fault [rule: string, held: int, examples: list<string>]: nothing -> record<rule: string, held: int, examples: list<string>> {
+export def fault [rule: string, held: int, examples: list<string>]: nothing -> record<rule: string, held: int, examples: list<string>> {
     { rule: $rule, held: $held, examples: ($examples | first 4) }
 }
 
 # The rows that break a rule as one fault, none when no row does
-def faults-of [rule: string, rows: list<any>, example: closure]: nothing -> list<any> {
+export def faults-of [rule: string, rows: list<any>, example: closure]: nothing -> list<any> {
     if ($rows | is-empty) { [] } else { [(fault $rule ($rows | length) ($rows | each $example))] }
 }
 
 # Lists of faults joined in order
-def joined [lists: list<any>]: nothing -> list<any> {
+export def joined [lists: list<any>]: nothing -> list<any> {
     $lists | reduce --fold [] {|x, acc| $acc ++ $x }
 }
 
@@ -331,405 +293,8 @@ def end-faults [h: record, frames: list<record>, fl: record]: nothing -> list<an
     []
 }
 
-# The receipt stage's faults, before anything is read from a receipt
-export def receipt-faults [frames: list<record>, origin: int, timing: bool]: nothing -> list<any> {
-    let issue = ($frames | where {|f|
-        if $f.issued == 0 { $f.status != $NO_STATUS or $f.s != 0 or $f.t != 0 } else if $f.status in [0 1] { $f.s == 0 or $f.t == 0 } else { $f.status == $NO_STATUS }
-    })
-    let presents = ($frames | enumerate | each {|r|
-        let f = $r.item
-        let before = (if $r.index == 0 { 1 } else { $frames | get ($r.index - 1) | get ordinal })
-        { presented: ($f.issued == 1 and ($f.status == 0 or ($f.status == 3 and $f.ordinal == $before + 1))), ordinal: $f.ordinal }
-    })
-    let violations = (present ordinal-violations 1 $presents)
-    let ordinals = ($violations | group-by rule | items {|rule, rows| fault $"the present sequence: ($rule)" ($rows | length) ($rows | each {|v| $"frame ($v.index) at ($v.ordinal), ($v.wanted) wanted" }) } | default [])
-    let accepted = ($frames | where {|f| $f.issued == 1 and $f.status == 0 } | where {|f|
-        let low = ($origin + (if $timing { $f.call_start } else { $f.start }))
-        let high = ($origin + $f.call_end)
-        $f.s < $f.t or $f.s < $low or $f.s > $high
-    })
-    (faults-of "the receipt's flip" $issue {|f| $"frame ($f.frame): issued ($f.issued), status ($f.status), s ($f.s), T ($f.t)" }) ++ ($ordinals | sort-by rule) ++ (faults-of "the acceptance" $accepted {|f| $"frame ($f.frame): s ($f.s), T ($f.t)" })
-}
-
-# A replay stream's dt values, held to its header
-def replay-dts [bytes: binary]: nothing -> record<seed: int, dts: list<int>, faults: list<any>> {
-    let size = ($bytes | bytes length)
-    if $size < $REPLAY_HEADER { return { seed: 0, dts: [], faults: [(fault "the replay's stream" 1 [$"($size) bytes, its header ($REPLAY_HEADER)"])] } }
-    let n = (le $bytes 8 4)
-    let wrong = ([
-        (if (le $bytes 0 4) != $REPLAY_MAGIC { "its magic" })
-        (if (le $bytes 4 4) != 1 { $"schema (le $bytes 4 4)" })
-        (if $n < 1 or $n > $FRAMES_MAX { $"($n) frames" })
-        (if $size != ($REPLAY_HEADER + $n * 4) { $"($size) bytes for ($n) frames" })
-    ] | compact)
-    if not ($wrong | is-empty) { return { seed: 0, dts: [], faults: [(fault "the replay's stream" ($wrong | length) $wrong)] } }
-    { seed: (le $bytes 16 8), dts: (0..<$n | each {|i| le $bytes ($REPLAY_HEADER + $i * 4) 4 }), faults: [] }
-}
-
-# A replay run held to the stream its identity binds: SHA-256, seed, frames, dt
-def replay-bound-faults [stream: record, identity: record, replay: any]: nothing -> list<any> {
-    let bound = ($identity | get -o replay)
-    if $bound == null { return [(fault "the replay" 1 ["a REPLAY build's identity names no replay stream"])] }
-    let file = (if $replay != null { $replay | path expand } else { $bound.file })
-    if not ($file | path exists) { return [(fault "the replay" 1 [$"its stream is not at ($file)"])] }
-    let bytes = (open --raw $file | into binary)
-    let sha = ($bytes | hash sha256)
-    if $sha != $bound.sha256 { return [(fault "the replay" 1 [$"its stream's SHA-256 ($sha), the identity's ($bound.sha256)"])] }
-    let read = (replay-dts $bytes)
-    if not ($read.faults | is-empty) { return $read.faults }
-    let frames = $stream.frames
-    let differ = ($frames | zip $read.dts | where {|p| $p.0.dt != $p.1 })
-    joined [
-        (if $read.seed != $stream.header.seed { [(fault "the replay's seed" 1 [$"the header's ($stream.header.seed), its stream's ($read.seed)"])] } else { [] })
-        (if ($frames | length) != ($read.dts | length) { [(fault "the replay's frames" 1 [$"($frames | length) frames, its stream's ($read.dts | length)"])] } else { [] })
-        (faults-of "the replay's dt" $differ {|p| $"frame ($p.0.frame): dt ($p.0.dt), its stream's ($p.1)" })
-    ]
-}
-
-# The identity's build held to the header; one naming no build read as historical
-def identity-stage [stream: record, identity: record, replay: any]: nothing -> record<historical: bool, faults: list<any>, unchecked: list<string>, build: any> {
-    let fl = (flags-of $stream.header.flags)
-    let present = ($BUILD_FIELDS | where {|k| ($identity | get -o $k) != null })
-    if ($present | is-empty) {
-        let unchecked = ($HISTORICAL_UNCHECKED ++ (if $fl.replay { ["the replay: its frames, seed, and dt against its stream"] } else { [] }))
-        return { historical: true, faults: [], unchecked: $unchecked, build: null }
-    }
-    if ($present | length) < ($BUILD_FIELDS | length) {
-        let missing = ($BUILD_FIELDS | where {|k| $k not-in $present })
-        return { historical: false, faults: [(fault "the identity's build" 1 [$"it names ($present | str join ', ') and not ($missing | str join ', ')"])], unchecked: [], build: null }
-    }
-    let cadence = $identity.cadence
-    let named = {
-        timing: ("TIMING" in $cadence), replay: ("REPLAY" in $cadence), prepare: ("PREPARE" in $cadence),
-        test: ("CADENCE_TEST" in $cadence), event_room: ($identity.flags | str contains "--defsym EVENT_ROOM=1"),
-    }
-    let said = {|on: bool| if $on { "sets" } else { "clears" } }
-    let arm = ($named | columns | where {|k| ($named | get $k) != ($fl | get $k) } | each {|k| $"($SYMBOLS | get $k): the header (do $said ($fl | get $k)) it, the build (do $said ($named | get $k)) it" })
-    let order = ($identity | get -o workload.order | default "")
-    let image = ($identity | get -o image.sha256 | default "")
-    let kernel = ($identity | get -o kernel.sha256 | default "")
-    let faults = (joined [
-        (if "CADENCE" not-in $cadence { [(fault "the build" 1 [$"its symbols ($cadence | str join ' ') hold no CADENCE"])] } else { [] })
-        (faults-of "the arm against the build" $arm {|x| $x })
-        (if ($order == "prepare") != $fl.prepare { [(fault "the loop order" 1 [$"the identity's workload ($order), the header's PREPARE ($fl.prepare)"])] } else { [] })
-        (if $image == "" or $kernel == "" { [(fault "the build's files" 1 ["the identity names no image or kernel SHA-256"])] } else { [] })
-        (if $fl.replay { replay-bound-faults $stream $identity $replay } else { [] })
-    ])
-    { historical: false, faults: $faults, unchecked: [], build: { workload: $identity.workload, cadence: $cadence, image: $image, kernel: $kernel } }
-}
-
-# The nearest-rank percentile of the values, null for none
-def rank [values: list<number>, p: float]: nothing -> any {
-    if ($values | is-empty) { return null }
-    let sorted = ($values | sort)
-    let i = ([((($p * ($sorted | length)) | math ceil) - 1) 0] | math max)
-    $sorted | get $i
-}
-
-# Ticks in milliseconds, null kept
-def ms [ticks: any]: nothing -> any {
-    if $ticks == null { null } else { $ticks / 10000.0 }
-}
-
-# A distribution's median and 95th in milliseconds, from ticks
-def spread [ticks: list<number>]: nothing -> record<median_ms: any, p95_ms: any, count: int> {
-    let ms = ($ticks | each {|t| $t / 10000.0 })
-    { median_ms: (rank $ms 0.5), p95_ms: (rank $ms 0.95), count: ($ms | length) }
-}
-
-# A distribution's median and 95th in milliseconds, from microseconds
-def spread-us [us: list<number>]: nothing -> record<median_ms: any, p95_ms: any, count: int> {
-    let ms = ($us | each {|t| $t / 1000.0 })
-    { median_ms: (rank $ms 0.5), p95_ms: (rank $ms 0.95), count: ($ms | length) }
-}
-
-# The guest's side of a reading, on a stream that held
-export def guest-side [stream: record, eps: int]: nothing -> record {
-    let fl = (flags-of $stream.header.flags)
-    let frames = $stream.frames
-    let starts = ($frames | get start)
-    let intervals = ($starts | window 2 | each {|p| $p.1 - $p.0 })
-    let phases = (if $fl.timing {
-        {
-            work: (spread ($frames | each {|f| $f.work_end - $f.start })),
-            wait: (spread ($frames | each {|f| $f.wait_end - $f.wait_start })),
-            call: (spread ($frames | where issued == 1 | each {|f| $f.call_end - $f.call_start })),
-        }
-    } else { { work: null, wait: null, call: null } })
-    let accepted = ($frames | where {|f| $f.issued == 1 and $f.status == 0 } | get s)
-    let presented = ($accepted | window 2 | each {|p| $p.1 - $p.0 })
-    let k = (present k-violations $accepted $PERIOD $eps)
-    let window_s = (($frames | last | get call_end) / $HZ)
-    {
-        frames: ($frames | length),
-        window_s: $window_s,
-        ended_by: ($ENDS | get $stream.header.ended),
-        flags: $fl,
-        frame_interval: (spread $intervals),
-        presented_interval: (spread $presented),
-        phases: $phases,
-        presents: ($accepted | length),
-        k: { eps: $eps, period: $PERIOD, violations: ($k | length), first: ($k | first 8) },
-        workload: {
-            drawn: { median: (rank ($frames | get drawn) 0.5), p95: (rank ($frames | get drawn) 0.95) },
-            rect_area: { median: (rank ($frames | get rect_area) 0.5), p95: (rank ($frames | get rect_area) 0.95) },
-            enters_per_s: (if $window_s > 0 { ($frames | get enters | math sum) / $window_s } else { null }),
-        },
-    }
-}
-
-# A stream read on the path both readings take: rules, receipts, binding, build
-def guest-of [bytes: binary, identity: record, eps: int, test: bool, replay: any]: nothing -> record<result: record, stream: record> {
-    let stream = (stream-of $bytes --test=$test)
-    let base = { reader: "walk cadence", mode: "guest", guest_only: true }
-    if not $stream.complete {
-        return { result: ($base | merge { complete: false, valid: false, faults: $stream.faults, nonce: null, historical: null, deciding: false, build: null, unchecked: [], reading: null }), stream: $stream }
-    }
-    let receipts = (if ($stream.frames | is-empty) { [] } else { receipt-faults $stream.frames $stream.header.origin (flags-of $stream.header.flags).timing })
-    let wanted = ($identity | get -o capture_nonce)
-    let binding = (if $wanted == null or $wanted == 0 or $wanted != $stream.header.nonce {
-        [(fault "the binding" 1 [$"the header's nonce ($stream.header.nonce), the identity's ($wanted | to nuon)"])]
-    } else { [] })
-    let built = (identity-stage $stream $identity $replay)
-    let faults = ($stream.faults ++ $receipts ++ $binding ++ $built.faults)
-    let valid = ($faults | is-empty)
-    let result = ($base | merge {
-        complete: true, valid: $valid, faults: $faults, nonce: $stream.header.nonce,
-        historical: $built.historical, deciding: ($valid and not $built.historical), build: $built.build, unchecked: $built.unchecked,
-        reading: (if $valid { guest-side $stream $eps } else { null }),
-    })
-    { result: $result, stream: $stream }
-}
-
-# A guest-only reading: its stream, receipts, binding, build, and guest
-export def guest-reading [bytes: binary, identity: record, --eps: int = 10000, --test, --replay: path]: nothing -> record {
-    (guest-of $bytes $identity $eps $test $replay).result
-}
-
-# Each presented flip's guest figures beside what the host's renders chose
-def flip-rows [frames: list<record>, presented: list<record>, chosen: list<any>, timing: bool]: nothing -> list<any> {
-    if ($presented | length) != ($chosen | length) { error make { msg: $"the selection holds ($chosen | length) pairs for ($presented | length) presents" } }
-    $presented | zip $chosen | enumerate | each {|e|
-        let f = $e.item.0
-        let s = $e.item.1
-        if $s.ordinal != $f.ordinal { error make { msg: $"the selection's pair ($e.index) is ordinal ($s.ordinal), its present's ($f.ordinal)" } }
-        let before = (if $e.index == 0 { null } else { $presented | get ($e.index - 1) })
-        {
-            frame: $f.frame, ordinal: $f.ordinal, start: $f.start,
-            frame_interval: (if $f.frame == 0 { null } else { $f.start - ($frames | get ($f.frame - 1) | get start) }),
-            presented_interval: (if $before == null { null } else { $f.s - $before.s }),
-            work: (if $timing { $f.work_end - $f.start } else { null }),
-            wait: (if $timing { $f.wait_end - $f.wait_start } else { null }),
-            call: (if $timing { $f.call_end - $f.call_start } else { null }),
-            upload_interval_us: $s.upload_interval_us, age_us: $s.age_us, shown_interval_us: $s.shown_interval_us,
-            renders: $s.renders, repeats: $s.repeats, shown: $s.shown, superseded: $s.superseded, unshown: $s.unshown,
-        }
-    }
-}
-
-# The presented flips' host side: what the renders chose, the intervals, the age
-def flips-summary [rows: list<any>, renders: int]: nothing -> record {
-    let n = ($rows | length)
-    let shown = ($rows | where shown | length)
-    {
-        presents: $n, renders: $renders, shown: $shown,
-        superseded: ($rows | where superseded | length),
-        repeated: (if $n == 0 { 0 } else { $rows | get repeats | math sum }),
-        unshown_at_end: ($rows | where unshown | length),
-        share_shown: (if $n == 0 { null } else { $shown / $n }),
-        host_interval: (spread-us ($rows | get upload_interval_us | compact)),
-        presented_interval: (spread ($rows | get presented_interval | compact)),
-        age: (spread-us ($rows | get age_us | compact)),
-        shown_interval: (spread-us ($rows | get shown_interval_us | compact)),
-    }
-}
-
-# A stretch's figure for one measure against the run's steady flips
-def against-steady [name: string, stretch: list<any>, steady: list<any>]: nothing -> record {
-    let mine = ($stretch | get $name | compact)
-    let base = ($steady | get $name | compact)
-    let median = (rank $mine 0.5)
-    let middle = (rank $base 0.5)
-    let rise = (if $median == null or $middle == null { null } else { $median - $middle })
-    {
-        name: $name, median_ms: (ms $median), steady_median_ms: (ms $middle), steady_p95_ms: (ms (rank $base 0.95)),
-        rise_ms: (ms $rise), risen: ($rise != null and $rise >= $RISE),
-    }
-}
-
-# The slow stretches, each set against the run's steady flips and located
-def stretches-of [rows: list<any>, timing: bool]: nothing -> list<any> {
-    mut runs = []
-    mut current = []
-    for r in ($rows | enumerate) {
-        let slow = ($r.item.upload_interval_us != null and $r.item.upload_interval_us >= $STRETCH_US)
-        if $slow {
-            $current = ($current | append $r.index)
-        } else {
-            if ($current | length) >= $STRETCH_FLIPS { $runs = ($runs | append [$current]) }
-            $current = []
-        }
-    }
-    if ($current | length) >= $STRETCH_FLIPS { $runs = ($runs | append [$current]) }
-    let inside = ($runs | reduce --fold [] {|x, acc| $acc ++ $x })
-    let steady = ($rows | enumerate | where {|r| $r.index not-in $inside } | get item)
-    $runs | each {|run|
-        let mine = ($run | each {|i| $rows | get $i })
-        let frame = (against-steady frame_interval $mine $steady)
-        let phases = (if $timing { $PHASES | each {|k| against-steady $k $mine $steady } } else { null })
-        let risen = (if $timing { $phases | where risen | get name } else { [] })
-        let located = (if not $timing { null } else if not ($risen | is-empty) {
-            $risen | each {|p| { work: "the work", wait: "the wait", call: "the flip call" } | get $p }
-        } else if not $frame.risen { ["delivery past the guest"] } else { ["the frame, its rise spread across its phases"] })
-        {
-            first: { frame: ($mine | first | get frame), ordinal: ($mine | first | get ordinal) },
-            last: { frame: ($mine | last | get frame), ordinal: ($mine | last | get ordinal) },
-            flips: ($mine | length),
-            at_s: (($mine | first | get start) / $HZ),
-            host_interval: (spread-us ($mine | get upload_interval_us | compact)),
-            presented_interval: (spread ($mine | get presented_interval | compact)),
-            frame_interval: $frame,
-            phases: $phases,
-            located: $located,
-        }
-    }
-}
-
-# A probed run read paired: bundle, stream, pairing, renders, and stretches
-export def paired-reading [probe: path, --eps: int = 10000, --replay: path]: nothing -> record {
-    let dir = ($probe | path expand)
-    let bundle = ($dir | path join "bundle")
-    let identity = (open --raw ($bundle | path join "identity.nuon") | into binary | decode | from nuon)
-    let bytes = (open --raw ($bundle | path join "api.out") | into binary)
-    let g = (guest-of $bytes $identity $eps false $replay)
-    let base = ($g.result | merge { mode: "paired", guest_only: false, stage: null, capture: null, pairing: null, flips: null, stretches: null })
-    if not $g.result.valid { return ($base | merge { stage: "stream" }) }
-    let checked = (try { sdl bundle-check $bundle --guest {|api| header-nonce (open --raw $api | into binary) } } catch {|e| { refusal: $e.msg } })
-    if ($checked | get -o refusal) != null {
-        return ($base | merge { stage: "capture", valid: false, deciding: false, faults: ($g.result.faults ++ [(fault "the capture" 1 [$checked.refusal])]) })
-    }
-    let capture = ($checked | reject events)
-    let timing = (flags-of $g.stream.header.flags).timing
-    let origin = $g.stream.header.origin
-    let frames = $g.stream.frames
-    let presented = ($frames | where {|f| $f.issued == 1 and $f.status == 0 })
-    let flips = ($presented | each {|f| { status: 0, ordinal: $f.ordinal, lo: ($origin + (if $timing { $f.call_start } else { $f.start })), hi: ($origin + $f.call_end) } })
-    let pair = (sdl pair $checked.events $flips)
-    let pairing = {
-        verdict: $pair.verdict, refusals: $pair.refusals, bound: (if $timing { "recorded" } else { "frame" }),
-        bracket: $pair.bracket, shifts: $pair.shifts, window: $pair.window, fit: $pair.fit,
-        stalls: (if $timing { { calls: $pair.stalls, frame: [] } } else { { calls: [], frame: $pair.stalls } }),
-    }
-    if not $pair.ok {
-        let refused = (fault "the pairing" ($pair.refusals | length) ($pair.refusals | each {|r| $"($r.refusal): ($r.count)" }))
-        return ($base | merge { stage: "pairing", valid: false, deciding: false, capture: $capture, pairing: $pairing, faults: ($g.result.faults ++ [$refused]) })
-    }
-    let chosen = (selection $checked.events $pair.pairs)
-    let rows = (flip-rows $frames $presented $chosen.frames $timing)
-    $base | merge { capture: $capture, pairing: $pairing, flips: (flips-summary $rows $chosen.renders), stretches: (stretches-of $rows $timing) }
-}
-
 # The header's capture nonce from an export's bytes, null if too short
 export def header-nonce [bytes: binary]: nothing -> any {
     if ($bytes | bytes length) < $HEADER { return null }
     (header-of ($bytes | bytes at 0..<$HEADER)).nonce
-}
-
-# A replay stream from a run's own records, its dt values the run's
-export def replay-stream [bytes: binary]: nothing -> binary {
-    let stream = (stream-of $bytes --test)
-    if not $stream.complete or not ($stream.faults | is-empty) { error make { msg: $"the reference does not read whole: ($stream.faults | get rule | str join ', ')" } }
-    let n = ($stream.frames | length)
-    let word = {|v: int, size: int| $v | into binary --endian little | bytes at 0..<$size }
-    let head = ([
-        (do $word $REPLAY_MAGIC 4) (do $word 1 4) (do $word $n 4) (do $word 0 4)
-        (do $word $stream.header.seed 8) (do $word 0 8) ($bytes | hash sha256 --binary)
-    ] | bytes collect)
-    $head ++ ($stream.frames | each {|f| do $word $f.dt 4 } | bytes collect)
-}
-
-# A replay run's workload held to its reference's frame for frame
-export def replay-faults [replay: list<record>, reference: list<record>]: nothing -> list<any> {
-    let fields = [walkers rects rect_area drawn enters leaves]
-    if ($replay | length) != ($reference | length) { return [(fault "the replay's frames" 1 [$"($replay | length) frames, the reference's ($reference | length)"])] }
-    let differ = ($replay | zip $reference | enumerate | where {|r| $fields | any {|k| ($r.item.0 | get $k) != ($r.item.1 | get $k) } })
-    faults-of "the replay's workload" $differ {|r| $"frame ($r.index)" }
-}
-
-# A reading's record saved as NUON
-def write [record: record, out: path]: nothing -> nothing {
-    $record | to nuon --indent 1 | save --raw -f $out
-}
-
-# A reading's record printed for reading
-def show [record: record]: nothing -> nothing {
-    let state = (if $record.valid { "valid" } else if $record.complete { "invalid" } else { "incomplete" })
-    let standing = (if $record.historical == true { ", historical, no deciding arm" } else if $record.deciding { ", deciding" } else { "" })
-    let stopped = ($record | get -o stage | default "")
-    let at = (if $stopped == "" { "" } else { $", stopped at its ($stopped)" })
-    print $"walk cadence, ($record.mode): ($state)($standing)($at)"
-    for f in $record.faults { print $"  ($f.rule): ($f.held), ($f.examples | str join '; ')" }
-    for u in $record.unchecked { print $"  unchecked: ($u)" }
-    if $record.reading != null {
-        let r = $record.reading
-        print $"  ($r.frames) frames over ($r.window_s | math round -p 2) s, ended by ($r.ended_by); presents ($r.presents), K violations ($r.k.violations) at eps ($r.k.eps)"
-        print $"  frame interval ($r.frame_interval.median_ms) ms median, ($r.frame_interval.p95_ms) 95th; presented ($r.presented_interval.median_ms) and ($r.presented_interval.p95_ms)"
-    }
-    let pairing = ($record | get -o pairing)
-    if $pairing != null {
-        let window = ($pairing.window | default {})
-        let stalls = ($pairing.stalls.calls | length)
-        let framed = ($pairing.stalls.frame | length)
-        print $"  pairing ($pairing.verdict) on ($pairing.bound) bounds, ($window | get -o presents) presents of ($window | get -o uploads) uploads; stalls ($stalls), long frames on their brackets ($framed)"
-    }
-    let flips = ($record | get -o flips)
-    if $flips != null {
-        print $"  ($flips.shown) of ($flips.presents) shown, ($flips.superseded) superseded, ($flips.repeated) repeats; host flips ($flips.host_interval.median_ms) ms median, ($flips.host_interval.p95_ms) 95th; age ($flips.age.median_ms) ms"
-    }
-    for s in ($record | get -o stretches | default []) {
-        let located = (if $s.located == null { "no phase located, TIMING off" } else { $s.located | str join ", " })
-        print $"  stretch at ($s.at_s | math round -p 2) s, frames ($s.first.frame) to ($s.last.frame), ($s.flips) flips, host ($s.host_interval.median_ms) ms median: ($located)"
-    }
-}
-
-# A probed run read paired, saved
-export def main [probe: path, out: path, --eps: int = 10000, --replay: path] {
-    let record = (paired-reading $probe --eps $eps --replay $replay)
-    write $record $out
-    show $record
-}
-
-# An unprobed run read from its own records, guest-only, saved
-export def guest [run: path, out: path, --eps: int = 10000, --replay: path] {
-    let dir = ($run | path expand)
-    let identity = (open --raw ($dir | path join "identity.nuon") | into binary | decode | from nuon)
-    let api = ($dir | path join "api.out")
-    let bytes = (if ($api | path exists) { open --raw $api | into binary } else { 0x[] })
-    let record = (guest-reading $bytes $identity --eps $eps --replay $replay)
-    write $record $out
-    show $record
-}
-
-# Every run under a set's tree read guest-only, each saved as <name>.guest.nuon
-export def guest-runs [tree: path, out: path, --eps: int = 10000] {
-    let root = ($tree | path expand)
-    let runs = (glob ($root | path join "**" "api.out") --no-dir | each {|a| $a | path dirname } | where {|d| $d | path join "identity.nuon" | path exists } | sort)
-    if ($runs | is-empty) { error make { msg: $"no run under ($root): no directory there holds an api.out and an identity.nuon" } }
-    mkdir $out
-    for dir in $runs {
-        let rel = ($dir | path relative-to $root)
-        let name = (if $rel == "" { $root | path basename } else { $rel | path split | str join "_" })
-        let identity = (open --raw ($dir | path join "identity.nuon") | into binary | decode | from nuon)
-        let record = (guest-reading (open --raw ($dir | path join "api.out") | into binary) $identity --eps $eps)
-        write $record ($out | path join $"($name).guest.nuon")
-        print $"--- ($name)"
-        show $record
-    }
-}
-
-# A replay stream written from a run's own records
-export def replay-of [run: path, stream: path] {
-    let bytes = (open --raw ($run | path expand | path join "api.out") | into binary)
-    replay-stream $bytes | save --raw $stream
-    print $"replay-of: ($stream), (open --raw $stream | into binary | bytes length) bytes"
 }

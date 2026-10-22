@@ -1,4 +1,6 @@
-use (path self ..)
+use (path self ../reading)
+use (path self ../replay)
+use (path self ../stream)
 
 # The capture nonce 77's WNON frame, the protocol's bytes
 const NONCE_FRAME = 0x[57 4e 4f 4e 00 00 00 00 4d 00 00 00 00 00 00 00]
@@ -100,7 +102,7 @@ export def main [jab_dir: path, scratch: path, --only: string = ""] {
     if "replay" in $asked {
         let reference = ($four | where name == "await_on" | first | get run)
         let stream_file = ($scratch | path join "await_on.wrpl")
-        walk replay-stream $reference.bytes | save --raw $stream_file
+        replay replay-stream $reference.bytes | save --raw $stream_file
         let replayed = (wrapped $wrapper (do $image "replay") (do $kernel_of "replay") ($runs | path join "replay") "replay" --replay $stream_file)
         replay-holds $replayed $reference
         print $"walk launches: replay: ($replayed.stream.frames | length) frames, the reference's workload and dt frame for frame"
@@ -177,9 +179,9 @@ def recorded [out: path, label: string, --replay: path]: nothing -> record {
     let identity = (open --raw ($out | path join "identity.nuon") | decode | from nuon)
     let api = ($out | path join "api.out")
     let bytes = (if ($api | path exists) { open --raw $api | into binary } else { 0x[] })
-    let reading = (walk guest-reading $bytes $identity --test --replay $replay)
+    let reading = (reading guest-reading $bytes $identity --test --replay $replay)
     if not $reading.valid { fail $label $"the reading refused it: ($reading.faults | to nuon)" }
-    { identity: $identity, bytes: $bytes, reading: $reading, stream: (walk stream-of $bytes --test) }
+    { identity: $identity, bytes: $bytes, reading: $reading, stream: (stream stream-of $bytes --test) }
 }
 
 # A landed run's cases read again by today's reader, each held as it was held
@@ -225,7 +227,7 @@ def stall-median [frames: list<record>]: nothing -> float {
 # What the four loop-order runs hold beside their readings' validity
 def four-holds [name: string, r: record] {
     let frames = $r.stream.frames
-    let fl = (walk flags-of $r.stream.header.flags)
+    let fl = (stream flags-of $r.stream.header.flags)
     let ords = ($frames | where {|f| $f.issued == 1 and $f.status == 0 } | get ordinal)
     if ($ords | first) != 2 or ($ords | window 2 | any {|p| $p.1 != $p.0 + 1 }) { fail $name "the presents' ordinals are not consecutive from 2" }
     if $r.stream.header.nonce != $r.identity.capture_nonce { fail $name "the header's nonce is not the one sent" }
@@ -283,7 +285,7 @@ def replay-holds [r: record, reference: record] {
     if $r.stream.header.ended != 4 { fail "replay" $"ended by ($r.stream.header.ended), not the replay's last frame" }
     let frames = $r.stream.frames
     let ref = $reference.stream.frames
-    let faults = (walk replay-faults $frames $ref)
+    let faults = (replay replay-faults $frames $ref)
     if not ($faults | is-empty) { fail "replay" ($faults | to nuon) }
     if ($frames | get dt) != ($ref | get dt) { fail "replay" "its dt values are not the reference's" }
     if ($frames | get $CLAMP_NEXT | get dt) != $DT_MAX { fail "replay" $"frame ($CLAMP_NEXT)'s dt is not the reference's clamp" }

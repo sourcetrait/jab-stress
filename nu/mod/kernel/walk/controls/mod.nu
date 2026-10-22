@@ -1,5 +1,5 @@
 use (path self ../../../../../../jab/nu/mod/sdl)
-use (path self ..)
+use (path self ../paired)
 
 # A slow stretch's least host flip interval, 1.5 periods in milliseconds
 const STRETCH_MS = 25.0
@@ -125,7 +125,7 @@ def run-of [base: path, label: string, words: list<string>, readings: path]: not
     let probe = ($base | path join $label "probe")
     let identity = (open --raw ($probe | path join "identity.nuon") | decode | from nuon)
     let cadenced = (($identity | get -o cadence | default []) | is-not-empty)
-    let paired = (if $cadenced { walk paired-reading $probe } else { null })
+    let paired = (if $cadenced { paired paired-reading $probe } else { null })
     if $paired != null { $paired | to nuon --indent 1 | save --raw -f ($readings | path join $"($label).paired.nuon") }
     let host = (host-side $probe)
     {
