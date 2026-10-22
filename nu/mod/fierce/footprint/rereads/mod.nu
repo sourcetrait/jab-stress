@@ -100,8 +100,7 @@ def still-held [disk: record, out: path, inventory: list<any>, c: record]: nothi
     $result
 }
 
-# One captured pose read again from a restoration: disk, bindings, reference,
-# its capture held to the pose set's record but for the reading's own fields
+# One captured pose read again from a restoration, held to its pose set's row
 def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>, c: record, tool: record, listed: any]: nothing -> record {
     let name = $c.pose.name
     let unlisted = (if $listed == null { [$"the pose set holds no pose ($name)"] } else {
@@ -168,8 +167,7 @@ def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>,
     { pose: $name, problems: $problems, differences: ($launches | get differences | flatten), no_span_table: $no_span, still: $held.disk, rows_same: ($rows_sha != null and $rows_sha == $recorded_rows), pictures_same: (if $pictures == null { null } else { not $picture_differs }) }
 }
 
-# A restored footprint run read again against a pose set: every pose, its
-# reading, the first's beside it
+# A restored footprint run read again against a pose set, the first beside it
 export def reread [tree: path, out: path, poses: path] {
     let tree = ($tree | path expand)
     let out = ($out | path expand)

@@ -1,4 +1,4 @@
-# The pose fields a reading takes from the pose set, never a capture's condition
+# The pose fields a reading takes from the pose set, never from its capture
 export const READING_FIELDS = [witness derivative]
 
 # A level's verdict against a reference level and its band
@@ -48,8 +48,7 @@ def departure-of [b: record]: nothing -> record<new_off: int, own_sharper: int, 
     { new_off: $b.new_off, own_sharper: $b.own_sharper, holds: ($b.new_off == 0 and $b.own_sharper == 0) }
 }
 
-# A view's population held: none unresolved, one judged, its kind's own judged,
-# and the pose set's witnesses
+# A view's population held: resolved, judged, its actors and its witnesses
 def population-of [c: record, rows: path, listed: record]: nothing -> record<counts: record, problems: list<string>> {
     let pop = $c.reference.population
     let unresolved = ($pop.classes | transpose class blocks | where {|x| $x.class not-in [judged sky] and $x.blocks > 0 } | each {|x| $"($x.blocks) blocks unresolved, ($x.class)" })
