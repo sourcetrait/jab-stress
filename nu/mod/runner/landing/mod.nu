@@ -1,8 +1,12 @@
 use (path self ../record)
 use (path self ../log)
+use (path self ../../../../../jab/nu/mod/identity)
 
 # The data checkout beside the workbench
 const DATA = (path self ../../../../../jab-stress-data | path expand)
+
+# The workbench's checkout and jab's beside it, a reread's reader's code
+const READERS = [(path self ../../../.. | path expand) (path self ../../../../../jab | path expand)]
 
 # The files a landed run holds beside its stored objects
 const CONTROL = [run.nuon inventory.nuon storage.nuon]
@@ -280,7 +284,7 @@ export def reread [run: path, scratch: path, reader: string, bin: path, ...words
     if ($taken | is-not-empty) { error make { msg: $"the reader wrote ($taken | str join ', ') into its out, the names the reread keeps for its own record" } }
     $ran.stdout | save --raw -f ($own | path join reread.stdout)
     $ran.stderr | save --raw -f ($own | path join reread.stderr)
-    let done = { run: ($run | path expand), reader: $reader, bin: $bin, words: $words, restoration: (measured ($dir | path join restoration.nuon)).sha256, exit: $ran.exit_code }
+    let done = { run: ($run | path expand), reader: $reader, bin: $bin, words: $words, restoration: (measured ($dir | path join restoration.nuon)).sha256, exit: $ran.exit_code, identity: (identity reader $READERS) }
     $done | to nuon --indent 1 | save -f ($own | path join reread.nuon)
     $done
 }
