@@ -128,7 +128,7 @@ repositories, under the session's scratch directory or
   [--ide]`, `hot <elf>`, `fierce tiles keys|lit-steps|handoff` through
   jab's tiles bin (`keys` reads a capture's tile dumps as each tile's
   header and the SHA-256 of its texels), and `fierce census reader-holds
-  <tree> <serial>` and `gauge-load`.
+  <tree> <serial>`.
 - The development smoke is fierce's own, `kit/fierce/nu/bin/nuance.nu
   smoke <seeds> <seconds>` in the Jab checkout.
 - `nu/mod/fierce/stress/` holds the release tier's fixtures, the

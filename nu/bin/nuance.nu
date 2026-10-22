@@ -135,9 +135,4 @@ def "main fierce census reader-holds" [tree: path, serial: path] {
     census reader-holds $tree $serial
 }
 
-# fierce's gauge module loaded alone in a nu of its own.
-def "main fierce census gauge-load" [] {
-    census gauge-load
-}
-
 def main [] { help main }

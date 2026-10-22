@@ -127,8 +127,3 @@ bin's `handoff`, handoff's `handoff-stats`.
 `nu nu/bin/nuance.nu fierce census reader-holds <tree> <serial>`: the census
 reader's holds of a jab tree over a serial log, `reader-holds: ok` once they
 hold.
-
-## def main fierce census gauge-load
-
-`nu nu/bin/nuance.nu fierce census gauge-load`: fierce's gauge module loaded
-alone, `loaded` printed.
