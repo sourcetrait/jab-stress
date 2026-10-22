@@ -42,7 +42,7 @@ def programs-of [jab: path]: nothing -> list<string> {
 def build-at [jab: path, cache: path, program: string, tuple: list<string>]: [
     nothing -> record<exit: int, stderr: string>
 ] {
-    let tool = (if ($jab | path join 'nu' 'bin' 'do.nu' | path exists) { $jab | path join 'nu' 'bin' 'do.nu' } else { $jab | path join 'sdk' 'nu' 'jab.nu' })
+    let tool = ($jab | path join 'nu' 'bin' 'do.nu')
     let at = (match $program {
         '*' => [$jab],
         'kernel' => [($jab | path join 'kernel') '--kernel'],

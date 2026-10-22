@@ -40,9 +40,8 @@ Every `program.jab.toml` of the checkout outside `.git`, `.target`, and
 
 ## def build-at
 
-`nu nu/bin/do.nu build`, or `sdk/nu/jab.nu`'s on a tree from before the
-bins: at the workspace's root it builds the kernel and
-every program, at a program path the kernel and that program, and with
+`nu nu/bin/do.nu build`, the checkout's own bin: at the workspace's root it
+builds the kernel and every program, at a program path the kernel and that program, and with
 `--kernel` at the kernel's directory the kernel alone, each at the tuple.
 No `--set` is passed for the empty tuple.
 
