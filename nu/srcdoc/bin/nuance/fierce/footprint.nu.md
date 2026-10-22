@@ -34,6 +34,6 @@ both as PNGs.
 ## def main reread
 
 `nu/bin/nuance/fierce/footprint.nu reread`, its parameters `tree: path, out:
-path`: A restored run's poses read again, its reading set beside the first's.
-The "fps footprint" reader of `nuance.nu runner reread`, its words `reread
-{tree} {out}`.
+path, poses: path`: A restored run's poses read again against a pose set, its
+reading set beside the first's. The "fps footprint" reader of `nuance.nu
+runner reread`, its words `reread {tree} {out} <poses>`.

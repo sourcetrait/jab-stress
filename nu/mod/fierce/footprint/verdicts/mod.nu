@@ -1,3 +1,6 @@
+# The pose fields a reading takes from the pose set, never a capture's condition
+export const READING_FIELDS = [witness derivative]
+
 # A level's verdict against a reference level and its band
 def judged [level: int, reference: int, band: any]: nothing -> string {
     let least = (if $band == null { $reference } else { $band - 1 })
@@ -45,15 +48,19 @@ def departure-of [b: record]: nothing -> record<new_off: int, own_sharper: int, 
     { new_off: $b.new_off, own_sharper: $b.own_sharper, holds: ($b.new_off == 0 and $b.own_sharper == 0) }
 }
 
-# A view's population held: none unresolved, one judged, its kind's own judged
-def population-of [c: record, rows: path]: nothing -> record<counts: record, problems: list<string>> {
+# A view's population held: none unresolved, one judged, its kind's own judged,
+# and the pose set's witnesses
+def population-of [c: record, rows: path, listed: record]: nothing -> record<counts: record, problems: list<string>> {
     let pop = $c.reference.population
     let unresolved = ($pop.classes | transpose class blocks | where {|x| $x.class not-in [judged sky] and $x.blocks > 0 } | each {|x| $"($x.blocks) blocks unresolved, ($x.class)" })
     let none = (if $pop.classes.judged == 0 { ["no block judged"] } else { [] })
     let actors = (if ($c.pose | get -o hold | default false) and $pop.actors == 0 { ["no actor's block judged"] } else { [] })
-    let witness = ($c.pose | get -o witness)
+    let witness = ($listed | get -o witness)
+    let derivative = ($listed | get -o derivative)
+    let table = (if $witness == null and $derivative == null { [] } else { open $rows })
+    let at = {|w: record| $table | where {|r| $r.row == $w.row and $r.x0 == $w.x0 } | get -o 0 }
     let clamp = (if $witness == null { [] } else {
-        let found = (open $rows | where {|r| $r.row == $witness.row and $r.x0 == $witness.x0 } | get -o 0)
+        let found = (do $at $witness)
         if $pop.clamped == 0 {
             ["no clamped block judged"]
         } else if $found == null or $found.class != "judged" or (not $found.clamped) {
@@ -62,12 +69,21 @@ def population-of [c: record, rows: path]: nothing -> record<counts: record, pro
             [$"the candidate's level at the witness, ($found.levels | get 1), is not the clamped reference's ($found.secant_reference)"]
         } else { [] }
     })
-    { counts: $pop, problems: ($unresolved ++ $none ++ $actors ++ $clamp) }
+    let down = (if $derivative == null { [] } else {
+        let found = (do $at $derivative)
+        if $found == null or $found.class != "judged" or (not $found.clamped) {
+            [$"the derivative witness at row ($derivative.row) and ($derivative.x0) is no clamped block judged"]
+        } else if $found.down != $derivative.down {
+            [$"the down term at the derivative witness, ($found.down), is not the recorded ($derivative.down)"]
+        } else { [] }
+    })
+    { counts: $pop, problems: ($unresolved ++ $none ++ $actors ++ $clamp ++ $down) }
 }
 
 # Every captured pose judged against the pose set, reading.nuon written
 export def read [out: path, poses: path] {
-    let inventory = (open $poses | get name)
+    let set = (open $poses)
+    let inventory = ($set | get name)
     let captured = (glob ($out | path join "*" "pose.nuon") | sort | each {|f| open $f })
     if ($captured | is-empty) { error make { msg: $"no pose captured in ($out)" } }
     let missing = ($inventory | where {|n| $n not-in ($captured | get pose.name) })
@@ -77,9 +93,10 @@ export def read [out: path, poses: path] {
         let cand = ($c.reference.captures | get 1)
         let rows = ($out | path join $c.pose.name "rows.nuon")
         let blocks = (blocks-of $rows)
-        let population = (population-of $c $rows)
+        let population = (population-of $c $rows ($set | where name == $c.pose.name | get -o 0 | default {}))
         {
             pose: $c.pose.name, map: $c.pose.map, judged: $today.judged, sensitive: $population.counts.sensitive, clamped: $population.counts.clamped,
+            iz_min: ($c.reference | get -o iz_min), floor_depth: ($c.reference | get -o floor_depth),
             population: $population.counts, resolved: ($population.problems | is-empty), unresolved: $population.problems,
             declared: (verdict-of $today $cand ""), secant: (verdict-of $today $cand "secant_"),
             departure: (departure-of $blocks),
@@ -97,7 +114,8 @@ export def read [out: path, poses: path] {
     for v in $views {
         let b = $v.blocks
         let pictures = (if $v.pictures == null { "no pictures" } else { $"the pictures ($v.pictures.pixels) pixels in ($v.pictures.regions) regions, at most ($v.pictures.largest) apart" })
-        print $"($v.pose): ($v.population.blocks) blocks, ($v.judged) judged, ($v.sensitive) in a band, ($v.clamped) clamped, ($v.population.actors) on actors; (if $v.resolved { 'every block accounted for' } else { $v.unresolved | str join '; ' })"
+        let floor = (if $v.iz_min == null { "its floor unrecorded" } else { $"at IZ_MIN ($v.iz_min), ($v.floor_depth | math round --precision 1) m deep" })
+        print $"($v.pose): ($v.population.blocks) blocks, ($v.judged) judged, ($v.sensitive) in a band, ($v.clamped) clamped ($floor), ($v.population.actors) on actors; (if $v.resolved { 'every block accounted for' } else { $v.unresolved | str join '; ' })"
         print $"  declared today ($v.declared.today) off, the candidate ($v.declared.candidate) with ($v.declared.candidate_sharper) sharper, (if $v.declared.holds { 'holds' } else { 'fails' }); secant today ($v.secant.today), the candidate ($v.secant.candidate) with ($v.secant.candidate_sharper) sharper, (if $v.secant.holds { 'holds' } else { 'fails' }); ($pictures)"
         print $"  blocks: levels differing in ($b.levels_differ); sharper for both ($b.shared_sharper), the candidate's own ($b.own_sharper), today's own ($b.today_own_sharper); the along step's, today ($b.along_today.blocks) and the candidate ($b.along_candidate.blocks), the along term deciding in ($b.along_candidate.along_decides) of the candidate's, its step over the start's derivative ($b.along_candidate.ratio | default [] | each {|x| $x | math round --precision 3 } | str join ' to ')"
         print $"  no new departure from the declared reference: ($v.departure.new_off) blocks off it where today's agrees, ($v.departure.own_sharper) sharper where today's is not, (if $v.departure.holds { 'holds' } else { 'fails' })"

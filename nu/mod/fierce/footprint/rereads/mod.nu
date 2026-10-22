@@ -1,7 +1,7 @@
 use (path self ../../tilesources)
 use (path self ../builds) [IMAGES iz-min-of]
 use (path self ../captures) [GAME KINDS bind disk-for footprint-tool]
-use (path self ../verdicts) [read]
+use (path self ../verdicts) [read READING_FIELDS]
 
 # The run a restored tree came from, named by the receipt beside the tree
 def restored-run [tree: path]: nothing -> string {
@@ -100,9 +100,14 @@ def still-held [disk: record, out: path, inventory: list<any>, c: record]: nothi
     $result
 }
 
-# One captured pose read again from a restoration: disk, bindings, reference
-def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>, c: record, tool: record]: nothing -> record {
+# One captured pose read again from a restoration: disk, bindings, reference,
+# its capture held to the pose set's record but for the reading's own fields
+def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>, c: record, tool: record, listed: any]: nothing -> record {
     let name = $c.pose.name
+    let unlisted = (if $listed == null { [$"the pose set holds no pose ($name)"] } else {
+        let fields = (($c.pose | columns) ++ ($listed | columns) | uniq | where {|k| $k not-in $READING_FIELDS and ($c.pose | get -o $k) != ($listed | get -o $k) })
+        if ($fields | is-empty) { [] } else { [$"the pose set's ($name) differs from the captured pose in ($fields | str join ', ')"] }
+    })
     let kind = ($KINDS | get ($c.pose | get -o images | default "view"))
     let labels = ([$kind.owner] ++ $kind.levels ++ $kind.pictures)
     let dir = ($out | path join $name)
@@ -150,7 +155,7 @@ def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>,
         $d.stdout | from nuon
     })
     let picture_differs = ($c.pictures != null and $pictures != null and (($pictures | select pixels regions) != ($c.pictures | select pixels regions)))
-    let problems = ($missing ++ $disk_problems ++ ($reference | get -o problems | default []))
+    let problems = ($missing ++ $disk_problems ++ $unlisted ++ ($reference | get -o problems | default []))
     {
         pose: $c.pose, disk: $disk, export: $c.export, commit: $c.commit, tool: $tool, launch: ($c | get -o launch), rows: ($launches | get row),
         reference: ($reference | get -o value), pictures: $pictures, problems: $problems,
@@ -163,8 +168,9 @@ def reread-pose [tree: path, out: path, inventory: list<any>, images: list<any>,
     { pose: $name, problems: $problems, differences: ($launches | get differences | flatten), no_span_table: $no_span, still: $held.disk, rows_same: ($rows_sha != null and $rows_sha == $recorded_rows), pictures_same: (if $pictures == null { null } else { not $picture_differs }) }
 }
 
-# A restored footprint run read again: every pose, its reading, the first's beside it
-export def reread [tree: path, out: path] {
+# A restored footprint run read again against a pose set: every pose, its
+# reading, the first's beside it
+export def reread [tree: path, out: path, poses: path] {
     let tree = ($tree | path expand)
     let out = ($out | path expand)
     let run = (restored-run $tree)
@@ -172,20 +178,21 @@ export def reread [tree: path, out: path] {
     let images = (open ($tree | path join "images" $IMAGES) | get images)
     let captured = (glob ($tree | path join "*" "pose.nuon") | sort | each {|f| open $f })
     if ($captured | is-empty) { error make { msg: $"no pose captured in ($tree)" } }
+    let set = (open $poses)
     mkdir $out
     let tool = (footprint-tool)
-    let poses = ($out | path join "poses.nuon")
-    $captured | get pose | to nuon --indent 2 | save --raw $poses
-    let read = ($captured | each {|c| reread-pose $tree $out $inventory $images $c $tool })
+    let taken = ($out | path join "poses.nuon")
+    cp $poses $taken
+    let read = ($captured | each {|c| reread-pose $tree $out $inventory $images $c $tool ($set | where name == $c.pose.name | get -o 0) })
     for r in $read {
         let rows = (if $r.rows_same { "its block table the first's byte for byte" } else { "its block table another than the first's" })
         let still = (if $r.still.held { "its still copy the capture's" } else { "its still copy not the capture's" })
         print $"($r.pose): (if ($r.problems | is-empty) { 'read again' } else { $r.problems | str join '; ' }); ($rows); ($still); ($r.differences | length) differences from the first reading"
     }
-    read $out $poses
+    read $out $taken
     let first = (open ($tree | path join "reading.nuon"))
     let again = (open ($out | path join "reading.nuon"))
-    let fields = [judged sensitive clamped declared secant departure today_levels candidate_levels]
+    let fields = [judged sensitive clamped resolved iz_min floor_depth declared secant departure today_levels candidate_levels]
     let held = ($fields | where {|k| $first.views | all {|v| $k in ($v | columns) } })
     let changed = ($again.views | each {|v|
         let f = ($first.views | where pose == $v.pose | get -o 0)

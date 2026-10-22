@@ -28,9 +28,9 @@ def "main crops" [out: path, pose: string, --pad: int = 16] {
     footprint crops $out $pose --pad $pad
 }
 
-# A restored run's poses read again, its reading set beside the first's
-def "main reread" [tree: path, out: path] {
-    footprint reread $tree $out
+# A restored run's poses read again against a pose set, its reading set beside the first's
+def "main reread" [tree: path, out: path, poses: path] {
+    footprint reread $tree $out $poses
 }
 
 def main [] { help main }

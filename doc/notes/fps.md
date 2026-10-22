@@ -53,8 +53,10 @@ repositories, under the session's scratch directory or
     pose captured at the release floor. `read <out> <poses>` judges the
     pose set whole, and `crops <out> <pose>` cuts each region where a
     view's two pictures differ out of both, side by side. `reread <tree>
-    <out>` reads a landed run again from its restoration, through `runner
-    reread` with the reader `fps footprint`: each still copy made again
+    <out> <poses>` reads a landed run again from its restoration against a
+    pose set, through `runner reread` with the reader `fps footprint`: each
+    captured pose held to the set's on every field but its witnesses, which
+    the reading takes from the set; each still copy made again
     and held file by file to the run's inventory, and remade as a checkout
     compiled it before jab c804ccb where it differs only outside the
     files the reference reads; each launch bound again and its UART read;
