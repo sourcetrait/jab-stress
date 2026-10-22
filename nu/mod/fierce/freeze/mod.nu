@@ -16,6 +16,14 @@ export def launcher-of [repo: string]: nothing -> record {
     }
 }
 
+# A freeze's launcher written once to `out`, and the line naming it
+export def launcher [repo: string, out: path]: nothing -> string {
+    if ($out | path exists) { error make { msg: $"($out) exists; a freeze's launcher is recorded once" } }
+    let l = (launcher-of $repo)
+    $l | to nuon --indent 2 | save --raw $out
+    $"launcher: ($l.supervisor.path), SHA-256 ($l.supervisor.sha256), built from ($l.built_from.commit)(if $l.built_from.dirty { ' with changes' } else { '' }); ($out)"
+}
+
 # The build symbols a set names: screaming snake case, each once, sorted
 export def symbols-of [set: string]: nothing -> list<string> {
     $set | split row "," | each {|s| $s | str trim } | where {|s| $s != "" } | each {|s| $s | str screaming-snake-case } | uniq | sort

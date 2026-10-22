@@ -44,8 +44,15 @@ The launcher a freeze's measurements run under (FrameCeiling's fix pass,
 RelaySupervision): the supervisor's binary as jab's `supervise binary`
 builds it from the SDK's own checkout, its path and SHA-256; the checkout's
 commit and state (`identity reader`); the supervisor's bounds (`supervise
-bounds`); and the timing domain. Its bin's `launcher <repo> <out>` writes
-it once.
+bounds`); and the timing domain. launcher writes it once.
+
+## def launcher
+
+The launcher a freeze's measurements run under (launcher-of) written to
+`out` as indented NUON, refused where `out` exists already, since a
+freeze's launcher is recorded once; it returns the line its bin prints,
+the supervisor's path and SHA-256, the commit it was built from with
+"with changes" for a changed tree, and `out`.
 
 ## def symbols-of
 
