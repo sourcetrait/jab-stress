@@ -23,6 +23,7 @@ export def ready [a: record]: nothing -> record<out: string, steps: int> {
         if ($bin | path type) == null { error make {msg: $"step ($s.name): no bin ($bin)"} }
         build symbols $s.symbols | ignore
         for f in $s.fixtures { fixture-of $a $f | ignore }
+        env-of $s | ignore
     }
     mkdir $out
     { out: $out, steps: ($names | length) }
@@ -44,8 +45,9 @@ export def main [a: record]: nothing -> record<out: string, steps: table<name: s
         let fixtures = ($s.fixtures | each {|f| revision-of $a $f })
         let root = (repo-of $a $s.repo)
         let bin = (bin-of $a $s)
+        let given = (env-of $s)
         let started = (date now | format date "%+")
-        let timed = (timeit --output { cd $root; ^$bin ...$words | complete })
+        let timed = (timeit --output { with-env $given { cd $root; ^$bin ...$words | complete } })
         let ended = (date now | format date "%+")
         let r = $timed.output
         $r.stdout | save --raw -f ($dir | path join "run.stdout")
@@ -67,6 +69,7 @@ export def main [a: record]: nothing -> record<out: string, steps: table<name: s
             repo: $s.repo,
             bin: $s.bin,
             words: $words,
+            env: ($s | get -o env | default []),
             symbols: $names,
             started: $started,
             ended: $ended,
@@ -108,6 +111,19 @@ def bin-of [a: record, step: record]: nothing -> string {
 # A word with `{target}` jab's target root and `{step}` the step's directory
 def resolved [word: string, target: string, dir: string]: nothing -> string {
     $word | str replace --all "{target}" $target | str replace --all "{step}" $dir
+}
+
+# A step's `env` rows as one record, each a text name and value, set once
+def env-of [step: record]: nothing -> record {
+    $step | get -o env | default [] | reduce --fold {} {|e, acc|
+        let name = (try { $e.name } catch { null })
+        let value = (try { $e.value } catch { null })
+        if (($name | describe) != "string") or ($name == "") or (($value | describe) != "string") {
+            error make {msg: $"step ($step.name): an env row is a name and a value, both text"}
+        }
+        if ($name in ($acc | columns)) { error make {msg: $"step ($step.name): env sets ($name) twice"} }
+        $acc | insert $name $value
+    }
 }
 
 # A checkout's commit and whether its tree holds changes

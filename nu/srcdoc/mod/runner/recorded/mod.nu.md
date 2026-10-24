@@ -20,20 +20,22 @@ Before the launch: the run's directory must not exist, and is made; both
 checkouts clean, since a step's record names their commits and a tree holding
 changes is no commit; jab's `kernel/` and `sdk/src` equal to `kernel_source`'s
 when it names one (`git diff --quiet`); the steps' names distinct, each bin
-present, each step's symbols ones the assembler takes, and each fixture a
-tracked file of its checkout.
+present, each step's symbols ones the assembler takes, each fixture a
+tracked file of its checkout, and each step's `env`, where it sets one, rows
+of a text `name` and `value`, no name set twice.
 
 ## def main
 
 Each step in turn, every step run and recorded whatever the one before did,
 then a failure raised naming every failed step once all are recorded. A step:
 its outs' files listed, its bin run from its checkout's root as an executable,
-as a user runs `./do`, its words with `{target}` and `{step}` resolved, the
-run timed by `timeit`'s monotonic clock; its stdout and stderr saved apart as
-`run.stdout` and `run.stderr`; every file it wrote or changed under each out
-copied beneath `out_<n>`; the kernel's build and each program's copied beneath
-`build/`, the kernel's flat image beside its ELF by the toolchain's `objcopy`,
-the loaded bytes; then `step.nuon`: the words, the symbols, the start and end
+as a user runs `./do`, under its `env` where it sets one, its words with
+`{target}` and `{step}` resolved, the run timed by `timeit`'s monotonic clock;
+its stdout and stderr saved apart as `run.stdout` and `run.stderr`; every file
+it wrote or changed under each out copied beneath `out_<n>`; the kernel's
+build and each program's copied beneath `build/`, the kernel's flat image
+beside its ELF by the toolchain's `objcopy`, the loaded bytes; then
+`step.nuon`: the words, the `env` rows, the symbols, the start and end
 (realtime, provenance alone), the seconds, the exit, `ok`, both checkouts'
 commits and cleanliness, the kernel source asked, the last commit touching
 `kernel/` or `sdk/src`, and whether the two trees are equal, each fixture's
@@ -54,6 +56,12 @@ A step's bin, its path from its checkout's root.
 
 A word or an out with `{target}` jab's target root and `{step}` the step's own
 directory.
+
+## def env-of
+
+A step's `env` rows as the one record `with-env` takes, none when it sets no
+`env`: each row a text `name`, not empty, and a text `value`, a name set
+twice refused.
 
 ## def checkout-of
 

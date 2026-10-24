@@ -15,6 +15,7 @@ equal, or empty for none; and `steps`, a table of `name`, `repo` (`jab` or
 driver), `words`, `symbols` (the build symbols the step's artifacts carry, as
 `--set` names them, `DEBUG` among them for a debug build), `programs` (jab
 programs whose builds the step records), `fixtures` (`<repo>:<path>` files
-whose revisions it records), and `outs` (directories whose new files are its
-outputs), `{target}` and `{step}` in a word or an out standing for jab's
-target root and the step's own directory.
+whose revisions it records), `outs` (directories whose new files are its
+outputs), and, where a step sets one, `env` (a table of `name` and `value`,
+the environment its bin runs under), `{target}` and `{step}` in a word or an
+out standing for jab's target root and the step's own directory.
