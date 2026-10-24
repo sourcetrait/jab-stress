@@ -2728,6 +2728,14 @@ record<
         >>,
         missing: list<string>
     >>,
+    guest_presentation: record<
+        frame_eps: oneof<int, nothing>,
+        runs: table<
+            case: string, name: string, available: bool, reason: oneof<string, nothing>,
+            qualifying_waits: oneof<int, nothing>, greatest_delay_ticks: oneof<int, nothing>, catch_ups: oneof<int, nothing>,
+            tolerances: table<eps: int, late_wakes: oneof<int, nothing>, k_violations: oneof<int, nothing>>
+        >
+    >,
     ledger: table<row: string, kind: string, carried: bool, state: string, evidence: list<string>, why: string, problems: list<string>>,
     verdicts: record<subset: record<rows: list<string>, passes: bool, verdict: string>, final: record<passes: bool, failed: list<string>, pending: table<row: string, dependency: string>, verdict: string>>
 >

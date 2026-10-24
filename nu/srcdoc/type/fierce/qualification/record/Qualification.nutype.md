@@ -5,7 +5,8 @@ The shape of `qualification.nuon`, a target's qualification record
 `check/qualification.nuon` from the same `record-of`): the target, when
 it was written, the readers' identity, the candidate, the spec, the
 bench, the conditions, the hosts, the watch, the RAM, the runs, the
-cases, the diagnostics, the ledger, and the verdicts. `candidate.builds`
+cases, the diagnostics, every acceptance run's guest presentation, the
+ledger, and the verdicts. `candidate.builds`
 is keyed by the bench files' named builds and names those jab's
 `kit/fierce/bench/qual_1ka1.nuon` and `qual_1kb1.nuon` give, service and
 debug. The watch, and each run's identity, measurement, CPU, and audio,

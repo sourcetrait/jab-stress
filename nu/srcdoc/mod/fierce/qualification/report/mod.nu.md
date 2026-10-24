@@ -2,8 +2,9 @@
 
 The report over the targets' checks, written for its reader as a public
 document: the candidate, then a section a target with its final verdict, the
-preparation subset's apart, the obligations, its runs, the route by leg, the
-tails, the presentation, the CPU, the tile pool, the host, the worker scaling,
+preparation subset's apart, the obligations, its runs, the guest's
+presentation, the route by leg, the tails, the presentation, the CPU, the tile
+pool, the host, the worker scaling,
 the problems, the record's own answers that differ, and the limits. Every
 section reads the record the check derived, never a stored one. `main` writes it
 to the last path given.
@@ -36,13 +37,32 @@ A table in Markdown from its header and rows of cells.
 
 ## def sentence
 
+A sentence's first letter capitalized and a full stop after it.
+
+## def tick-ms
+
+The guest clock's ticks, 10,000 a millisecond, in milliseconds to a
+hundredth; a dash for none.
+
+## def guest-section
+
+The guest's presentation (the record's `guest_presentation`): a sentence
+saying what the receipts hold, the kernel's frame rule tolerance beside the
+gauge's, or which of them a record over older builds lacks, and that the
+counts are the guest's own and a diagnostic; then a
+row for each acceptance run, its case, qualifying waits, late wakes at each
+tolerance, greatest delay, K's violations at each, and catch-ups; then each
+run whose receipts were unread with its reason. A record without the
+reading says so.
+
 ## def target-section
 
 One target's section of the report (report-text), public-production
 writing for TheUser, from a check and the record it derived: the final
 verdict its opening sentence, the preparation subset's beside it and
 never in its place (ObligationLedger), the obligations a table, every
-acceptance run's verdict, the route by leg, the tails, the presentation
+acceptance run's verdict with the guest's presentation beside it
+(guest-section), the route by leg, the tails, the presentation
 and its shim control, the CPU beside the guest's waits, the tile pool,
 the host, the worker scaling control, the service active's windows, the
 feature unavailable's refusal, the audio's debug runs, each where its

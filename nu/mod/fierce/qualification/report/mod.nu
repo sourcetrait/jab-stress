@@ -44,6 +44,40 @@ def sentence [s: string]: nothing -> string {
     $"($s | str capitalize)."
 }
 
+# The guest clock's ticks in milliseconds to a hundredth, a dash for none
+def tick-ms [ticks: any]: nothing -> string {
+    if $ticks == null { "-" } else { $"(($ticks / 10000.0) | math round --precision 2) ms" }
+}
+
+# The guest's presentation for each acceptance run, from the record's receipts
+def guest-section [guest: any]: nothing -> list<string> {
+    let intro = [
+        ""
+        "### The guest's presentation"
+        ""
+    ]
+    if $guest == null { return ($intro ++ ["The record holds no reading of the guest's presentation."]) }
+    let tolerances = ($guest.runs | each {|g| $g.tolerances | get eps } | flatten | uniq | sort --reverse)
+    let count = {|g: record, eps: int, field: string|
+        let v = ($g.tolerances | where eps == $eps | get -o 0 | get -o $field)
+        if $v == null { "-" } else { $"($v)" }
+    }
+    let header = (["Run" "Case" "Qualifying waits"] ++ ($tolerances | each {|e| $"Late at (tick-ms $e)" }) ++ ["Greatest delay"] ++ ($tolerances | each {|e| $"K violations at (tick-ms $e)" }) ++ ["Catch-ups"])
+    let rows = ($guest.runs | each {|g|
+        [$g.name $g.case (if $g.qualifying_waits == null { "-" } else { $"($g.qualifying_waits)" })] ++ ($tolerances | each {|e| do $count $g $e "late_wakes" }) ++ [(tick-ms $g.greatest_delay_ticks)] ++ ($tolerances | each {|e| do $count $g $e "k_violations" }) ++ [(if $g.catch_ups == null { "-" } else { $"($g.catch_ups)" })]
+    })
+    let rule = (if $guest.frame_eps != null {
+        $"The kernel's frame rule allows (tick-ms $guest.frame_eps), and the gauge reads its own tolerance beside it."
+    } else if ($tolerances | is-empty) {
+        "Neither the candidate's kernel nor the runs' measurements name a tolerance, so only the waits are read."
+    } else { "The candidate's kernel names no frame rule tolerance, so only the gauge's own is read." })
+    let unread = ($guest.runs | where {|g| not $g.available } | each {|g| $"- ($g.name)'s receipts could not be read: ($g.reason)." })
+    $intro ++ [
+        $"Each acceptance run's receipts record when the guest accepted each frame. A wait is late when its frame was accepted at least a tolerance past the tick it waited for. ($rule) A K violation is a frame accepted sooner after an earlier one than the frame rule allows, and a catch-up is a frame accepted less than half a period after the one before. These counts come from the guest's own records. They do not measure the host's scheduler or the display, and they are a diagnostic, never a verdict."
+        ""
+    ] ++ (md-table $header $rows) ++ (if ($unread | is-empty) { [] } else { [""] ++ $unread })
+}
+
 # One target's section of the report, from its check and the record it derived
 def target-section [c: record]: nothing -> list<string> {
     let r = (open $c.record)
@@ -186,7 +220,7 @@ def target-section [c: record]: nothing -> list<string> {
         ""
         $"Each run passes when it stands valid, runs the candidate on ($name), and its critical path's median frame is under 15 ms. Each run is judged on its own."
         ""
-    ] ++ $runs_table ++ [
+    ] ++ $runs_table ++ (guest-section ($r | get -o guest_presentation)) ++ [
         ""
         "### The route by leg"
         ""

@@ -4,8 +4,9 @@ One target's qualification record from a bench run of the game's qualification
 bench: every run with its standing, its identity, that identity's agreement
 with the candidate and the target, and its conditions against its step; each
 case of the matrix with its runs; every acceptance run's verdict; the controls'
-and the diagnostics' readings; the bench's one host and one QEMU and each case's
-one backend; the host; and its own ledger and verdicts. `main`
+and the diagnostics' readings; every acceptance run's guest presentation; the
+bench's one host and one QEMU and each case's one backend; the host; and its
+own ledger and verdicts. `main`
 writes it as qualification.nuon and prints the record's own verdicts; the
 check derives them again from the reopened inputs.
 
@@ -47,7 +48,10 @@ that identity's agreement with its build, the candidate, and the target
 (build-of, agreement-of), its conditions against its step's words
 (conditions-of), its backend, the window and the audio driver its run
 record names, whether it was probed, its bundle, its measurement, its CPU
-windows, and an audio run's reading.
+windows, and an audio run's reading; a run of an acceptance step (`accepting`)
+carries its guest presentation (guest-presentation-of) over its own rows of the
+step's gauge.nuon, at its measurement's eps and the kernel's FRAME_EPS
+(`frame_eps`), which record-of lifts out of the run.
 
 ## def condition-problems
 
@@ -141,6 +145,24 @@ A diagnostic's readings from the normal play runs (DIAGNOSTICS): per
 route run each leg it names, every leg the run holds where it names
 none, with the fields it reads, and a leg a run lacks named missing.
 
+## def frame-eps-of
+
+The kernel's frame rule tolerance at the candidate's commit, timer.S's
+FRAME_EPS in ticks, null where the commit's kernel names none.
+
+## def guest-presentation-of
+
+A run's guest presentation from its receipts, the gauge's own reader over
+its rows: its qualifying waits (`gauge measure wake-delays`, the frames that
+waited at cadence 1 and presented), their greatest delay in ticks, and at
+each tolerance the late wakes among those waits and K's violations over the
+accepted sequence, with the catch-ups (`gauge measure contract-of`). Where
+the measurement's acceptance does not stand, its `available` false and its
+`reason` as the reader gives it, every count null; a run with no
+measurement is said so. A run measured before the gauge read a contract,
+on a kernel before FRAME_EPS, knows no tolerance: its waits are read and
+its tolerances empty, its catch-ups null. A diagnostic, never a verdict.
+
 ## def ram-of
 
 The program's RAM window at the candidate's commit, jab.inc's
@@ -184,7 +206,10 @@ definition is read with its words resolved where the run's builds lay
 (resolved-in, bench.nuon's `build_root`), and each step's build from the
 words before (step-role). An acceptance run's verdict judges its service
 in the service active's case; a case whose steps the target holds none of
-is not applicable, its reading null and its reason kept. Its ledger is matrix's
+is not applicable, its reading null and its reason kept. `guest_presentation`
+holds the candidate kernel's FRAME_EPS (frame-eps-of) and every acceptance
+run's guest presentation by its case and name, normal play's, free play's,
+and service active's alike, outside the ledger. Its ledger is matrix's
 ledger-of over the record, the tag's state, and the bench's and the
 conditions' problems; its verdicts verdicts-of's. Its `readers` the
 identity `--readers` gives, else readers-of's taken as it starts.

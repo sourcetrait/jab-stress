@@ -52,7 +52,7 @@ def step-role [label: string, raw: any]: nothing -> any {
 }
 
 # A bench step's runs as the record keeps them, each held to its step's build
-def step-runs [step: record, doc: record, candidate: record, target: string, spec: record, words: list<string>, role: any]: nothing -> list<any> {
+def step-runs [step: record, doc: record, candidate: record, target: string, spec: record, words: list<string>, role: any, frame_eps: any, accepting: list<string>]: nothing -> list<any> {
     if $step.file == null { return [] }
     let g = (open $step.file)
     let build = (matrix build-of $candidate $role $words)
@@ -63,6 +63,11 @@ def step-runs [step: record, doc: record, candidate: record, target: string, spe
         let dir = (dir-of $step.file $r)
         let bundle = (if $dir == null { null } else { $dir | path join "bundle" })
         let ran = ($r | get -o ran | default {})
+        let measured = ($r | get -o measured)
+        let guest = (if $step.label not-in $accepting { null } else {
+            let tolerances = ([($measured | get -o contract.eps) $frame_eps] | compact | uniq)
+            guest-presentation-of ($g | get -o rows | default [] | where {|x| $x.run == $r.run }) $measured ($id.cap | default 60) $tolerances
+        })
         {
             step: $step.label, run: $r.run, seed: ($r | get -o seed), build: $role,
             kind: ($classed | get -o kind), selection: $req.selection, cadence: $req.cadence, workers: $req.workers, grain: $req.grain,
@@ -70,7 +75,7 @@ def step-runs [step: record, doc: record, candidate: record, target: string, spe
             probed: $req.probed, dir: $dir, bundle: (if $bundle != null and ($bundle | path type) == "dir" { $bundle } else { null }),
             identity: $id, agreement: (matrix agreement-of $id $candidate $build $target $spec), conditions: (matrix conditions-of $id $ran $words),
             backend: { window: ($ran | get -o window), audio: ($ran | get -o audio | default "" | split row "," | first) },
-            measured: ($r | get -o measured), cpu: ($r | get -o cpu), audio: ($r | get -o audio),
+            measured: $measured, cpu: ($r | get -o cpu), audio: ($r | get -o audio), guest: $guest,
         }
     }
 }
@@ -239,6 +244,32 @@ def diagnostic-reading [d: record, runs: list<any>]: nothing -> record {
     { case: $d.case, legs: $d.legs, fields: $d.fields, readings: $readings, missing: ($readings | where missing | each {|x| $"($x.name) holds no ($x.leg) leg" }) }
 }
 
+# The kernel's frame rule tolerance in ticks at the candidate's commit, null unread
+def frame-eps-of [commit: string]: nothing -> any {
+    let timer = (matrix jab-file $commit "kernel/src/timer.S")
+    let eps = (if $timer == null { null } else { $timer | lines | parse --regex '^\s*\.set FRAME_EPS, (?P<v>[0-9]+)' | get -o 0.v })
+    if $eps == null { null } else { $eps | into int }
+}
+
+# A run's guest presentation from its receipts: its waits, and the contract at each tolerance
+def guest-presentation-of [rows: list<any>, measured: any, cap: int, tolerances: list<int>]: nothing -> record {
+    let acceptance = ($measured | get -o acceptance | default { available: false, reason: "the run holds no measurement" })
+    if not $acceptance.available {
+        return {
+            available: false, reason: $acceptance.reason, qualifying_waits: null, greatest_delay_ticks: null, catch_ups: null,
+            tolerances: ($tolerances | each {|eps| { eps: $eps, late_wakes: null, k_violations: null } }),
+        }
+    }
+    let delays = (gauge measure wake-delays $rows)
+    let read = ($tolerances | each {|eps| gauge measure contract-of $rows $acceptance $cap $eps })
+    {
+        available: true, reason: null, qualifying_waits: ($delays | length),
+        greatest_delay_ticks: (if ($delays | is-empty) { null } else { $delays | math max }),
+        catch_ups: ($read | get -o 0.catch_ups),
+        tolerances: ($read | each {|c| { eps: $c.eps, late_wakes: $c.late_wakes, k_violations: $c.k_violations } }),
+    }
+}
+
 # The program's RAM window at the candidate's commit beside the target's
 def ram-of [commit: string, spec: record]: nothing -> record {
     let inc = (matrix jab-file $commit "sdk/src/jab.inc")
@@ -310,8 +341,14 @@ export def record-of [bench: path, candidate: path, target: string, --readers: a
     let definition = (if $raw == null { null } else { matrix resolved-in $raw $package ($listed | get -o build_root) })
     let frozen = (if $package == null { { cand: $cand, manifest: null, problems: [] } } else { frozen-of $bench $cand $candidate })
     let doc = (gauge bench doc $bench)
-    let runs = ($doc.steps | each {|s| step-runs $s $doc $frozen.cand $target $spec (step-words $s.label $listed $definition) (step-role $s.label $raw) } | flatten)
-    let runs = ($runs | each {|r|
+    let frame_eps = (frame-eps-of $cand.jab)
+    let accepting = ($CASES | where kind == "acceptance" | each {|c| $c.steps | get $target } | flatten)
+    let runs = ($doc.steps | each {|s| step-runs $s $doc $frozen.cand $target $spec (step-words $s.label $listed $definition) (step-role $s.label $raw) $frame_eps $accepting } | flatten)
+    let guest = ($runs | where {|r| $r.guest != null } | each {|r|
+        let case = ($CASES | where {|c| $c.kind == "acceptance" and $r.step in ($c.steps | get $target) } | get 0.case)
+        { case: $case, name: (matrix run-name $r) } | merge $r.guest
+    })
+    let runs = ($runs | reject -o guest | each {|r|
         let held = ($CASES | where {|c| $r.step in ($c.steps | get $target) })
         let acceptance = ($held | any {|c| $c.kind == "acceptance" })
         let serviced = ($held | any {|c| $c.reading == "service" })
@@ -368,6 +405,7 @@ export def record-of [bench: path, candidate: path, target: string, --readers: a
         runs: $runs,
         cases: $cases,
         diagnostics: ($DIAGNOSTICS | each {|d| diagnostic-reading $d $routed }),
+        guest_presentation: { frame_eps: $frame_eps, runs: $guest },
     }
     let ledger = (matrix ledger-of $r (matrix tag-state $cand.tag $cand.jab) ($bench_problems ++ $conditions.problems))
     $r | insert ledger $ledger | insert verdicts (matrix verdicts-of $ledger)
