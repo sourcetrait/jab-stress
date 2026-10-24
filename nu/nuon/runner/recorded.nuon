@@ -1,9 +1,9 @@
 {
- nonce: "cGtIodV4OLI",
+ nonce: "",
  title: "Steps through jab's or the workbench's bins, each one's sources, artifacts, and outputs recorded",
  args_type: "record<stress: string, out: string, label: string, mcp_nom: string, max_quiet_min: int, kernel_source: string, steps: table<name: string, repo: string, bin: string, words: list<string>, symbols: string, programs: list<string>, fixtures: list<string>, outs: list<string>>>",
  result_type: "record<label: string, nonce: string>",
- body: "use rig/sourcetrait/emptwo/prototype/long
+ body: "use rig/sourcetrait/two/prototype/long
 let a = $args
 let bin = ($a.stress | path join nu bin nuance.nu)
 let given = ($a | to nuon)

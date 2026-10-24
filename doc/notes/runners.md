@@ -1,7 +1,7 @@
 # Long-engine runners
 
 The runners are the long-running test and measurement runs, each run on the
-Grammar MCP's long engine (`rig/sourcetrait/emptwo/prototype/long`), which
+Grammar MCP's long engine (`rig/sourcetrait/two/prototype/long`), which
 reports progress on the MCP's channel and keeps every packet in the
 launching call's trace. A run's record, its logs and results, is kept in
 the data checkout beside this repository, `../jab-stress-data`, under
@@ -41,7 +41,7 @@ the data checkout beside this repository, `../jab-stress-data`, under
 - To run a runner: while the server's cache still holds its nonce, `rerun`
   that nonce with the arguments; otherwise pass the body to the `run` tool
   with its types written as schemas, and record the new nonce in the
-  descriptor.
+  descriptor. An empty nonce is a body that has not run since it changed.
 
 ## Recorded steps
 

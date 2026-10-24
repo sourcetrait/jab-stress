@@ -1,4 +1,4 @@
-const LEAVES = ['std' 'rig/sourcetrait/emptwo/prototype/long']
+const LEAVES = ['std' 'rig/sourcetrait/two/prototype/long']
 const FORM = '^\s*(?P<form>export use|overlay use|use|source)\s+(?P<rest>\S.*)$'
 const PATH_CONST = '^(?:export )?const (?P<n>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*["''](?P<v>[^"'']*)["'']\s*$'
 const SELF_CONST = '^(?:export )?const (?P<n>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*\(?path self (?P<v>[^\s\)]+)\)?\s*$'

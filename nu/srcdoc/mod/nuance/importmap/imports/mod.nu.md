@@ -6,7 +6,7 @@ and line, and the cycle check over what they reach.
 ## const LEAVES
 
 The external leaves a graph stops at: nushell's bundled `std`, and the long
-engine a runner's body imports, `rig/sourcetrait/emptwo/prototype/long`.
+engine a runner's body imports, `rig/sourcetrait/two/prototype/long`.
 
 ## def lines-of
 

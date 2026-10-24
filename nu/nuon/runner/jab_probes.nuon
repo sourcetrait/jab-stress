@@ -1,9 +1,9 @@
 {
- nonce: "jiOMKYvbPUY",
+ nonce: "",
  title: "One program's sdl probes in a declared order, each run's probe directory kept",
  args_type: "record<stress: string, jab: string, program: string, probe_dir: string, base: string, runs: table<label: string, words: list<string>>, label: string, mcp_nom: string, max_quiet_min: int>",
  result_type: "record<label: string, nonce: string>",
- body: "use rig/sourcetrait/emptwo/prototype/long
+ body: "use rig/sourcetrait/two/prototype/long
 let a = $args
 let bin = ($a.stress | path join nu bin nuance.nu)
 let given = ($a | to nuon)

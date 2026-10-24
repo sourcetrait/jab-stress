@@ -1,9 +1,9 @@
 {
- nonce: "hLqC10ufwh6",
+ nonce: "",
  title: "Gauge batches in a declared order, each under its own environment",
  args_type: "record<stress: string, fps: string, base: string, batches: table<label: string, words: list<string>, env: table<name: string, value: string>>, label: string, mcp_nom: string, max_quiet_min: int>",
  result_type: "record<label: string, nonce: string>",
- body: "use rig/sourcetrait/emptwo/prototype/long
+ body: "use rig/sourcetrait/two/prototype/long
 let a = $args
 let bin = ($a.stress | path join nu bin nuance.nu)
 let given = ($a | to nuon)

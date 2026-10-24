@@ -1,9 +1,9 @@
 {
- nonce: "5VM2YxfDTyY",
+ nonce: "",
  title: "walk's CADENCE runs in a declared order, each batch a condition's image and kernel",
  args_type: "record<stress: string, jab: string, base: string, batches: table<label: string, image: string, kernel: string, spec: string, runs: int>, label: string, mcp_nom: string, max_quiet_min: int>",
  result_type: "record<label: string, nonce: string>",
- body: "use rig/sourcetrait/emptwo/prototype/long
+ body: "use rig/sourcetrait/two/prototype/long
 let a = $args
 let bin = ($a.stress | path join nu bin nuance.nu)
 let given = ($a | to nuon)
