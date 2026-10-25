@@ -48,12 +48,16 @@ hundredth; a dash for none.
 
 The guest's presentation (the record's `guest_presentation`): a sentence
 saying what the receipts hold, the kernel's frame rule tolerance beside the
-gauge's, or which of them a record over older builds lacks, and that the
-counts are the guest's own and a diagnostic; then a
-row for each acceptance run, its case, qualifying waits, late wakes at each
-tolerance, greatest delay, K's violations at each, and catch-ups; then each
-run whose receipts were unread with its reason. A record without the
-reading says so.
+gauge's, or which of them a record over older builds lacks, where neither
+names one that the waits and the catch-ups are read and no late wake or K
+violation is counted, and that the counts are the guest's own and a
+diagnostic; then a row for each acceptance run, its case, qualifying
+waits, late wakes at each tolerance, greatest delay, K's violations at
+each, and catch-ups; then each run whose receipts were unread with its
+reason, each run naming no tolerance where others name one, which reads
+its waits and catch-ups and counts no late wake or K violation, and each
+run whose K violations and catch-ups are uncounted for want of a recorded
+cap, with its reason. A record without the reading says so.
 
 ## def target-section
 

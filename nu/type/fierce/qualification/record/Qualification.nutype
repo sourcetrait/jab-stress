@@ -2733,6 +2733,7 @@ record<
         runs: table<
             case: string, name: string, available: bool, reason: oneof<string, nothing>,
             qualifying_waits: oneof<int, nothing>, greatest_delay_ticks: oneof<int, nothing>, catch_ups: oneof<int, nothing>,
+            period_unread: oneof<string, nothing>,
             tolerances: table<eps: int, late_wakes: oneof<int, nothing>, k_violations: oneof<int, nothing>>
         >
     >,

@@ -66,7 +66,7 @@ def step-runs [step: record, doc: record, candidate: record, target: string, spe
         let measured = ($r | get -o measured)
         let guest = (if $step.label not-in $accepting { null } else {
             let tolerances = ([($measured | get -o contract.eps) $frame_eps] | compact | uniq)
-            guest-presentation-of ($g | get -o rows | default [] | where {|x| $x.run == $r.run }) $measured ($id.cap | default 60) $tolerances
+            guest-presentation-of ($g | get -o rows | default [] | where {|x| $x.run == $r.run }) $measured $id.cap $tolerances
         })
         {
             step: $step.label, run: $r.run, seed: ($r | get -o seed), build: $role,
@@ -244,29 +244,37 @@ def diagnostic-reading [d: record, runs: list<any>]: nothing -> record {
     { case: $d.case, legs: $d.legs, fields: $d.fields, readings: $readings, missing: ($readings | where missing | each {|x| $"($x.name) holds no ($x.leg) leg" }) }
 }
 
-# The kernel's frame rule tolerance in ticks at the candidate's commit, null unread
+# The kernel's frame rule tolerance at the candidate's commit, null unread
 def frame-eps-of [commit: string]: nothing -> any {
     let timer = (matrix jab-file $commit "kernel/src/timer.S")
     let eps = (if $timer == null { null } else { $timer | lines | parse --regex '^\s*\.set FRAME_EPS, (?P<v>[0-9]+)' | get -o 0.v })
     if $eps == null { null } else { $eps | into int }
 }
 
-# A run's guest presentation from its receipts: its waits, and the contract at each tolerance
-def guest-presentation-of [rows: list<any>, measured: any, cap: int, tolerances: list<int>]: nothing -> record {
+# A run's guest presentation: its waits, catch-ups, and each tolerance's counts
+def guest-presentation-of [
+    rows: list<any>, measured: any, cap: oneof<int, nothing>, tolerances: list<int>
+]: nothing -> record {
     let acceptance = ($measured | get -o acceptance | default { available: false, reason: "the run holds no measurement" })
     if not $acceptance.available {
         return {
-            available: false, reason: $acceptance.reason, qualifying_waits: null, greatest_delay_ticks: null, catch_ups: null,
+            available: false, reason: $acceptance.reason, qualifying_waits: null, greatest_delay_ticks: null,
+            catch_ups: null, period_unread: null,
             tolerances: ($tolerances | each {|eps| { eps: $eps, late_wakes: null, k_violations: null } }),
         }
     }
     let delays = (gauge measure wake-delays $rows)
-    let read = ($tolerances | each {|eps| gauge measure contract-of $rows $acceptance $cap $eps })
     {
         available: true, reason: null, qualifying_waits: ($delays | length),
         greatest_delay_ticks: (if ($delays | is-empty) { null } else { $delays | math max }),
-        catch_ups: ($read | get -o 0.catch_ups),
-        tolerances: ($read | each {|c| { eps: $c.eps, late_wakes: $c.late_wakes, k_violations: $c.k_violations } }),
+        catch_ups: (if $cap == null { null } else { gauge measure catch-ups-of $rows $cap }),
+        period_unread: (if $cap == null { "its identity records no cap, so no period bounds them" } else { null }),
+        tolerances: ($tolerances | each {|eps|
+            let k = (if $cap == null { null } else {
+                gauge measure contract-of $rows $acceptance $cap $eps | get k_violations
+            })
+            { eps: $eps, late_wakes: ($delays | where {|d| $d >= $eps } | length), k_violations: $k }
+        }),
     }
 }
 

@@ -69,13 +69,22 @@ def guest-section [guest: any]: nothing -> list<string> {
     let rule = (if $guest.frame_eps != null {
         $"The kernel's frame rule allows (tick-ms $guest.frame_eps), and the gauge reads its own tolerance beside it."
     } else if ($tolerances | is-empty) {
-        "Neither the candidate's kernel nor the runs' measurements name a tolerance, so only the waits are read."
+        "Neither the candidate's kernel nor the runs' measurements name a tolerance, so the waits and the catch-ups are read, and no late wake or K violation is counted."
     } else { "The candidate's kernel names no frame rule tolerance, so only the gauge's own is read." })
     let unread = ($guest.runs | where {|g| not $g.available } | each {|g| $"- ($g.name)'s receipts could not be read: ($g.reason)." })
+    let untolerated = (if ($tolerances | is-empty) { [] } else {
+        $guest.runs | where {|g| $g.available and ($g.tolerances | is-empty) } | each {|g|
+            $"- ($g.name)'s measurement names no tolerance, so its waits and catch-ups are read and no late wake or K violation is counted."
+        }
+    })
+    let unperiodic = ($guest.runs | where {|g| ($g | get -o period_unread) != null } | each {|g|
+        $"- ($g.name)'s K violations and catch-ups are not counted: ($g.period_unread)."
+    })
+    let notes = ($unread ++ $untolerated ++ $unperiodic)
     $intro ++ [
         $"Each acceptance run's receipts record when the guest accepted each frame. A wait is late when its frame was accepted at least a tolerance past the tick it waited for. ($rule) A K violation is a frame accepted sooner after an earlier one than the frame rule allows, and a catch-up is a frame accepted less than half a period after the one before. These counts come from the guest's own records. They do not measure the host's scheduler or the display, and they are a diagnostic, never a verdict."
         ""
-    ] ++ (md-table $header $rows) ++ (if ($unread | is-empty) { [] } else { [""] ++ $unread })
+    ] ++ (md-table $header $rows) ++ (if ($notes | is-empty) { [] } else { [""] ++ $notes })
 }
 
 # One target's section of the report, from its check and the record it derived

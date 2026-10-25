@@ -51,7 +51,8 @@ record names, whether it was probed, its bundle, its measurement, its CPU
 windows, and an audio run's reading; a run of an acceptance step (`accepting`)
 carries its guest presentation (guest-presentation-of) over its own rows of the
 step's gauge.nuon, at its measurement's eps and the kernel's FRAME_EPS
-(`frame_eps`), which record-of lifts out of the run.
+(`frame_eps`), with the cap its identity records, none where it records
+none, which record-of lifts out of the run.
 
 ## def condition-problems
 
@@ -154,14 +155,21 @@ FRAME_EPS in ticks, null where the commit's kernel names none.
 
 A run's guest presentation from its receipts, the gauge's own reader over
 its rows: its qualifying waits (`gauge measure wake-delays`, the frames that
-waited at cadence 1 and presented), their greatest delay in ticks, and at
-each tolerance the late wakes among those waits and K's violations over the
-accepted sequence, with the catch-ups (`gauge measure contract-of`). Where
-the measurement's acceptance does not stand, its `available` false and its
+waited at cadence 1 and presented), their greatest delay in ticks; at each
+tolerance the late wakes among those waits, each a wait at least the
+tolerance past its tick, and K's violations over the accepted sequence
+(`gauge measure contract-of`); and the catch-ups (`gauge measure
+catch-ups-of`), which no tolerance enters. K and the catch-ups are bound
+to a period, the run's own cap as its identity records it. A run whose
+identity records no cap reads both null, `period_unread` saying why, and
+is never given a default period; its waits, their delays, and its late
+wakes, which need no period, stay read (GuestCatchUps). Where the
+measurement's acceptance does not stand, its `available` false and its
 `reason` as the reader gives it, every count null; a run with no
 measurement is said so. A run measured before the gauge read a contract,
-on a kernel before FRAME_EPS, knows no tolerance: its waits are read and
-its tolerances empty, its catch-ups null. A diagnostic, never a verdict.
+on a kernel before FRAME_EPS, knows no tolerance and is given none: its
+tolerances empty, its waits and its catch-ups read, and no late wake or K
+violation counted. A diagnostic, never a verdict.
 
 ## def ram-of
 

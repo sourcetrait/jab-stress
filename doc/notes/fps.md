@@ -209,7 +209,13 @@ repositories, under the session's scratch directory or
   pooled; a run left unread names its stage and refusals. Every final
   obligation is a row of the ledger, met, failed, pending on its
   dependency, or not applicable; the preparation subset's verdict and the
-  final one are read apart.
+  final one are read apart. Beside the ledger, a diagnostic, each
+  acceptance run's guest presentation is read from its receipts: its
+  qualifying waits and their greatest delay, its late wakes at each
+  tolerance, the gauge's eps and the kernel's FRAME_EPS, K's violations at
+  each, and its catch-ups, which need no tolerance. K and the catch-ups
+  need a period, the cap the run's identity records; a run recording none
+  reads both null with its reason and is never given a default period.
 - `proberuns` is ProbeRuns' reader, `nu/bin/nuance/fierce/proberuns.nu
   <base> <out.nuon> <label>...`: each probed run's capture, bundle,
   flips, and pairing read in turn, a run failing one left unread with its
