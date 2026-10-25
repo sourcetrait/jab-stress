@@ -10,5 +10,6 @@
     ["gauge.nuon", [], "jab", "kit/fierce/nu/type/gauge/report/Gauge.nutype"]
     ["*/gauge.nuon", [], "jab", "kit/fierce/nu/type/gauge/report/Gauge.nutype"]
     ["bench/*/gauge.nuon", [], "jab", "kit/fierce/nu/type/gauge/report/Gauge.nutype"]
+    ["host_load.nuonl", [], "jab-stress", "nu/type/data/HostLoad.nutype"]
     ["*/host_load.nuonl", [], "jab-stress", "nu/type/data/HostLoad.nutype"]
 ]
