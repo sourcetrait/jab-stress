@@ -6,13 +6,10 @@ use (path self ../../freeze) [symbols-of provenance-of]
 const BUILDS = [
     [label, set, kind];
     [picture, "debug", view]
-    [picture_candidate, "debug,footprint", view]
     [owner, "debug,owner", view]
     [levels, "debug,levels", view]
-    [levels_candidate, "debug,footprint,levels", view]
     [owner_clamp, "debug,iz_test,owner", clamp]
     [levels_clamp, "debug,iz_test,levels", clamp]
-    [levels_candidate_clamp, "debug,footprint,iz_test,levels", clamp]
 ]
 
 # The images' record, in the export's own directory

@@ -6,11 +6,13 @@ floor an image was assembled with (footprint's builds).
 ## const BUILDS
 
 the images, each a label, the set it is built with, and the kind of pose it
-serves: for a view, today's picture and the candidate's, the surfaces, and
-today's levels and the candidate's; for the clamp, the surfaces and both
-levels with IZ_TEST, the debug-only symbol that raises IZ_MIN to 5.5 m, so the
-OWNER capture, both LEVELS captures, and their span tables share one floor. The
-copy of the export each builds in is `<export>_<label>`.
+serves: for a view, the picture, the surfaces, and the levels; for the clamp,
+the surfaces and the levels with IZ_TEST, the debug-only symbol that raises
+IZ_MIN to 5.5 m, so the OWNER capture, the LEVELS capture, and their span
+tables share one floor. The landed captures also hold the FOOTPRINT
+candidate's images, `picture_candidate`, `levels_candidate`, and
+`levels_candidate_clamp`, read by their labels (captures' KINDS); none is
+built now. The copy of the export each builds in is `<export>_<label>`.
 
 ## const IMAGES
 

@@ -1,12 +1,10 @@
 [
  [program,                 tuples];
  ["*",                     [[], [DEBUG]]],
- [kit/fierce,              [[COUNT, DEBUG], [CENSUS, DEBUG], [COUNT, DEBUG, HANDOFF], [DEBUG, HANDOFF], [DEBUG, OWNER], [DEBUG, STATS], [DEBUG, FOOTPRINT], [DEBUG, LEVELS], [DEBUG, FOOTPRINT, LEVELS], [RELEASE], [FOOTPRINT, RELEASE]]],
+ [kit/fierce,              [[COUNT, DEBUG], [CENSUS, DEBUG], [COUNT, DEBUG, HANDOFF], [DEBUG, HANDOFF], [DEBUG, OWNER], [DEBUG, STATS], [DEBUG, LEVELS], [RELEASE]]],
  [kit/fierce/test/fillrate, [[VECTOR], [DEBUG, VECTOR]]],
  [example/walk,            [[CADENCE, CADENCE_TEST], [CADENCE, CADENCE_TEST, TIMING], [CADENCE, CADENCE_TEST, PREPARE], [CADENCE, CADENCE_TEST, PREPARE, TIMING], [CADENCE, CADENCE_TEST, EVENT_ROOM, TIMING], [CADENCE, CADENCE_TEST, REPLAY, TIMING], [CADENCE], [CADENCE, TIMING], [CADENCE, PREPARE], [CADENCE, PREPARE, TIMING], [DEBUG, PREPARE]]],
  [example/bounce,          [[DEBUG, PREPARE]]],
  [example/wasd,            [[DEBUG, PREPARE]]],
- [example/pad,             [[DEBUG, PREPARE]]],
- [test/framecap,           [[DEBUG, FLIP_BATCH]]],
- [kernel,                  [[FLIP_BATCH]]]
+ [example/pad,             [[DEBUG, PREPARE]]]
 ]
