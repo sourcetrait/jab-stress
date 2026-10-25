@@ -88,7 +88,9 @@ arm the runs whose identity names the shim, its plain arm the others,
 each run valid and the candidate's; the shim's effect on every measure
 over those runs (observer.nu); met once every expected run is there,
 valid, and the candidate's (control-problems), admissible once every
-effect is within its noise.
+effect is within its noise. `unevaluated` keeps the observer's own
+problems apart, each measure it could not evaluate by its missing input,
+which the ledger names among the admissibility's grounds.
 
 ## def scaling-reading
 

@@ -278,22 +278,39 @@ export def diagnostic-problems [d: record]: nothing -> list<string> {
     $unread ++ $d.missing
 }
 
+# Why a control's probed readings are inadmissible, each ground named
+def admissibility-grounds [reading: record]: nothing -> string {
+    let us = {|v: number| $"($v | math round)" }
+    let past = ($reading.measures
+        | where {|m| not $m.within and $m.effect != null and $m.noise != null and ($m.runs | all {|x| $x.value != null }) }
+        | each {|m| $"the ($m.measure) (do $us $m.probed) us probed against (do $us $m.plain) plain, an effect of (do $us $m.effect) against a noise of (do $us $m.noise)" })
+    $past ++ ($reading | get -o unevaluated | default []) | str join "; "
+}
+
 # Every final obligation on the record's target a row: its state and its ground
 export def ledger-of [r: record, tag: record, held: list<string>]: nothing -> list<any> {
     let row = {|name: string, kind: string, carried: bool, problems: list<string>, evidence: list<string>|
-        { row: $name, kind: $kind, carried: $carried, state: (if ($problems | is-empty) { "met" } else { "failed" }), evidence: $evidence, why: "", problems: $problems }
+        { row: $name, kind: $kind, carried: $carried, state: (if ($problems | is-empty) { "met" } else { "failed" }), admissible: null, evidence: $evidence, why: "", problems: $problems }
     }
     let cases = ($r.cases | each {|c|
         if ($c | get -o applicable | default true) {
-            do $row $c.case $c.kind true (case-problems $r $c) ($c.runs | each {|x| $"($x.step) run ($x.run)" })
+            let held = (do $row $c.case $c.kind true (case-problems $r $c) ($c.runs | each {|x| $"($x.step) run ($x.run)" }))
+            let admissible = (if $c.kind == "control" { $c.reading | get -o admissible } else { null })
+            $held | update admissible $admissible | update why (if $admissible == false { admissibility-grounds $c.reading } else { "" })
         } else {
-            { row: $c.case, kind: $c.kind, carried: true, state: "not applicable", evidence: [], why: ($c | get -o why | default ""), problems: [] }
+            { row: $c.case, kind: $c.kind, carried: true, state: "not applicable", admissible: null, evidence: [], why: ($c | get -o why | default ""), problems: [] }
         }
     })
     let diagnostics = ($r.diagnostics | each {|d| do $row $d.case "diagnostic" true (diagnostic-problems $d) ($d.readings | each {|x| $x.name } | uniq) })
     let bench = (do $row "the bench held to its definition" "freeze" true $held [$"the bench file at ($r.candidate.jab | str substring 0..<10)"])
-    let tagged = { row: "the tagged candidate", kind: "freeze", carried: false, state: $tag.state, evidence: (if $tag.state == "met" { [$r.candidate.tag] } else { [] }), why: (if $tag.state == "met" { "" } else { $tag.why }), problems: (if $tag.state == "failed" { [$tag.why] } else { [] }) }
-    let others = ($OBLIGATIONS | each {|o| { row: $o.row, kind: $o.kind, carried: false, state: ($o.state | get $r.target), evidence: [], why: ($o.why | get $r.target), problems: [] } })
+    let tagged = {
+        row: "the tagged candidate", kind: "freeze", carried: false, state: $tag.state, admissible: null,
+        evidence: (if $tag.state == "met" { [$r.candidate.tag] } else { [] }), why: (if $tag.state == "met" { "" } else { $tag.why }),
+        problems: (if $tag.state == "failed" { [$tag.why] } else { [] }),
+    }
+    let others = ($OBLIGATIONS | each {|o|
+        { row: $o.row, kind: $o.kind, carried: false, state: ($o.state | get $r.target), admissible: null, evidence: [], why: ($o.why | get $r.target), problems: [] }
+    })
     $cases ++ $diagnostics ++ [$bench $tagged] ++ $others
 }
 

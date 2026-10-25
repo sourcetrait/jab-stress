@@ -197,17 +197,37 @@ runs and its reading's problems when unread.
 
 ## def diagnostic-problems
 
+A diagnostic's problems from its reading: no normal play route run to
+read, and each leg a run lacks.
+
+## def admissibility-grounds
+
+Why a control's probed readings are inadmissible (LedgerAdmissibility),
+from its reading: each measure measured past its noise, its two arms'
+statistics, the effect, and the noise in microseconds (on the 1KA1
+preparation proof, the flip median 1651 us probed against 1601 plain, an
+effect of 50 against a noise of 22); then each measure the observer could
+not evaluate, by the observer's own problems naming its missing input
+(the reading's `unevaluated`), never as a measured noise failure.
+
 ## def ledger-of
 
 The ledger (ObligationLedger): every final obligation on the record's
 target a row with its kind, whether the bench carries it, its state, its
-evidence, its ground, and its problems. The bench carries its cases, its
-diagnostics, and its own agreement with its definition, `held` naming
-every problem of the bench, its conditions, and its reopened inputs; the
-freeze's tag is tag-state's; every other obligation OBLIGATIONS'. A case
-whose steps the target holds none of is not applicable, its CASES reason
-its ground. The presentation's row is met only where ProbeRuns' reader read
-every probed run, never a bundle directory's presence.
+admissibility, its evidence, its ground, and its problems. The bench
+carries its cases, its diagnostics, and its own agreement with its
+definition, `held` naming every problem of the bench, its conditions, and
+its reopened inputs; the freeze's tag is tag-state's; every other
+obligation OBLIGATIONS'. A case whose steps the target holds none of is
+not applicable, its CASES reason its ground. The presentation's row is
+met only where ProbeRuns' reader read every probed run, never a bundle
+directory's presence. A control's row carries `admissible` as its reading
+gives it, the shim control's true or false, since Qualification.md admits
+the probed readings only on a passing shim control of their scope, and
+null for a control with no admissibility of its own and for every other
+row, so no control gains a pass condition; an inadmissible row's `why` is
+its grounds (admissibility-grounds), whatever its state. The verdicts read
+the states alone.
 
 ## def verdicts-of
 

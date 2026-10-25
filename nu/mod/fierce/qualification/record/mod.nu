@@ -138,7 +138,7 @@ def shim-reading [runs: list<any>, missing: list<any>, target: string]: nothing 
     let arm = {|probed: bool| $fit | where probed == $probed | each {|r| { name: (matrix run-name $r), whole: $r.measured.whole } } }
     let effect = (observer shim-effect (do $arm true) (do $arm false))
     let problems = ((control-problems $runs $missing $target) ++ $effect.problems)
-    { met: ($problems | is-empty), admissible: $effect.admissible, measures: $effect.measures, problems: $problems }
+    { met: ($problems | is-empty), admissible: $effect.admissible, measures: $effect.measures, unevaluated: $effect.problems, problems: $problems }
 }
 
 # The worker scaling control's reading: forced against automatic, by leg

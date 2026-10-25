@@ -64,7 +64,9 @@ cap, with its reason. A record without the reading says so.
 One target's section of the report (report-text), public-production
 writing for TheUser, from a check and the record it derived: the final
 verdict its opening sentence, the preparation subset's beside it and
-never in its place (ObligationLedger), the obligations a table, every
+never in its place (ObligationLedger), the obligations a table, a row
+with an admissibility, the shim control's, printing it and its grounds
+beside its state's ground, every
 acceptance run's verdict with the guest's presentation beside it
 (guest-section), the route by leg, the tails, the presentation
 and its shim control, the CPU beside the guest's waits, the tile pool,

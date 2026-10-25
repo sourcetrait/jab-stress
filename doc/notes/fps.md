@@ -208,8 +208,11 @@ repositories, under the session's scratch directory or
   its pairing established, and its shown, superseded, and repeated frames
   pooled; a run left unread names its stage and refusals. Every final
   obligation is a row of the ledger, met, failed, pending on its
-  dependency, or not applicable; the preparation subset's verdict and the
-  final one are read apart. Beside the ledger, a diagnostic, each
+  dependency, or not applicable; the shim control's row says besides
+  whether the probed readings are admissible, naming each effect past its
+  noise and each measure left unevaluated where they are not; the
+  preparation subset's verdict and the final one are read apart from the
+  states alone. Beside the ledger, a diagnostic, each
   acceptance run's guest presentation is read from its receipts: its
   qualifying waits and their greatest delay, its late wakes at each
   tolerance, the gauge's eps and the kernel's FRAME_EPS, K's violations at

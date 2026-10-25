@@ -2503,6 +2503,7 @@ record<
                     effect: oneof<number, nothing>, noise: oneof<float, nothing>, within: bool,
                     runs: table<arm: string, name: string, value: oneof<number, nothing>>
                 >,
+                unevaluated: list<string>,
                 problems: list<string>
             >,
             record<
@@ -2737,6 +2738,9 @@ record<
             tolerances: table<eps: int, late_wakes: oneof<int, nothing>, k_violations: oneof<int, nothing>>
         >
     >,
-    ledger: table<row: string, kind: string, carried: bool, state: string, evidence: list<string>, why: string, problems: list<string>>,
+    ledger: table<
+        row: string, kind: string, carried: bool, state: string, admissible: oneof<bool, nothing>,
+        evidence: list<string>, why: string, problems: list<string>
+    >,
     verdicts: record<subset: record<rows: list<string>, passes: bool, verdict: string>, final: record<passes: bool, failed: list<string>, pending: table<row: string, dependency: string>, verdict: string>>
 >

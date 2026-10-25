@@ -102,7 +102,12 @@ def target-section [c: record]: nothing -> list<string> {
             "failed" => ($x.problems | str join "; ")
             _ => $x.why
         })
-        [$x.row $x.kind $x.state (if $ground == "" { "-" } else { $ground })]
+        let admissible = ($x | get -o admissible)
+        let admitted = (if $admissible == null { "" } else if $admissible {
+            "its probed readings admissible, every effect within its noise"
+        } else { $"its probed readings inadmissible: ($x.why)" })
+        let cell = ([$ground $admitted] | where {|s| $s != "" } | str join "; ")
+        [$x.row $x.kind $x.state (if $cell == "" { "-" } else { $cell })]
     }))
     let history = ($c.history | each {|h| $"- The record's ($h.item) reads ($h.stored | to nuon), and derived again from its inputs ($h.derived | to nuon)." })
     let done = ($r.bench.steps | where state == "done" | length)
@@ -221,7 +226,7 @@ def target-section [c: record]: nothing -> list<string> {
         ""
         "### The obligations"
         ""
-        "Every final obligation of the qualification on this target is a row: met on its evidence, failed with its problems, pending on its dependency, or not applicable for its reason. Qualification passes only when every row is met or not applicable."
+        "Every final obligation of the qualification on this target is a row: met on its evidence, failed with its problems, pending on its dependency, or not applicable for its reason. Qualification passes only when every row is met or not applicable. The shim control's row also says whether the probed readings are admissible, and why not where they are not. That decides what the probed readings may claim, never whether qualification passes."
         ""
     ] ++ $ledger_table ++ [
         ""
