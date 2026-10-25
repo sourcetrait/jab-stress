@@ -66,11 +66,13 @@ writing for TheUser, from a check and the record it derived: the final
 verdict its opening sentence, the preparation subset's beside it and
 never in its place (ObligationLedger), the obligations a table, a row
 with an admissibility, the shim control's, printing it and its grounds
-beside its state's ground, every
+beside its state's ground unless the row is pending, whose ground already
+carries them, with what a bench counts for by its machine's role, every
 acceptance run's verdict with the guest's presentation beside it
 (guest-section), the route by leg, the tails, the presentation
 and its shim control, the CPU beside the guest's waits, the tile pool,
-the host, the worker scaling control, the service active's windows, the
+the host, its machine named by its operator's alias with the role it
+declared and never by its hostname, the worker scaling control, the service active's windows, the
 feature unavailable's refusal, the audio's debug runs, each where its
 target holds it, the problems the check names, the record's stored
 answers that differ from those derived again, and the limits. The presentation states

@@ -80,19 +80,32 @@ def step-runs [step: record, doc: record, candidate: record, target: string, spe
     }
 }
 
-# The bench's one host and one QEMU and each case's one backend, else each named
+# A run's system: its alias, else the hostname a run recorded before aliases
+def system-of [host: any]: nothing -> any {
+    if $host == null { null } else { $host | get -o alias | default ($host | get -o hostname) }
+}
+
+# The bench's one system, role, description, and QEMU, each case's one backend
 def condition-problems [runs: list<any>, cases: list<any>]: nothing -> record {
-    let hosts = ($runs | each {|r| $r.identity.host | get -o hostname } | uniq)
+    let hosts = ($runs | each {|r| system-of $r.identity.host } | uniq)
+    let roles = ($runs | each {|r| $r.identity.host | get -o role | default "unknown" } | uniq)
+    let descriptions = ($runs | each {|r|
+        let h = ($r.identity.host | default {})
+        { os: ($h | get -o os), name: ($h | get -o name), os_version: ($h | get -o os_version), kernel_version: ($h | get -o kernel_version), cpu: ($h | get -o cpu), cores: ($h | get -o cores), memory: ($h | get -o memory) }
+    } | uniq)
+    let described = {|d: record| $"($d.name | default 'an unnamed OS') ($d.os_version | default ''), kernel ($d.kernel_version | default 'unrecorded'), ($d.cpu | default 'an unrecorded CPU'), ($d.cores | default '-') cores, ($d.memory | default 'unrecorded') memory" }
     let qemus = ($runs | each {|r| { version: ($r.identity.qemu | get -o version), sha256: ($r.identity.qemu | get -o sha256) } } | uniq)
     let backends = ($cases | each {|c|
         let these = ($runs | where {|r| ($c.runs | any {|x| $x.step == $r.step and $x.run == $r.run }) })
         { case: $c.case, backends: ($these | get backend | uniq) }
     })
     let problems = ([
-        (if ($hosts | length) > 1 { $"the bench ran on ($hosts | length) hosts, ($hosts | str join ', '), where a bench runs on one" })
+        (if ($hosts | length) > 1 { $"the bench ran on ($hosts | length) systems, ($hosts | str join ', '), where a bench runs on one" })
+        (if ($roles | length) > 1 { $"the bench's runs declare ($roles | length) roles, ($roles | str join ', '), where a bench runs on one machine's" })
+        (if ($descriptions | length) > 1 { $"the bench's runs record ($descriptions | length) host configurations, ($descriptions | each {|d| do $described $d } | str join '; '), where a bench runs on one" })
         (if ($qemus | length) > 1 { $"the bench ran ($qemus | length) QEMUs, ($qemus | each {|q| $'($q.version | default 'unrecorded') of SHA-256 ($q.sha256 | default 'unrecorded')' } | str join '; '), where a bench runs one" })
     ] | compact) ++ ($backends | where {|b| ($b.backends | length) > 1 } | each {|b| $"($b.case) holds ($b.backends | length) backends, ($b.backends | each {|x| $'($x.window) with ($x.audio)' } | str join '; '), where a case holds one" })
-    { hosts: $hosts, qemus: $qemus, backends: $backends, problems: $problems }
+    { hosts: $hosts, roles: $roles, descriptions: $descriptions, qemus: $qemus, backends: $backends, problems: $problems }
 }
 
 # The bench run held to the candidate's bench file, each problem named

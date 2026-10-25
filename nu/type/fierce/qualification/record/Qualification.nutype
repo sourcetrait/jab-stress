@@ -46,6 +46,12 @@ record<
     >,
     conditions: record<
         hosts: list<oneof<string, nothing>>,
+        roles: list<string>,
+        descriptions: list<record<
+            os: oneof<string, nothing>, name: oneof<string, nothing>, os_version: oneof<string, nothing>,
+            kernel_version: oneof<string, nothing>, cpu: oneof<string, nothing>, cores: oneof<int, nothing>,
+            memory: oneof<filesize, nothing>
+        >>,
         qemus: table<version: oneof<string, nothing>, sha256: oneof<string, nothing>>,
         backends: table<case: string, backends: table<window: oneof<string, nothing>, audio: string>>,
         problems: list<string>
@@ -55,6 +61,11 @@ record<
             record<
                 os: string, name: oneof<string, nothing>, os_version: oneof<string, nothing>,
                 kernel_version: oneof<string, nothing>, hostname: oneof<string, nothing>,
+                cpu: oneof<string, nothing>, cores: int, memory: oneof<filesize, nothing>
+            >,
+            record<
+                os: string, name: oneof<string, nothing>, os_version: oneof<string, nothing>,
+                kernel_version: oneof<string, nothing>, hostname: nothing, alias: string, role: string,
                 cpu: oneof<string, nothing>, cores: int, memory: oneof<filesize, nothing>
             >,
             nothing
@@ -464,6 +475,11 @@ record<
                     record<
                         os: string, name: oneof<string, nothing>, os_version: oneof<string, nothing>,
                         kernel_version: oneof<string, nothing>, hostname: oneof<string, nothing>,
+                        cpu: oneof<string, nothing>, cores: int, memory: oneof<filesize, nothing>
+                    >,
+                    record<
+                        os: string, name: oneof<string, nothing>, os_version: oneof<string, nothing>,
+                        kernel_version: oneof<string, nothing>, hostname: nothing, alias: string, role: string,
                         cpu: oneof<string, nothing>, cores: int, memory: oneof<filesize, nothing>
                     >,
                     nothing
@@ -1306,6 +1322,11 @@ record<
                     record<
                         os: string, name: oneof<string, nothing>, os_version: oneof<string, nothing>,
                         kernel_version: oneof<string, nothing>, hostname: oneof<string, nothing>,
+                        cpu: oneof<string, nothing>, cores: int, memory: oneof<filesize, nothing>
+                    >,
+                    record<
+                        os: string, name: oneof<string, nothing>, os_version: oneof<string, nothing>,
+                        kernel_version: oneof<string, nothing>, hostname: nothing, alias: string, role: string,
                         cpu: oneof<string, nothing>, cores: int, memory: oneof<filesize, nothing>
                     >,
                     nothing

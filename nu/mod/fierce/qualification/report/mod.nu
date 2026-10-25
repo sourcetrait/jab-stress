@@ -103,7 +103,7 @@ def target-section [c: record]: nothing -> list<string> {
             _ => $x.why
         })
         let admissible = ($x | get -o admissible)
-        let admitted = (if $admissible == null { "" } else if $admissible {
+        let admitted = (if $admissible == null or $x.state == "pending" { "" } else if $admissible {
             "its probed readings admissible, every effect within its noise"
         } else { $"its probed readings inadmissible: ($x.why)" })
         let cell = ([$ground $admitted] | where {|s| $s != "" } | str join "; ")
@@ -215,6 +215,11 @@ def target-section [c: record]: nothing -> list<string> {
         ] ++ (md-table ["Run" "Pad events taken" "Pad events dropped" "Times the sound queue ran empty" "Pad reports QEMU dropped" "Continuity"] $rows)
     })
     let host = ($r.hosts.hosts | each {|h| $"($h | get -o name | default 'an unnamed host') ($h | get -o os_version | default ''), ($h | get -o cpu | default 'an unrecorded CPU'), ($h | get -o cores | default '-') cores" })
+    let aliases = ($r.hosts.hosts | each {|h| $h | get -o alias } | compact | uniq)
+    let declared = ($r | get -o conditions.roles | default [] | each {|x| if $x == "unknown" { "no role" } else { $"the role ($x)" } } | str join " and ")
+    let machine = (if ($aliases | is-empty) { "- The machine recorded no name of its operator's and declared no role." } else {
+        $"- The machine is ($aliases | str join ' and '), its operator's name for it, and it declared ($declared)."
+    })
     let qemus = ($r.hosts.qemus | each {|q| $"($q | get -o version | default 'an unrecorded QEMU') at ($q | get -o binary | default '-'), SHA-256 ($q | get -o sha256 | default 'unrecorded')" })
     let window = (if $r.ram.window_bytes == null { "unread" } else { $"($r.ram.window_bytes / 1048576 | math round) MiB" })
     [
@@ -226,7 +231,7 @@ def target-section [c: record]: nothing -> list<string> {
         ""
         "### The obligations"
         ""
-        "Every final obligation of the qualification on this target is a row: met on its evidence, failed with its problems, pending on its dependency, or not applicable for its reason. Qualification passes only when every row is met or not applicable. The shim control's row also says whether the probed readings are admissible, and why not where they are not. That decides what the probed readings may claim, never whether qualification passes."
+        "Every final obligation of the qualification on this target is a row: met on its evidence, failed with its problems, pending on its dependency, or not applicable for its reason. Qualification passes only when every row is met or not applicable. The shim control's row also says whether the probed readings are admissible, and why not where they are not. That decides what the probed readings may claim, never whether qualification passes. A bench counts by the role its machine declares: a Linux desktop's bench meets the obligation of TheUser's Linux host, a container's supports the preparation, and the runs of a machine that declares no role meet no obligation, their readings kept."
         ""
     ] ++ $ledger_table ++ [
         ""
@@ -274,7 +279,7 @@ def target-section [c: record]: nothing -> list<string> {
         ""
         "### The host"
         ""
-    ] ++ ($host | each {|h| $"- ($h)" }) ++ ($qemus | each {|q| $"- ($q)" }) ++ [
+    ] ++ [$machine] ++ ($host | each {|h| $"- ($h)" }) ++ ($qemus | each {|q| $"- ($q)" }) ++ [
         $"- The program's RAM window is ($window) of ($r.spec.ram_bytes / 1073741824 | math round) GiB installed. The RAM past the window is held apart."
         (memory-line $r.watch)
         ""

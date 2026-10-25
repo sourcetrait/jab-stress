@@ -54,13 +54,25 @@ step's gauge.nuon, at its measurement's eps and the kernel's FRAME_EPS
 (`frame_eps`), with the cap its identity records, none where it records
 none, which record-of lifts out of the run.
 
+## def system-of
+
+A run's system as the one-system rule keys it (HostnamesOut): its
+identity's alias, the nickname its operator gives the system in place of
+its hostname, else, for a run recorded before aliases, the hostname its
+identity carries, so a landed bench keeps its hostnames' reading; a reread
+never fills an alias from the reading machine's settings.
+
 ## def condition-problems
 
-The bench's one host and one QEMU, by each identity's hostname and its
-QEMU's version and binary SHA-256, and each case's one backend: a bench
-that ran on two hosts or two QEMUs, or a case holding two backends,
-offscreen against a window or two audio drivers, mixes conditions no
-verdict may pool, each named.
+The bench's one system (system-of); its one declared role, a run whose
+identity records none reading `unknown` (DeclaredConditions); its one host
+configuration, the OS, its name, version, and kernel, the CPU, the cores,
+and the memory, a configuration check that proves no one machine; its one
+QEMU, by version and binary SHA-256; and each case's one backend: a bench
+that ran on two systems, roles, configurations, or QEMUs, or a case
+holding two backends, offscreen against a window or two audio drivers,
+mixes conditions no verdict may pool, each named. An alias is an
+operator's label, not an attestation of the hardware.
 
 ## def bench-problems
 

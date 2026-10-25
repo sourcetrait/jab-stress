@@ -50,18 +50,24 @@ export const DIAGNOSTICS = [
     ["worker balance", [], [frames workers grains raster slowest busy dispatch barrier]]
 ]
 
-# Every final obligation past the bench's cases, its kind and state by target
+# Every final obligation past the bench's cases, its state, and the bench meeting it
 export const OBLIGATIONS = [
-    [row, kind, state, why];
-    ["the parity", correctness, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the parity tool on both maps' still copies at the freeze", "1kb1": "the parity tool on both maps' still copies at the freeze"}]
-    ["the OWNER captures", correctness, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the OWNER captures at the freeze", "1kb1": "the OWNER captures at the freeze"}]
-    ["the fps suite on the target", correctness, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the fps suite on 1KA1 at the freeze", "1kb1": "the fps suite on 1KB1 at the freeze"}]
-    ["the freeze's fps suite", freeze, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the fps suite at the tagged candidate", "1kb1": "the fps suite at the tagged candidate"}]
-    ["the freeze's root suite", freeze, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the root suite at the tagged candidate", "1kb1": "the root suite at the tagged candidate"}]
-    ["TheUser's Linux host", host, {"1ka1": pending, "1kb1": pending}, {"1ka1": "his host's bench on 1KA1, its probed runs bundled (U1)", "1kb1": "his host's bench on 1KB1, its probed runs bundled (U1)"}]
-    ["the Windows runs", host, {"1ka1": pending, "1kb1": pending}, {"1ka1": "WindowsHost, PadWindows, and his host (U4)", "1kb1": "WindowsHost, PadWindows, and his host (U4)"}]
-    ["the reports and the evidence package", reports, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the reports from the final records and the evidence package landed (EvidenceRetention)", "1kb1": "the reports from the final records and the evidence package landed (EvidenceRetention)"}]
+    [row, kind, state, why, met_by];
+    ["the parity", correctness, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the parity tool on both maps' still copies at the freeze", "1kb1": "the parity tool on both maps' still copies at the freeze"}, null]
+    ["the OWNER captures", correctness, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the OWNER captures at the freeze", "1kb1": "the OWNER captures at the freeze"}, null]
+    ["the fps suite on the target", correctness, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the fps suite on 1KA1 at the freeze", "1kb1": "the fps suite on 1KB1 at the freeze"}, null]
+    ["the freeze's fps suite", freeze, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the fps suite at the tagged candidate", "1kb1": "the fps suite at the tagged candidate"}, null]
+    ["the freeze's root suite", freeze, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the root suite at the tagged candidate", "1kb1": "the root suite at the tagged candidate"}, null]
+    ["TheUser's Linux host", host, {"1ka1": pending, "1kb1": pending}, {"1ka1": "his host's bench on 1KA1, its probed runs bundled (U1)", "1kb1": "his host's bench on 1KB1, its probed runs bundled (U1)"}, {role: desktop, os: linux}]
+    ["the Windows runs", host, {"1ka1": pending, "1kb1": pending}, {"1ka1": "WindowsHost, PadWindows, and his host (U4)", "1kb1": "WindowsHost, PadWindows, and his host (U4)"}, null]
+    ["the reports and the evidence package", reports, {"1ka1": pending, "1kb1": pending}, {"1ka1": "the reports from the final records and the evidence package landed (EvidenceRetention)", "1kb1": "the reports from the final records and the evidence package landed (EvidenceRetention)"}, null]
 ]
+
+# Why a bench's runs meet no obligation, by its machine's declared role
+const UNMEETING = {
+    unknown: "its bench's machine declares no role, so its runs meet no obligation",
+    metal: "its bench ran on metal, whose runs are Jab Metal's and meet no obligation of this qualification",
+}
 
 # The bench's verb in a step's words, play, run, or audio, wherever it stands
 export def step-verb [words: list<string>]: nothing -> any {
@@ -303,15 +309,46 @@ export def ledger-of [r: record, tag: record, held: list<string>]: nothing -> li
     })
     let diagnostics = ($r.diagnostics | each {|d| do $row $d.case "diagnostic" true (diagnostic-problems $d) ($d.readings | each {|x| $x.name } | uniq) })
     let bench = (do $row "the bench held to its definition" "freeze" true $held [$"the bench file at ($r.candidate.jab | str substring 0..<10)"])
+    let role = (bench-role $r)
+    let unmeeting = ($UNMEETING | get -o $role)
+    let carried = ($cases ++ $diagnostics ++ [$bench] | each {|x|
+        if $unmeeting == null or $x.state != "met" { $x } else {
+            let grounds = (if $x.admissible == false { $"its probed readings inadmissible: ($x.why)" })
+            $x | update state "pending" | update why ([$unmeeting $grounds] | compact | str join "; ")
+        }
+    })
     let tagged = {
         row: "the tagged candidate", kind: "freeze", carried: false, state: $tag.state, admissible: null,
         evidence: (if $tag.state == "met" { [$r.candidate.tag] } else { [] }), why: (if $tag.state == "met" { "" } else { $tag.why }),
         problems: (if $tag.state == "failed" { [$tag.why] } else { [] }),
     }
     let others = ($OBLIGATIONS | each {|o|
-        { row: $o.row, kind: $o.kind, carried: false, state: ($o.state | get $r.target), admissible: null, evidence: [], why: ($o.why | get $r.target), problems: [] }
+        let declared = { row: $o.row, kind: $o.kind, carried: false, state: ($o.state | get $r.target), admissible: null, evidence: [], why: ($o.why | get $r.target), problems: [] }
+        if (meets $r $role $o.met_by) { met-by-bench $declared $r $carried } else { $declared }
     })
-    $cases ++ $diagnostics ++ [$bench $tagged] ++ $others
+    $carried ++ [$tagged] ++ $others
+}
+
+# A record's bench role: its runs' one declared role, else unknown
+def bench-role [r: record]: nothing -> string {
+    let roles = ($r | get -o conditions.roles | default [])
+    if ($roles | length) == 1 { $roles | first } else { "unknown" }
+}
+
+# Whether a bench of its role and its hosts' OS is the one an obligation names
+def meets [r: record, role: string, by: any]: nothing -> bool {
+    if $by == null or $role != $by.role { return false }
+    ($r | get -o hosts.hosts | default [] | each {|h| $h | get -o os } | uniq) == [$by.os]
+}
+
+# An obligation a bench meets, met when every row it carries is, else failed
+def met-by-bench [declared: record, r: record, carried: list<any>]: nothing -> record {
+    let unmet = ($carried | where {|x| $x.state not-in ["met" "not applicable"] })
+    if not ($unmet | is-empty) {
+        return ($declared | update state "failed" | update why "" | update problems ($unmet | each {|x| $"($x.row) is ($x.state)" }))
+    }
+    let on = ($r | get -o conditions.hosts | default [] | compact | str join ", ")
+    $declared | update state "met" | update why "" | update evidence [$"the bench at ($r.bench.stamp | default 'an unrecorded time') on ($on), declared ($r.conditions.roles | first)"]
 }
 
 # The preparation subset's verdict and the final one, read from a ledger

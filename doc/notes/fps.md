@@ -195,8 +195,15 @@ repositories, under the session's scratch directory or
   its step's conditions, the service, the workers, the cadence, the window
   and the sound, the pad, and the probe; to its step's build, the
   candidate's release build or the named build its words run as
-  `{build:<name>}`; the bench to one host and one QEMU; each case to one
-  backend. The service active's verdicts judge each run's service window,
+  `{build:<name>}`; the bench to one system, by each run's alias (a run
+  recorded before aliases by its hostname), one declared role, one host
+  configuration, and one QEMU; each case to one backend. The role is the
+  one each run's machine declares in jab's `jab/debug.toml`, recorded in
+  its identity, and a run recording none reads `unknown`: a bench counts by
+  it, a Linux desktop's meeting the obligation of TheUser's Linux host, a
+  container's supporting the preparation subset, and an `unknown` or a
+  `metal` bench's rows that would be met reading pending, their readings
+  kept. A record never reads the reading machine's role or alias. The service active's verdicts judge each run's service window,
   one closed whole with no quota skipped; the feature unavailable reads the
   start's refusal under the floor; the audio reads each debug run's driver
   counters and, where its sound was recorded, its 50 ms windows. A case a

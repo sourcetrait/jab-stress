@@ -58,7 +58,18 @@ Every final obligation no bench carries (ObligationLedger): the
 correctness runs and the suites at the freeze, his Linux host's bench
 (U1), the Windows runs (U4), and the reports with the evidence package;
 each a state and a ground by target, pending on its dependency or not
-applicable for its reason, his ruling where one stands.
+applicable for its reason, his ruling where one stands; and `met_by`, the
+bench that meets it where a bench can, its machine's declared role and
+the OS it runs, the Linux host's a Linux desktop's (U5, DeclaredConditions).
+
+## const UNMEETING
+
+Why a bench's runs meet no obligation, by its machine's declared role
+(DeclaredConditions): `unknown`, a machine declaring none, every landed
+bench recorded before roles among them, and `metal`, whose runs are Jab
+Metal's, which this qualification holds no obligation of. A `container`
+bench supports the preparation subset and a `desktop` bench meets U5's,
+so neither is here.
 
 ## def step-verb
 
@@ -226,8 +237,31 @@ gives it, the shim control's true or false, since Qualification.md admits
 the probed readings only on a passing shim control of their scope, and
 null for a control with no admissibility of its own and for every other
 row, so no control gains a pass condition; an inadmissible row's `why` is
-its grounds (admissibility-grounds), whatever its state. The verdicts read
-the states alone.
+its grounds (admissibility-grounds), whatever its state. The bench's
+declared role (bench-role) then decides what its rows meet: a bench whose
+role UNMEETING names leaves each row it carries that would be met pending,
+its `why` that reason with an inadmissible row's grounds after it, its
+readings kept and its failures failed; an obligation whose `met_by` names
+the bench (meets) is the bench's to meet (met-by-bench); every other
+obligation stands as OBLIGATIONS gives it. The verdicts read the states
+alone.
+
+## def bench-role
+
+A record's bench role: its runs' one declared role, the conditions'
+`roles`, else `unknown`, for a bench of mixed roles, which the conditions
+name a problem, and for one with no run.
+
+## def meets
+
+Whether a bench is the one an obligation's `met_by` names: its declared
+role that role and every host its runs record running that OS.
+
+## def met-by-bench
+
+An obligation a bench meets: met when every row the bench carries is met
+or not applicable, its evidence the bench, its stamp, its system, and its
+role; else failed, naming each row the bench carries that is not.
 
 ## def verdicts-of
 
