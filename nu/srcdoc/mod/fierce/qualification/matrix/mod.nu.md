@@ -164,6 +164,10 @@ each named: the service at the step's `--service` quota or none, the
 workers automatic or forced to the step's count, the cadence the step
 asks or the gauge's default 1, none for the audio's play, the window and
 the sound live with `--host` or a play and off and recorded otherwise, the
+audio's `--host` sound live on a machine declaring `desktop` alone and
+recorded on any other, since gauge/audio records where the machine has no
+output and the declared role carries the machine's audio
+(DeclaredConditions), the
 pad the route's, the host's for a play, or the table for the audio's, and
 the sdl probe on the probed steps alone. A run that differs is foreign to
 its case, so it fails an acceptance case and leaves a control unmet.

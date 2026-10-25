@@ -207,7 +207,8 @@ export def conditions-of [id: record, ran: any, words: list<string>]: nothing ->
     let probed = ("--sdl-probe" in $words)
     let mode = ($id.mode | default {})
     let pad = (if $play { "host" } else if $audio { "table" } else { "route" })
-    let sound = (if $host { "host" } else { "recorded" })
+    let live = (if $audio { ($id.host | get -o role) == "desktop" } else { true })
+    let sound = (if $host and $live { "host" } else { "recorded" })
     let quota = (flag-of $words "--service" | default "-1" | into int)
     let service = (if $quota < 0 { null } else { $quota })
     [
