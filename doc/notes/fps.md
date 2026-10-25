@@ -35,15 +35,17 @@ repositories, under the session's scratch directory or
     release, or debug with `--debug`, the export named after its symbols
     (`export_<commit>-footprint`, `export_<commit>-debug`).
   - `footprint.nu` runs FootprintEstimate's level comparison. `images
-    <export>` builds eight debug images of one export, each in a copy of
+    <export>` builds five debug images of one export, each in a copy of
     the export's program named `<export>_<label>`: for a view, `picture`
-    and `picture_candidate` (debug, and debug with FOOTPRINT) for the
-    pictures, `owner`, and `levels` and `levels_candidate` (debug with
-    LEVELS, and with LEVELS and FOOTPRINT); for the clamp pose,
-    `owner_clamp`, `levels_clamp`, and `levels_candidate_clamp`, the
-    same with IZ_TEST. Each image keeps the kernel built with it as
-    `kernel.elf`, its provenance, and the IZ_MIN its ELF was assembled
-    with; their record is `footprint_images.nuon` in the export.
+    (debug), `owner`, and `levels` (debug with LEVELS); for the clamp
+    pose, `owner_clamp` and `levels_clamp`, the same with IZ_TEST. Each
+    image keeps the kernel built with it as `kernel.elf`, its provenance,
+    and the IZ_MIN its ELF was assembled with; their record is
+    `footprint_images.nuon` in the export. The landed sets also hold the
+    FOOTPRINT candidate's `picture_candidate`, `levels_candidate`, and
+    `levels_candidate_clamp`; `capture` and `read` take a view's kind with
+    them beside today's, so they serve the landed sets, which `reread`
+    reads by those labels.
     `capture <export> <poses> <out> [--only <poses>]` launches each pose's
     kind's images, every pose `--only` names, comma separated, all of
     them by default, asks each launch for its frames' snapshots, and runs

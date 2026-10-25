@@ -33,8 +33,8 @@ repositories, under `$XDGX_TMP_HOME/jab-stress/freshbuild/`.
 
 `nu/nuon/nuance/freshbuild/matrix.nuon` lists them: the whole workspace
 in release and under `DEBUG`, then each program built with other symbols,
-such as the game's `COUNT` and `CENSUS` builds, walk's `CADENCE` builds,
-and the kernel alone with `FLIP_BATCH`. Each tuple is built in turn, and
+such as the game's `COUNT` and `CENSUS` builds and walk's `CADENCE`
+builds. Each tuple is built in turn, and
 its outputs are hashed the moment its build ends, since the next build of
 the same tree replaces them.
 

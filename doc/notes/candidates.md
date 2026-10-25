@@ -7,9 +7,10 @@ build without the symbol is the same, byte for byte, as the build before
 the change. The candidate is measured against the build without it, both
 from one commit.
 
-| Symbol | Task | What it changes |
-|---|---|---|
-| `flip_batch` | SubmitWait | The kernel's whole-screen flip sends its transfer and its flush as one batch with one wait, as a list of rectangles is sent |
+No kernel candidate sits in the source now. The last, SubmitWait's
+`flip_batch`, the whole flip's transfer and flush sent as one batch with
+one wait, was retained by its comparisons and removed; its exports stay
+landed under `runs/kernel/export/` with their hashes.
 
 `prepare`, LoopReorder's, landed with JointTiming's frame rule: bounce, walk,
 wasd, and pad draw first and wait for the display's tick after in every
@@ -19,9 +20,7 @@ measurement build.
 ## Testing a candidate
 
 A candidate's cases run in the Jab checkout's own tests, built with its
-symbol: `./do test test/framecap --set flip_batch` there holds the whole
-flip's receipts on the candidate, and the same test without the symbol
-holds them on the kernel as it is.
+symbol, and the same tests without the symbol hold the kernel as it is.
 
 ## Exporting a candidate
 
