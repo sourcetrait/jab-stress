@@ -47,7 +47,22 @@ the data checkout beside this repository, `../jab-stress-data`, under
 
 | Descriptor | What it runs |
 |---|---|
-| `recorded.nuon` | steps through jab's bins or the workbench's, each under the environment its `env` names, a table of `name` and `value`, where it sets one, and each in its own directory: its output, the revisions it ran, its symbols, its kernel's and programs' builds with their digests, and the files it wrote, in `step.nuon`, the run's directory then landed whole. A suite, a program's tests, the smoke, a gauge battery and its compares, or a workbench reader's run is its step list |
+| `recorded.nuon` | steps through jab's bins or the workbench's, each under the environment its `env` names, a table of `name` and `value`, where it sets one, and each in its own directory: its output, the revisions it ran, its symbols, its kernel's and programs' builds with their digests, the files it wrote, and the host's CPU by process beside it, in `step.nuon` and `host_load.nuonl`, the run's directory then landed whole. A suite, a program's tests, the smoke, a gauge battery and its compares, or a workbench reader's run is its step list |
+
+## The host's load
+
+Every recorded step reads the host's CPU by process beside it into
+`host_load.nuonl`: a baseline as the step starts, a reading every ten
+seconds, and one as it ends, each process by its pid, start, parent, name,
+and CPU, never its command line, environment, user, or paths. Its
+`step.nuon` carries the summary: the readings, their span, any failed
+reading, every foreign or unknown process that reached 0.1 cores over an
+interval, and each interval's CPU that no process read accounts for. A
+process is the step's when it descends from the runner, foreign when its
+parents reach the top of the table without it, and unknown when a parent
+vanished. The summary claims what the covered readings saw and no more: a
+process born and reaped between readings is unseen, and on the box, a
+container, the host's own processes show only as unattributed CPU.
 
 ## Benches
 

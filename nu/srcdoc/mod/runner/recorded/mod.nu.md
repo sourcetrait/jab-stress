@@ -30,7 +30,10 @@ Each step in turn, every step run and recorded whatever the one before did,
 then a failure raised naming every failed step once all are recorded. A step:
 its outs' files listed, its bin run from its checkout's root as an executable,
 as a user runs `./do`, under its `env` where it sets one, its words with
-`{target}` and `{step}` resolved, the run timed by `timeit`'s monotonic clock;
+`{target}` and `{step}` resolved, the run timed by `timeit`'s monotonic clock,
+the host's CPU read by process beside it into `host_load.nuonl` (hostload: a
+baseline before the bin starts, the sampler a job beside it, its final reading
+taken as the step ends, a raised error's path too);
 its stdout and stderr saved apart as `run.stdout` and `run.stderr`; every file
 it wrote or changed under each out copied beneath `out_<n>`; the kernel's
 build and each program's copied beneath `build/`, the kernel's flat image
@@ -40,8 +43,9 @@ beside its ELF by the toolchain's `objcopy`, the loaded bytes; then
 commits and cleanliness, the kernel source asked, the last commit touching
 `kernel/` or `sdk/src`, and whether the two trees are equal, each fixture's
 last commit, blob, and SHA-256, each artifact with its flags line, the symbols
-its `--defsym`s define, and `held`, those symbols the step's exactly, and each
-out's copy. `ok` is the exit 0 with every artifact's symbols held.
+its `--defsym`s define, and `held`, those symbols the step's exactly, each
+out's copy, and `host_load`, hostload's summary of the step's readings. `ok` is
+the exit 0 with every artifact's symbols held.
 
 ## def repo-of
 

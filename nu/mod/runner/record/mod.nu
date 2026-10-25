@@ -257,9 +257,21 @@ export def outputs [dir: path, set: string]: nothing -> list<string> {
         let text = (open --raw $model | decode utf-8)
         glob ($dir | path join $r.pattern) --no-dir | sort | each {|f|
             let rel = ($f | path relative-to $dir)
-            let value = (read-nuon $f)
-            if $value == null { [$"($rel) does not parse"] } else { nutype problems $value $text $model | each {|p| $"($rel): ($p)" } }
+            if ($f | str ends-with ".nuonl") { lines-problems $f $text $model $rel } else {
+                let value = (read-nuon $f)
+                if $value == null { [$"($rel) does not parse"] } else { nutype problems $value $text $model | each {|p| $"($rel): ($p)" } }
+            }
         } | flatten
+    } | flatten
+}
+
+# A lines file held to its model a line at a time, each problem named by its line
+def lines-problems [file: path, text: string, model: string, rel: string]: nothing -> list<string> {
+    open --raw $file | decode utf-8 | lines | enumerate | where {|l| $l.item != "" } | each {|l|
+        let value = (try { $l.item | from nuon } catch { null })
+        if $value == null { [$"($rel) line ($l.index + 1) does not parse"] } else {
+            nutype problems $value $text $model | each {|p| $"($rel) line ($l.index + 1): ($p)" }
+        }
     } | flatten
 }
 

@@ -142,11 +142,18 @@ hash-only original is absent, and every kept or archived one is restored.
 A run's reader outputs held to their models before it lands: every file
 under the run's directory that an output row's pattern matches, where the
 row takes the run's set, held to that row's model, each problem prefixed
-with the file's path in the run, and a file that does not parse named. A
-table that breaks its model raises. Only a landing holds a run to it,
+with the file's path in the run, and a file that does not parse named; a
+lines file, `.nuonl`, held a line at a time (lines-problems). A table that
+breaks its model raises. Only a landing holds a run to it,
 since a run landed before a model existed keeps its records as written;
 the files no row names, a build's `flags`, `home`, and sources and the
 evidence's own records and bytes among them, are kept as written.
+
+## def lines-problems
+
+A lines file held to its model, each non-empty line a value held alone,
+each problem and each line that does not parse named by its line's
+number: a recorded step's `host_load.nuonl` among them.
 
 ## def required
 

@@ -1,0 +1,5 @@
+record<
+    kind: string, seq: int, at: oneof<float, nothing>, ticks: int, busy: oneof<int, nothing>,
+    failed: oneof<string, nothing>,
+    processes: table<pid: int, start: int, parent: int, name: string, cpu: int>
+>

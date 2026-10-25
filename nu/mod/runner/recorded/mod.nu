@@ -1,5 +1,6 @@
 use (path self ../../../../../jab/nu/mod/build)
 use (path self ../../../../../jab/nu/mod/target)
+use (path self ../hostload)
 
 # jab, checked out beside the workbench
 const JAB = (path self ../../../../../jab | path expand)
@@ -46,8 +47,17 @@ export def main [a: record]: nothing -> record<out: string, steps: table<name: s
         let root = (repo-of $a $s.repo)
         let bin = (bin-of $a $s)
         let given = (env-of $s)
+        let ticks = (hostload clock-ticks)
+        let load = ($dir | path join "host_load.nuonl")
+        let own = (hostload root)
         let started = (date now | format date "%+")
-        let timed = (timeit --output { with-env $given { cd $root; ^$bin ...$words | complete } })
+        hostload append-reading $load 0 $ticks
+        let sampler = (job spawn { hostload sample $load 1 $ticks })
+        let timed = (try { timeit --output { with-env $given { cd $root; ^$bin ...$words | complete } } } catch {|e|
+            hostload stop $sampler | ignore
+            error make {msg: $"step ($s.name) stopped, its host load read to its stop: ($e.msg)"}
+        })
+        let final = (hostload stop $sampler)
         let ended = (date now | format date "%+")
         let r = $timed.output
         $r.stdout | save --raw -f ($dir | path join "run.stdout")
@@ -82,6 +92,7 @@ export def main [a: record]: nothing -> record<out: string, steps: table<name: s
             kernel: $kernel,
             programs: $programs,
             outs: $wrote,
+            host_load: (hostload summary $load $own $final),
             stdout: "run.stdout",
             stderr: "run.stderr",
         } | to nuon --indent 2 | save --raw -f ($dir | path join "step.nuon")

@@ -14,7 +14,9 @@ copy. Three modules under `nu/mod/runner/` own it:
 - `record` is the one validator. Its models are in `nu/type/data/`: the
   manifest at schema 2 (`Run.nutype`) and at schema 1
   (`RunSchemaOne.nutype`), the inventory, the storage, a restoration's
-  receipt, and a log container.
+  receipt, a log container, and a line of a recorded step's
+  `host_load.nuonl` (`HostLoad.nutype`), which a landing holds a line at a
+  time.
 
 ## Landing a run
 
