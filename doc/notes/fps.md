@@ -34,25 +34,17 @@ repositories, under the session's scratch directory or
     [--program <dir>] [--debug]` exports a commit's program and builds it
     release, or debug with `--debug`, the export named after its symbols
     (`export_<commit>-footprint`, `export_<commit>-debug`).
-  - `footprint.nu` runs FootprintEstimate's level comparison. `images
-    <export>` builds five debug images of one export, each in a copy of
-    the export's program named `<export>_<label>`: for a view, `picture`
-    (debug), `owner`, and `levels` (debug with LEVELS); for the clamp
-    pose, `owner_clamp` and `levels_clamp`, the same with IZ_TEST. Each
-    image keeps the kernel built with it as `kernel.elf`, its provenance,
-    and the IZ_MIN its ELF was assembled with; their record is
-    `footprint_images.nuon` in the export. The landed sets also hold the
-    FOOTPRINT candidate's `picture_candidate`, `levels_candidate`, and
-    `levels_candidate_clamp`; `capture` and `read` take a view's kind with
-    them beside today's, so they serve the landed sets, which `reread`
-    reads by those labels.
-    `capture <export> <poses> <out> [--only <poses>]` launches each pose's
-    kind's images, every pose `--only` names, comma separated, all of
-    them by default, asks each launch for its frames' snapshots, and runs
-    the footprint crate's `reference` and `differ` over the bound
-    captures; a pose already captured into `out` is refused. `clamp-plan
-    <dir> <surface>` plans the clamp pose's threshold and witnesses over a
-    pose captured at the release floor. `read <out> <poses>` judges the
+  - `footprint.nu` reads FootprintEstimate's level comparison from its
+    landed sets. A set's images record, `footprint_images.nuon` in its
+    export, lists for a view `picture` (debug), `owner`, and `levels`
+    (debug with LEVELS), and for the clamp pose `owner_clamp` and
+    `levels_clamp` at the clamp's test floor, each image with the kernel
+    built with it as `kernel.elf`, its provenance, and the IZ_MIN its ELF
+    was assembled with; the sets also hold the FOOTPRINT candidate's
+    `picture_candidate`, `levels_candidate`, and `levels_candidate_clamp`,
+    which `read` and `reread` take by those labels. `clamp-plan <dir>
+    <surface>` plans the clamp pose's threshold and witnesses over a pose
+    captured at the release floor. `read <out> <poses>` judges the
     pose set whole, and `crops <out> <pose>` cuts each region where a
     view's two pictures differ out of both, side by side. `reread <tree>
     <out> <poses>` reads a landed run again from its restoration against a

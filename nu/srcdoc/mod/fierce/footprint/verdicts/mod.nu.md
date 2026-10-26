@@ -81,6 +81,7 @@ AlongSpanFootprint's. The declared criteria's result stands as recorded.
 The clamp's limit (ClampedReference): the release floor, IZ_MIN 4096, a
 depth of 16,384 m, is reached by no surface of the inventoried content at
 the inventoried poses, so the clamp stands proved at the test threshold
-alone, IZ_TEST's on the clamp pose. A reading shows it in its data, each
-view's clamped blocks beside its `iz_min`: none at the release floor, and
-the clamp pose's at IZ_TEST's with its two witnesses held.
+alone, the clamp images' 12,201,612, 5.5 m, on the clamp pose. A reading
+shows it in its data, each view's clamped blocks beside its `iz_min`: none
+at the release floor, and the clamp pose's at the test threshold with its
+two witnesses held.

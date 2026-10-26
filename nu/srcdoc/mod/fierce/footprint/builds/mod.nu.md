@@ -1,43 +1,21 @@
 # mod.nu
 
-An export's debug images built with their kernels and provenance, and the 1/z
-floor an image was assembled with (footprint's builds).
-
-## const BUILDS
-
-the images, each a label, the set it is built with, and the kind of pose it
-serves: for a view, the picture, the surfaces, and the levels; for the clamp,
-the surfaces and the levels with IZ_TEST, the debug-only symbol that raises
-IZ_MIN to 5.5 m, so the OWNER capture, the LEVELS capture, and their span
-tables share one floor. The landed captures also hold the FOOTPRINT
-candidate's images, `picture_candidate`, `levels_candidate`, and
-`levels_candidate_clamp`, read by their labels (captures' KINDS); none is
-built now. The copy of the export each builds in is `<export>_<label>`.
+The images' record of a landed footprint set and the 1/z floor an image was
+assembled with (footprint's builds).
 
 ## const IMAGES
 
-the images' record, in the export's own directory
+the images' record, in an export's own directory: each image's label, set,
+kind, image, kernel, digests, and IZ_MIN. A view's images are its picture,
+its surfaces, and its levels, and a clamp pose's its surfaces and levels at
+the clamp's test floor; the landed sets also hold the FOOTPRINT candidate's
+`picture_candidate`, `levels_candidate`, and `levels_candidate_clamp`, read
+by their labels (captures' KINDS). A record with no IZ_MIN leaves the floor
+to the image's archived ELF (rereads' floor-of).
 
 ## def iz-min-of
 
 ClampedReference's provenance rule: the floor is the integer the image was
 assembled with, read from its ELF's `IZ_MIN` symbol by the toolchain's nm, never
 a symbol's name or a nominal distance; 4096 on an ordinary debug build and
-12,201,612 under IZ_TEST.
-
-## def program-of
-
-The export's program directory, the one holding a manifest.
-
-## def images
-
-The images of an export (BUILDS), each its program copied beside the
-export as `<export>_<label>`, its src/, manifest, and source.nuon, the
-manifest still naming the export's SDK and the checkout's workspace;
-the checkout's kernel and then the copy built debug with its set by the
-checkout's tool; its flags holding DEBUG and every symbol of its set;
-that kernel copied beside it as `kernel.elf` with its loaded bytes,
-objcopy's flat image, as `kernel.bin`, every image's the same; and
-provenance.nuon beside it, its build tool's identity taken before that
-image's builds (provenance-of). The record, every image's label, set, kind,
-image, kernel, digests, and IZ_MIN, goes to the export's IMAGES.
+12,201,612 on the landed clamp images.

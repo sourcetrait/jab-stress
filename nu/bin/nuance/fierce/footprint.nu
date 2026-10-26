@@ -3,16 +3,6 @@
 const FOOTPRINT = path self ../../../mod/fierce/footprint
 use $FOOTPRINT
 
-# An export's debug images built with their kernels, provenance, and IZ_MIN
-def "main images" [export: path] {
-    footprint images $export
-}
-
-# Each pose captured on its kind's images, then referenced and differed
-def "main capture" [export: path, poses: path, out: path, --only: string = ""] {
-    footprint capture $export $poses $out --only $only
-}
-
 # Every captured pose judged against the pose set, reading.nuon written
 def "main read" [out: path, poses: path] {
     footprint read $out $poses
