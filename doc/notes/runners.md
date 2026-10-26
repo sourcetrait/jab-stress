@@ -1,7 +1,7 @@
 # Long-engine runners
 
 The runners are the long-running test and measurement runs, each run on the
-Grammar MCP's long engine (`rig/sourcetrait/two/prototype/long`), which
+Grammar MCP's long engine (`equip/ai/two/rig/prototype/long`), which
 reports progress on the MCP's channel and keeps every packet in the
 launching call's trace. A run's record, its logs and results, is kept in
 the data checkout beside this repository, `../jab-stress-data`, under
