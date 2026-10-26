@@ -36,7 +36,7 @@ any other count means the cache was not fresh.
 ## def programs-of
 
 Every `program.jab.toml` of the checkout outside `.git`, `.target`, and
-`target`, the 48 programs the suite tests.
+`target`, the 47 programs the suite tests.
 
 ## def build-at
 
