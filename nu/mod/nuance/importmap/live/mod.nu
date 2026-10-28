@@ -38,7 +38,8 @@ export def sources-of [repo: string, root: path]: [
     let descriptors = (glob ($root | path join 'nu' 'nuon' 'runner' '*.nuon')
         | sort
         | each {|f|
-            let body = (try { open $f | get body } catch { '' })
+            let definition = (try { open $f | get definition } catch { '' })
+            let body = ($definition | lines | skip 1 | drop 1 | str join (char nl))
             {repo: $repo, file: ($f | path relative-to $root), kind: 'descriptor', src: $body}
         })
     $nus | append $descriptors

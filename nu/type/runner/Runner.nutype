@@ -1,7 +1,5 @@
 record<
     nonce: string,
     title: string,
-    args_type: string,
-    result_type: string,
-    body: string
+    definition: string
 >

@@ -11,21 +11,22 @@ the data checkout beside this repository, `../jab-stress-data`, under
 ## The contract
 
 - A runner is two parts. Its descriptor, `nu/nuon/runner/<harness>.nuon`
-  (shaped by `nu/type/runner/Runner.nutype`), holds the nonce its body last
-  ran as, a title, its argument and result types, and its body. Its code
-  is the harness module `nu/mod/runner/<harness>/`, which exports `ready`
-  and `main`.
-- The body holds the long engine alone: the label, the interval, the quiet
-  bound, the progress check, and the teardown. Before the launch it runs
-  `nu/bin/nuance.nu runner ready <harness> <args>` and inside it `runner
-  work <harness> <args>`, the workbench's bin found from the `stress`
-  argument, the workbench's checkout, and run directly, since a run body
-  may not run `nu` by name. The arguments go as NUON text and the answers
-  come back as NUON. `ready` makes the run's directories, refuses what
-  must not be there, and returns the values the progress check reads.
+  (shaped by `nu/type/runner/Runner.nutype`), holds the nonce its
+  definition last ran as, a title, and its definition, the Grammar MCP's
+  `execute` definition, its signature the data's and the result's types.
+  Its code is the harness module `nu/mod/runner/<harness>/`, which exports
+  `ready` and `main`.
+- The definition holds the long engine alone: the label, the interval, the
+  quiet bound, the progress check, and the teardown. Before the launch it
+  runs `nu/bin/nuance.nu runner ready <harness> <args>` and inside it
+  `runner work <harness> <args>`, the workbench's bin found from the
+  `stress` field, the workbench's checkout, and run directly, since a
+  definition may not run `nu` by name. The data goes as NUON text and the
+  answers come back as NUON. `ready` makes the run's directories, refuses
+  what must not be there, and returns the values the progress check reads.
   `work` returns the record the run's result carries.
 - A refusal or a failure is the bin's exit 1 with its message alone on
-  stderr, which the body raises: a refusal before anything launches, a
+  stderr, which the definition raises: a refusal before anything launches, a
   failure as the run's result. No module imports the engine's rig, so
   every module parses and runs under plain nu, and no descriptor names a
   path on this machine.
@@ -39,15 +40,16 @@ the data checkout beside this repository, `../jab-stress-data`, under
 - `./do bench <battery> <args>` runs a harness whole in the foreground,
   its ready then its work, from a NUON file of its arguments.
 - To run a runner: while the server's cache still holds its nonce, `rerun`
-  that nonce with the arguments; otherwise pass the body to the `run` tool
-  with its types written as schemas, and record the new nonce in the
-  descriptor. An empty nonce is a body that has not run since it changed.
+  that nonce with its data; otherwise pass its definition and its data to
+  the `execute` tool, and record the new nonce in the descriptor. An empty
+  nonce is a definition that has not run since it changed. The data is held
+  to the signature's types, every field declared and none optional.
 
 ## Recorded steps
 
 | Descriptor | What it runs |
 |---|---|
-| `recorded.nuon` | steps through jab's bins or the workbench's, each under the environment its `env` names, a table of `name` and `value`, where it sets one, and each in its own directory: its output, the revisions it ran, its symbols, its kernel's and programs' builds with their digests, the files it wrote, and the host's CPU by process beside it, in `step.nuon` and `host_load.nuonl`, the run's directory then landed whole. A suite, a program's tests, the smoke, a gauge battery and its compares, or a workbench reader's run is its step list |
+| `recorded.nuon` | steps through jab's bins or the workbench's, each under the environment its `env` names, a table of `name` and `value`, empty where it sets none, and each in its own directory: its output, the revisions it ran, its symbols, its kernel's and programs' builds with their digests, the files it wrote, and the host's CPU by process beside it, in `step.nuon` and `host_load.nuonl`, the run's directory then landed whole. A suite, a program's tests, the smoke, a gauge battery and its compares, or a workbench reader's run is its step list |
 
 ## The host's load
 
@@ -68,7 +70,7 @@ container, the host's own processes show only as unattributed CPU.
 
 | Descriptor | What it runs |
 |---|---|
-| `stress_bin.nuon` | a workbench bin's verb in this checkout, `bin` its path under `nu/bin` less `.nu`, with its `verb` and `words`, under the environment `env` names, a table of `name` and `value`; its whole output saved to `log`, its exit and last lines returned, a non-zero exit an error, `max_quiet_min` its quiet limit in minutes: the qualification's `check` past the run tool's bound among them |
+| `stress_bin.nuon` | a workbench bin's verb in this checkout, `bin` its path under `nu/bin` less `.nu`, with its `verb` and `words`, under the environment `env` names, a table of `name` and `value`; its whole output saved to `log`, its exit and last lines returned, a non-zero exit an error, `max_quiet_min` its quiet limit in minutes: the qualification's `check` past a tool call's bound among them |
 
 ## Measurement
 

@@ -1,27 +1,27 @@
 {
  nonce: "",
  title: "Gauge batches in a declared order, each under its own environment",
- args_type: "record<stress: string, fps: string, base: string, batches: table<label: string, words: list<string>, env: table<name: string, value: string>>, label: string, mcp_nom: string, max_quiet_min: int>",
- result_type: "record<label: string, nonce: string>",
- body: "use equip/ai/two/rig/prototype/long
-let a = $args
-let bin = ($a.stress | path join nu bin nuance.nu)
-let given = ($a | to nuon)
-let ready = (^$bin runner ready gauge_batches $given | complete)
-if $ready.exit_code != 0 { error make { msg: $\"gauge_batches is not ready: ($ready.stderr | str trim)\" } }
-let r = ($ready.stdout | from nuon)
-let handle = (long launch {
-    label: $a.label,
-    mcp_nom: $a.mcp_nom,
-    interval: 120sec,
-    max_quiet: ($a.max_quiet_min * 1min),
-    check: {|state| { batches: (glob ($a.base | path join \"*.log\") | length) } },
-    teardown: null,
-    work: {
-        let w = (^$bin runner work gauge_batches $given | complete)
-        if $w.exit_code != 0 { error make { msg: $\"gauge_batches: ($w.stderr | str trim)\" } }
-        $w.stdout | from nuon
-    },
-})
-{ label: $handle.label, nonce: $handle.nonce }"
+ definition: "def execute [data: record<stress: string, fps: string, base: string, batches: table<label: string, words: list<string>, env: table<name: string, value: string>>, label: string, mcp_nom: string, max_quiet_min: int>]: nothing -> record<label: string, nonce: string> {
+    use equip/ai/two/rig/prototype/long
+    let a = $data
+    let bin = ($a.stress | path join nu bin nuance.nu)
+    let given = ($a | to nuon)
+    let ready = (^$bin runner ready gauge_batches $given | complete)
+    if $ready.exit_code != 0 { error make { msg: $\"gauge_batches is not ready: ($ready.stderr | str trim)\" } }
+    let r = ($ready.stdout | from nuon)
+    let handle = (long launch {
+        label: $a.label,
+        mcp_nom: $a.mcp_nom,
+        interval: 120sec,
+        max_quiet: ($a.max_quiet_min * 1min),
+        check: {|state| { batches: (glob ($a.base | path join \"*.log\") | length) } },
+        teardown: null,
+        work: {
+            let w = (^$bin runner work gauge_batches $given | complete)
+            if $w.exit_code != 0 { error make { msg: $\"gauge_batches: ($w.stderr | str trim)\" } }
+            $w.stdout | from nuon
+        },
+    })
+    { label: $handle.label, nonce: $handle.nonce }
+}"
 }

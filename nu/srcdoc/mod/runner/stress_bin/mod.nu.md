@@ -2,7 +2,7 @@
 
 The stress_bin runner's code, reached by its descriptor through the workbench
 bin's `runner` verbs, or run whole by `do.nu bench stress_bin <args>`: a
-workbench bin's verb past the run tool's bound, the qualification's `check`
+workbench bin's verb past a tool call's bound, the qualification's `check`
 among them.
 
 ## def ready

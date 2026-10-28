@@ -2,8 +2,8 @@
 
 The runners' dispatcher: every harness module by its name, the boundary
 between the long engine's descriptors in `nu/nuon/runner/` and the code they
-run. A descriptor's body holds the engine alone and reaches a harness through
-the workbench bin, `nuance.nu runner ready|work <harness> <args>`, its
+run. A descriptor's definition holds the engine alone and reaches a harness
+through the workbench bin, `nuance.nu runner ready|work <harness> <args>`, its
 arguments NUON on the command line and its answer NUON on stdout; so no module
 imports the engine's rig, every module parses and runs under plain nu, and no
 descriptor names a box path. `record`, the run records' validator, is a child

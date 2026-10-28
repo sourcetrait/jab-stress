@@ -22,7 +22,9 @@ checker read one declaration one way.
 
 Every nu file and every runner's body, `nu/nuon/runner/*.nuon`, each
 tagged with its kind, since a descriptor's body may import the long
-engine.
+engine. A body is its definition's block, the `def execute` line and the
+closing brace left out, so the definition is no declaration of the
+workbench's.
 
 ## def shape-text, dv-text, sig-text, signatures-of
 
