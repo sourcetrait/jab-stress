@@ -7,7 +7,7 @@ launched as `nuance.nu runner work recorded` with the progress check, the
 steps recorded so far against their count, and the bounds, `stress` the
 workbench's checkout, whose bin both run.
 
-Its data past `stress`, `label`, and `mcp_nom`: `out` the run's directory,
+Its data past `stress` and `label`: `out` the run's directory,
 made once; `max_quiet_min` the quiet bound in minutes; `kernel_source` the
 commit whose `kernel/` and `sdk/src` jab's checkout must equal, or empty for
 none; and `steps`, a table of `name`, `repo` (`jab` or `stress`), `bin` (its

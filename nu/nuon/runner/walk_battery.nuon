@@ -1,7 +1,7 @@
 {
  nonce: "",
  title: "walk's CADENCE runs in a declared order, each batch a condition's image and kernel",
- definition: "def execute [data: record<stress: string, jab: string, base: string, batches: table<label: string, image: string, kernel: string, spec: string, runs: int>, label: string, mcp_nom: string, max_quiet_min: int>]: nothing -> record<label: string, nonce: string> {
+ definition: "def execute [data: record<stress: string, jab: string, base: string, batches: table<label: string, image: string, kernel: string, spec: string, runs: int>, label: string, max_quiet_min: int>]: nothing -> record<label: string, nonce: string> {
     use equip/ai/two/rig/prototype/long
     let a = $data
     let bin = ($a.stress | path join nu bin nuance.nu)
@@ -10,7 +10,6 @@
     if $ready.exit_code != 0 { error make { msg: $\"walk_battery is not ready: ($ready.stderr | str trim)\" } }
     let handle = (long launch {
         label: $a.label,
-        mcp_nom: $a.mcp_nom,
         interval: 120sec,
         max_quiet: ($a.max_quiet_min * 1min),
         check: {|state| { batches: (glob ($a.base | path join \"*.log\") | length), runs: (glob ($a.base | path join \"*\" \"run_*\") | length) } },
